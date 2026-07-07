@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal</title>
+  <script>
+    // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+  <div id="app" class="flex flex-col lg:flex-row h-screen w-full overflow-hidden">
+
+    <!-- Top/Left Side: Slider (Flex-1 on mobile to share height dynamically, 60% width on desktop) -->
+    <div
+      class="w-full flex-1 lg:h-full lg:w-[60%] lg:flex-none relative flex flex-col items-center justify-center overflow-hidden">
+
+      <!-- Slider Container -->
+      <div id="slider-container" class="absolute inset-0 w-full h-full z-10"></div>
+
+      <!-- Dark Overlay -->
+      <div class="absolute inset-0 bg-blue-900/40 dark:bg-gray-900/70 z-40 pointer-events-none"></div>
+
+      <!-- Mobile Floating Theme Toggler (Top Right of Carousel) -->
+      <!-- <div class="absolute top-6 right-6 z-50 lg:hidden">
+        <button type="button"
+          class="theme-toggle-btn cursor-pointer text-white bg-black/30 hover:bg-black/50 focus:outline-none rounded-full p-2.5 transition-all">
+          <svg class="theme-toggle-dark-icon hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+          </svg>
+          <svg class="theme-toggle-light-icon hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+              fill-rule="evenodd" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+      </div> -->
+
+      <!-- Hero Content (Center - target for hide/show toggle on mobile) -->
+      <div id="mobile-hero-content"
+        class="relative z-50 flex flex-col items-center text-center text-white px-6 pointer-events-none transition-opacity duration-300">
+        <h1 class="text-4xl lg:text-6xl font-extrabold tracking-tight mb-2 lg:mb-4 drop-shadow-xl text-white">DOLE
+          ILIGAN PORTAL</h1>
+        <p class="text-sm lg:text-xl font-bold text-yellow-400 drop-shadow-lg uppercase tracking-widest">
+          Implementors Login Dashboard
+        </p>
+      </div>
+
+      <!-- Mobile Drawer Top Text (Active only when Drawer is opened, floats on top of dark overlay) -->
+      <div id="mobile-drawer-hero-text"
+        class="absolute top-[15%] left-6 right-6 z-[55] text-left pointer-events-none hidden px-4 transition-opacity duration-300">
+        <h4 class="text-xl font-extrabold text-white leading-tight drop-shadow-lg">
+          Log in to manage employment records and export reports easily.
+        </h4>
+      </div>
+    </div>
+
+    <!-- Bottom Side: Mobile "Get Started" Card (Dynamic height with rounded-t-[1.5rem] overlay, hidden on desktop) -->
+    <div
+      class="w-full lg:hidden bg-white dark:bg-gray-900 rounded-t-[1.5rem] border-t border-gray-100 dark:border-gray-800 p-6 pb-10 flex flex-col items-center text-center shadow-2xl z-50 shrink-0 mt-[-2.5rem] relative">
+
+      <!-- Logo and Brand -->
+      <div class="flex flex-col items-center mb-3">
+        <img src="/src/assets/logos/dole_logo.png" alt="DOLE" class="w-9 h-9 mb-1 drop-shadow-sm">
+        <span class="text-blue-700 dark:text-blue-500 font-bold text-[10px] tracking-widest uppercase">DOLE REGION
+          X</span>
+      </div>
+
+      <!-- Call to Action -->
+      <div class="flex flex-col items-center mb-4">
+        <h2 class="text-lg font-extrabold text-gray-900 dark:text-white">Implementors Login Portal</h2>
+        <p class="text-gray-500 dark:text-gray-400 text-[11px] mt-1 max-w-xs leading-relaxed">
+          Access the DOLE implementation systems to easily manage records, generate exports, and print reports.
+        </p>
+      </div>
+
+      <!-- Rectangle Get Started Button (Trigger handled in drawer.js) -->
+      <button id="show-login-drawer"
+        class="cursor-pointer w-full text-white bg-blue-700 hover:bg-blue-800 font-bold rounded-xl text-sm py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md"
+        type="button">
+        Get Started
+      </button>
+    </div>
+
+    <!-- Desktop Right Side: Login Form (40% width, hidden on mobile) -->
+    <div
+      class="hidden lg:flex lg:w-[40%] flex-col p-6 sm:p-8 lg:p-10 bg-white dark:bg-gray-900 shadow-2xl z-50 h-full overflow-y-hidden relative justify-center">
+
+      <!-- Login Section Container (Wider layout, max-w-[32rem] width, perfectly centered and proportioned) -->
+      <div class="w-full max-w-[32rem] mx-auto flex flex-col justify-center">
+
+        <!-- Right Grid Header (Aligned to form, logo on top-left) -->
+        <div class="flex items-center justify-between w-full mb-5">
+          <div class="flex items-center gap-3">
+            <img src="/src/assets/logos/dole_logo.png" alt="DOLE Logo" class="w-10 h-10 drop-shadow-sm">
+            <span class="text-blue-700 dark:text-blue-500 font-bold text-base tracking-widest uppercase">DOLE REGION
+              X</span>
+          </div>
+
+          <!-- Desktop Theme Toggler -->
+          <!-- <button type="button"
+            class="theme-toggle-btn cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-full hover:shadow-sm transition-all focus:outline-none">
+            <svg class="theme-toggle-dark-icon hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg class="theme-toggle-light-icon hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                fill-rule="evenodd" clip-rule="evenodd"></path>
+            </svg>
+          </button> -->
+        </div>
+
+        <!-- Login Form Header (Matched to reference style but using HR copy) -->
+        <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
+        <p class="text-gray-500 dark:text-gray-400 mb-5 text-sm leading-relaxed">
+          Sign in to access your administrative dashboard, manage employment program implementors, query systems, print
+          reports, and run data exports.
+        </p>
+
+        <!-- Form -->
+        <form class="space-y-4">
+          <div>
+            <label for="desktop-username"
+              class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Username</label>
+            <input type="text" id="desktop-username"
+              class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
+              placeholder="Enter your username" required>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="desktop-password"
+                class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Password</label>
+              <a href="#"
+                class="text-xs font-bold text-blue-700 hover:underline dark:text-blue-500 cursor-pointer transition-colors">Forgot
+                password?</a>
+            </div>
+            <div class="relative">
+              <input type="password" id="desktop-password"
+                class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
+                placeholder="Enter your password" required>
+              <button id="desktop-password-toggle" type="button"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
+                <!-- Slashed Eye (closed) by default -->
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center pt-0.5">
+            <input id="desktop-remember" type="checkbox" value=""
+              class="w-4 h-4 border border-gray-300 rounded-md bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+            <label for="desktop-remember"
+              class="ml-2 text-xs font-semibold text-gray-900 dark:text-gray-300 cursor-pointer">Remember me</label>
+          </div>
+
+          <button type="submit"
+            class="cursor-pointer w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md tracking-wide mt-2">
+            SIGN IN
+          </button>
+
+          <!-- Divider -->
+          <div class="flex items-center justify-center space-x-2 my-3">
+            <span class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></span>
+            <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Or
+              continue with</span>
+            <span class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></span>
+          </div>
+
+          <!-- Social Buttons -->
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button"
+              class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-700 dark:hover:text-blue-400 font-bold rounded-lg text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
+              <svg class="w-4 h-4 mr-2 text-[#1877F2]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor" viewBox="0 0 8 19">
+                <path fill-rule="evenodd"
+                  d="M6.135 3H8V0H6.135a4.147 4.147 0 0 0-4.142 4.142V6H0v3h2v9.938h3V9h2.021l.592-3H5V3.591A.6.6 0 0 1 5.592 3h.543Z"
+                  clip-rule="evenodd" />
+              </svg>
+              Facebook
+            </button>
+            <button type="button"
+              class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-200 dark:hover:border-red-900 hover:text-red-600 dark:hover:text-red-400 font-bold rounded-lg text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
+              <svg class="w-4 h-4 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                viewBox="0 0 18 19">
+                <path fill-rule="evenodd"
+                  d="M8.842 18.083a8.8 8.8 0 0 1-8.65-8.948 8.841 8.841 0 0 1 8.8-8.652h.153a8.464 8.464 0 0 1 5.7 2.257l-2.193 2.038A5.27 5.27 0 0 0 9.09 3.4a5.882 5.882 0 0 0-.2 11.76h.124a5.091 5.091 0 0 0 5.248-4.057L14.3 11H9V8h8.34c.066.543.095 1.09.088 1.636-.086 5.053-3.463 8.449-8.4 8.449l-.186-.002Z"
+                  clip-rule="evenodd" />
+              </svg>
+              Google
+            </button>
+          </div>
+
+        </form>
+
+        <div class="mt-4 border-t border-gray-200 dark:border-gray-800 pt-2.5 relative">
+          <p class="text-center text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+            DOLE ILIGAN Portal &copy; <span class="copyright-year"></span>
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mobile Login Bottom Drawer (Manual Flowbite trigger, rounded-t-[1.5rem]) -->
+  <div id="login-drawer"
+    class="fixed bottom-0 left-0 right-0 z-[60] w-full bg-white dark:bg-gray-900 rounded-t-[1.5rem] border-t border-gray-200 dark:border-gray-800 transition-transform translate-y-full p-6 overflow-y-auto max-h-[90vh] lg:hidden"
+    tabindex="-1" aria-labelledby="drawer-label">
+
+    <!-- Drawer Header with Logo positioned at the Top Left, Close on Right -->
+    <div class="flex items-center justify-between w-full mb-6 border-b border-gray-100 dark:border-gray-800 pb-3">
+      <div class="flex items-center gap-2">
+        <img src="/src/assets/logos/dole_logo.png" alt="DOLE" class="w-8 h-8 drop-shadow-sm">
+        <span id="drawer-label"
+          class="text-blue-700 dark:text-blue-500 font-bold text-xs tracking-widest uppercase">DOLE REGION X</span>
+      </div>
+
+      <button id="hide-login-drawer" type="button" aria-controls="login-drawer"
+        class="cursor-pointer text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+        <span class="sr-only">Close menu</span>
+      </button>
+    </div>
+
+    <!-- Drawer Content: RESTORED ORIGINAL LOGIN DESIGN (Centered title, removed description) -->
+    <div class="w-full max-w-sm mx-auto">
+
+      <!-- Centered Welcome Back title, with no long description context -->
+      <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-6 text-center">Welcome Back</h2>
+
+      <!-- Form inside Drawer (Matching original style rules) -->
+      <form class="space-y-4 text-left">
+        <div>
+          <label for="mobile-username"
+            class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Username</label>
+          <input type="text" id="mobile-username"
+            class="bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
+            placeholder="Enter your username" required>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label for="mobile-password"
+              class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Password</label>
+            <a href="#"
+              class="text-xs font-bold text-blue-700 hover:underline dark:text-blue-500 cursor-pointer transition-colors">Forgot
+              password?</a>
+          </div>
+          <div class="relative">
+            <input type="password" id="mobile-password"
+              class="bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
+              placeholder="Enter your password" required>
+            <button id="mobile-password-toggle" type="button"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
+              <!-- Slashed Eye (closed) by default -->
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center pt-1">
+          <input id="mobile-remember" type="checkbox" value=""
+            class="w-4 h-4 border border-gray-300 rounded-md bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
+          <label for="mobile-remember"
+            class="ml-2 text-xs font-semibold text-gray-900 dark:text-gray-300 cursor-pointer">Remember me</label>
+        </div>
+
+        <!-- SIGN IN Button (Rectangle, blue) -->
+        <button type="submit"
+          class="cursor-pointer w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-xl text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md tracking-wide mt-2">
+          SIGN IN
+        </button>
+
+        <!-- Divider -->
+        <div class="flex items-center justify-between space-x-2 my-4">
+          <span class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></span>
+          <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Or continue
+            with</span>
+          <span class="h-px bg-gray-200 dark:bg-gray-700 flex-1"></span>
+        </div>
+
+        <!-- Social Buttons (Facebook & Google, rectangle style) -->
+        <div class="grid grid-cols-2 gap-3">
+          <button type="button"
+            class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 font-bold rounded-xl text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 shadow-sm transition-colors">
+            <svg class="w-4 h-4 mr-2 text-[#1877F2]" fill="currentColor" viewBox="0 0 8 19"
+              xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd"
+                d="M6.135 3H8V0H6.135a4.147 4.147 0 0 0-4.142 4.142V6H0v3h2v9.938h3V9h2.021l.592-3H5V3.591A.6.6 0 0 1 5.592 3h.543Z"
+                clip-rule="evenodd" />
+            </svg>
+            Facebook
+          </button>
+          <button type="button"
+            class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 font-bold rounded-xl text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 shadow-sm transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 18 19" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd"
+                d="M8.842 18.083a8.8 8.8 0 0 1-8.65-8.948 8.841 8.841 0 0 1 8.8-8.652h.153a8.464 8.464 0 0 1 5.7 2.257l-2.193 2.038A5.27 5.27 0 0 0 9.09 3.4a5.882 5.882 0 0 0-.2 11.76h.124a5.091 5.091 0 0 0 5.248-4.057L14.3 11H9V8h8.34c.066.543.095 1.09.088 1.636-.086 5.053-3.463 8.449-8.4 8.449l-.186-.002Z"
+                clip-rule="evenodd" />
+            </svg>
+            Google
+          </button>
+        </div>
+
+      </form>
+
+      <div class="mt-5 border-t border-gray-200 dark:border-gray-800 pt-3 text-center">
+        <p class="text-[10px] font-medium text-gray-400">
+          DOLE ILIGAN Portal &copy; <span class="copyright-year"></span>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Backdrop for manual drawer triggers to handle click-away correctly -->
+  <div id="drawer-backdrop" class="fixed inset-0 z-50 bg-gray-900/50 dark:bg-gray-900/80 hidden lg:hidden"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

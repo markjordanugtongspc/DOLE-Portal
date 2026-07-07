@@ -1,0 +1,22 @@
+/* Inter Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+/* ENTERPRISE THEME */
+@import "flowbite/src/themes/enterprise";
+
+@plugin "flowbite/plugin";
+@source "../node_modules/flowbite";
+
+/* Configure Theme */
+@theme {
+  --font-sans: "Inter", sans-serif;
+}
+
+/* Enable class-based Dark Mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  font-family: "Inter", sans-serif;
+}
