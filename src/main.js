@@ -49,3 +49,6 @@ import '@/scripts/modules/auth.js';
 import '@/scripts/modules/theme-toggler.js';
 import '@/scripts/modules/slider.js';
 import '@/scripts/modules/drawer.js';
+import '@/scripts/modules/sidebar.js';
+import '@/scripts/modules/charts.js';
+import '@/scripts/modules/dashboard.js';

@@ -1,0 +1,42 @@
+<button data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" type="button" class="text-heading bg-transparent box-border border border-transparent hover:bg-neutral-secondary-medium focus:ring-4 focus:ring-neutral-tertiary font-medium leading-5 rounded-base ms-3 mt-3 text-sm p-2 focus:outline-none inline-flex sm:hidden cursor-pointer">
+   <span class="sr-only">Open sidebar</span>
+   <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"/>
+   </svg>
+</button>
+
+<aside id="default-sidebar" class="fixed top-0 left-0 z-40 w-64 h-full transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+   <div class="h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-900 border-e border-gray-200 dark:border-gray-800 transition-colors flex flex-col">
+      <!-- Brand Header -->
+      <div class="border-b border-gray-200 dark:border-gray-800 pb-4 mb-4 flex items-center gap-2">
+         <img src="/src/assets/logos/dole_logo.png" class="h-8 w-8 drop-shadow-sm" alt="DOLE Logo" />
+         <div class="flex flex-col">
+            <span class="text-sm font-extrabold text-blue-700 dark:text-blue-500 tracking-wider uppercase leading-none">DOLE PORTAL</span>
+            <span id="sidebar-role-badge" class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest leading-none">System User</span>
+         </div>
+      </div>
+      <!-- Nav List -->
+      <ul id="sidebar-nav-list" class="space-y-2 font-medium">
+         <!-- Links will be injected dynamically by sidebar.js -->
+      </ul>
+      
+      <!-- Temporary Theme Toggler & Settings -->
+      <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-1">
+         <a href="#" class="cursor-pointer flex items-center px-2 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group">
+            <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M10 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h2m10 1a3 3 0 0 1-3 3m3-3a3 3 0 0 0-3-3m3 3h1m-4 3a3 3 0 0 1-3-3m3 3v1m-3-4a3 3 0 0 1 3-3m-3 3h-1m4-3v-1m-2.121 1.879-.707-.707m5.656 5.656-.707-.707m-4.242 0-.707.707m5.656-5.656-.707.707M12 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+            <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M17 10v1.126c.367.095.714.24 1.032.428l.796-.797 1.415 1.415-.797.796c.188.318.333.665.428 1.032H21v2h-1.126c-.095.367-.24.714-.428 1.032l.797.796-1.415 1.415-.796-.797a3.979 3.979 0 0 1-1.032.428V20h-2v-1.126a3.977 3.977 0 0 1-1.032-.428l-.796.797-1.415-1.415.797-.796A3.975 3.975 0 0 1 12.126 16H11v-2h1.126c.095-.367.24-.714.428-1.032l-.797-.796 1.415-1.415.796.797A3.977 3.977 0 0 1 15 11.126V10h2Zm.406 3.578.016.016c.354.358.574.85.578 1.392v.028a2 2 0 0 1-3.409 1.406l-.01-.012a2 2 0 0 1 2.826-2.83ZM5 8a4 4 0 1 1 7.938.703 7.029 7.029 0 0 0-3.235 3.235A4 4 0 0 1 5 8Zm4.29 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h6.101A6.979 6.979 0 0 1 9 15c0-.695.101-1.366.29-2Z" clip-rule="evenodd"/></svg>
+            <span class="ms-3 font-medium">Settings</span>
+         </a>
+         <button id="theme-toggle" type="button" class="w-full text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center px-2 py-1.5 rounded-lg group cursor-pointer transition-colors">
+            <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+            <svg id="theme-toggle-light-icon" class="hidden w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path></svg>
+            <span class="ms-3 font-medium">Toggle Theme</span>
+         </button>
+      </div>
+
+      <div class="mt-auto pt-6 px-2 text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-widest uppercase select-none flex items-center justify-between">
+         <span>Portal Version</span>
+         <span id="app-version-display">v0.0.0</span>
+      </div>
+   </div>
+</aside>

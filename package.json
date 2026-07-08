@@ -1,6 +1,6 @@
 {
   "name": "portal",
-  "version": "0.0.45",
+  "version": "0.0.75",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",
+    "apexcharts": "^3.46.0",
     "flowbite": "^4.0.2",
     "tailwindcss": "^4.3.2"
   }

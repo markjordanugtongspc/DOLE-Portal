@@ -132,7 +132,7 @@
 
         <!-- Form -->
         <form class="space-y-4">
-          <div>
+          <div id="desktop-username-wrapper">
             <label for="desktop-username"
               class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Username</label>
             <input type="text" id="desktop-username"
@@ -140,7 +140,7 @@
               placeholder="Enter your username" required>
           </div>
 
-          <div>
+          <div id="desktop-password-wrapper">
             <div class="flex justify-between items-center mb-1.5">
               <label for="desktop-password"
                 class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Password</label>
@@ -185,8 +185,8 @@
           </div>
 
           <!-- Social Buttons -->
-          <div class="grid grid-cols-2 gap-3">
-            <button type="button"
+          <div id="desktop-methods-container" class="grid grid-cols-2 gap-3">
+            <button id="desktop-email-btn" type="button"
               class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800 hover:text-emerald-700 dark:hover:text-emerald-400 font-bold rounded-lg text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
               <svg class="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
@@ -194,7 +194,7 @@
               </svg>
               Email
             </button>
-            <button type="button"
+            <button id="desktop-phone-btn" type="button"
               class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400 font-bold rounded-lg text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
               <svg class="w-4 h-4 mr-2 text-violet-600 dark:text-violet-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
@@ -246,7 +246,7 @@
 
       <!-- Form inside Drawer (Matching original style rules) -->
       <form class="space-y-4 text-left">
-        <div>
+        <div id="mobile-username-wrapper">
           <label for="mobile-username"
             class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Username</label>
           <input type="text" id="mobile-username"
@@ -254,7 +254,7 @@
             placeholder="Enter your username" required>
         </div>
 
-        <div>
+        <div id="mobile-password-wrapper">
           <div class="flex justify-between items-center mb-1.5">
             <label for="mobile-password"
               class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Password</label>
@@ -300,8 +300,8 @@
         </div>
 
         <!-- Social Buttons (Facebook & Google, rectangle style) -->
-        <div class="grid grid-cols-2 gap-3">
-          <button type="button"
+        <div id="mobile-methods-container" class="grid grid-cols-2 gap-3">
+          <button id="mobile-email-btn" type="button"
             class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800 hover:text-emerald-700 dark:hover:text-emerald-400 font-bold rounded-xl text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
             <svg class="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
@@ -309,7 +309,7 @@
             </svg>
             Email
           </button>
-          <button type="button"
+          <button id="mobile-phone-btn" type="button"
             class="cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400 font-bold rounded-xl text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md">
             <svg class="w-4 h-4 mr-2 text-violet-600 dark:text-violet-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>

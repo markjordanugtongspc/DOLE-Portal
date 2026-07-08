@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - DOLE Portal</title>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+  <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+  <div id="sidebar" data-role="admin" data-active="dashboard"></div>
+
+  <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+  <div class="sm:ml-64 min-h-screen flex flex-col">
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-8 space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white">Admin Dashboard</h2>
+        </div>
+        <nav class="flex" aria-label="Breadcrumb">
+          <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+            <li class="inline-flex items-center">
+              <a href="/" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                <svg class="w-4 h-4 me-1.5" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <g transform="matrix(0.77 0 0 0.77 12 12)">
+                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform="translate(-16, -16)" d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z" stroke-linecap="round" />
+                  </g>
+                </svg>
+                Login
+              </a>
+            </li>
+            <li>
+              <div class="flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                <a href="#" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Dashboard</a>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div class="flex items-center space-x-1.5">
+                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                <span class="inline-flex items-center text-sm font-medium text-gray-400 dark:text-gray-500 select-none">Admin</span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+      </div>
+
+      <!-- Dashboard Cards Grid -->
+      <div class="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 md:pb-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:snap-none hide-scrollbar w-full">
+        <!-- Card 1: Total Staff -->
+        <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+          <div>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL STAFF</h3>
+            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">128</p>
+          </div>
+          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 2: Total Tickets -->
+        <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+          <div>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL TICKETS</h3>
+            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">450</p>
+          </div>
+          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg id='Two_Tickets_24' class="w-6 h-6 text-white" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+            <g transform="matrix(0.43 0 0 0.43 12 12)" >
+            <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-24.5, -24.5)" d="M 33.65625 4 C 33.148438 4 32.660156 4.183594 32.28125 4.5625 L 29.65625 7.1875 L 28.0625 5.5625 C 27.683594 5.183594 27.164063 5 26.65625 5 C 26.148438 5 25.660156 5.183594 25.28125 5.5625 L 1.5625 29.28125 C 0.800781 30.042969 0.800781 31.300781 1.5625 32.0625 L 5.78125 36.25 C 6.105469 36.574219 6.605469 36.640625 7 36.40625 C 7.734375 35.964844 8.675781 36.050781 9.3125 36.6875 C 9.949219 37.324219 10.035156 38.265625 9.59375 39 C 9.359375 39.394531 9.425781 39.894531 9.75 40.21875 L 13.9375 44.4375 C 14.699219 45.199219 15.957031 45.199219 16.71875 44.4375 L 19.3125 41.8125 L 20.9375 43.4375 C 21.699219 44.199219 22.957031 44.199219 23.71875 43.4375 L 47.4375 19.71875 C 48.199219 18.957031 48.199219 17.699219 47.4375 16.9375 L 43.21875 12.75 C 42.894531 12.425781 42.394531 12.359375 42 12.59375 C 41.265625 13.035156 40.324219 12.949219 39.6875 12.3125 C 39.050781 11.675781 38.964844 10.734375 39.40625 10 C 39.640625 9.605469 39.574219 9.105469 39.25 8.78125 L 35.0625 4.5625 C 34.683594 4.183594 34.164063 4 33.65625 4 Z M 33.65625 6 L 33.6875 6 L 37.5 9.84375 C 37.078125 11.1875 37.21875 12.65625 38.28125 13.71875 C 39.34375 14.78125 40.8125 14.921875 42.15625 14.5 L 46 18.3125 L 46 18.34375 L 22.34375 42 L 22.3125 42 L 20.75 40.40625 L 37.5 23.65625 L 37.8125 23.96875 C 38.199219 24.367188 38.835938 24.371094 39.234375 23.984375 C 39.632813 23.597656 39.636719 22.960938 39.25 22.5625 L 38.9375 22.25 L 40.4375 20.71875 C 41.195313 19.957031 41.199219 18.699219 40.4375 17.9375 L 36.21875 13.75 C 35.894531 13.425781 35.394531 13.359375 35 13.59375 C 34.265625 14.035156 33.324219 13.949219 32.6875 13.3125 C 32.050781 12.675781 31.964844 11.734375 32.40625 11 C 32.640625 10.605469 32.574219 10.105469 32.25 9.78125 L 31.09375 8.59375 Z M 26.65625 7 L 26.6875 7 L 28.65625 8.96875 C 28.753906 9.300781 29.011719 9.558594 29.34375 9.65625 L 30.5 10.84375 C 30.078125 12.1875 30.21875 13.65625 31.28125 14.71875 C 32.34375 15.78125 33.8125 15.921875 35.15625 15.5 L 39 19.34375 L 36.96875 21.40625 C 36.945313 21.425781 36.925781 21.445313 36.90625 21.46875 L 36.8125 21.53125 C 36.765625 21.578125 36.722656 21.632813 36.6875 21.6875 L 18.9375 39.375 C 18.617188 39.480469 18.371094 39.738281 18.28125 40.0625 L 15.34375 43 L 11.5 39.15625 C 11.921875 37.8125 11.78125 36.34375 10.71875 35.28125 C 9.65625 34.21875 8.1875 34.078125 6.84375 34.5 L 3 30.6875 L 3 30.65625 L 21.625 12.03125 L 22.46875 12.34375 L 23.21875 11.8125 L 23.25 10.90625 L 23.03125 10.625 Z M 24.3125 12.46875 L 23.59375 12.96875 L 23.5625 13.875 L 23.75 14.15625 L 24.46875 14.875 L 25.3125 15.15625 L 26.03125 14.65625 L 26.0625 13.75 L 25.875 13.46875 L 25.15625 12.75 Z M 27.15625 15.3125 L 26.40625 15.8125 L 26.375 16.71875 L 26.59375 17 L 27.28125 17.6875 L 28.125 18 L 28.875 17.46875 L 28.90625 16.5625 L 28.6875 16.28125 L 28 15.59375 Z M 29.96875 18.125 L 29.25 18.625 L 29.21875 19.53125 L 29.40625 19.8125 L 30.125 20.53125 L 30.96875 20.8125 L 31.6875 20.3125 L 31.71875 19.40625 L 31.53125 19.125 L 30.8125 18.40625 Z M 32.8125 20.96875 L 32.0625 21.46875 L 32.03125 22.375 L 32.25 22.65625 L 32.9375 23.375 L 33.78125 23.65625 L 34.53125 23.125 L 34.5625 22.25 L 34.375 21.9375 L 33.65625 21.25 Z" stroke-linecap="round" />
+            </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 3: Open Tickets -->
+        <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+          <div>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OPEN TICKETS</h3>
+            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">12</p>
+          </div>
+          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 4: Total Resigned -->
+        <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-rose-950 to-red-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+          <div>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL RESIGNED</h3>
+            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">18</p>
+          </div>
+          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm0 0v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-9 9m4.5-1.206a8.959 8.959 0 0 1-4.5 1.206"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toggle Button (Moved Outside) -->
+      <div class="flex justify-end mt-4 mb-2">
+        <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded p-1 shadow-inner border border-gray-200 dark:border-gray-700 h-[38px]">
+          <button id="btn-toggle-stats" class="px-3 py-1.5 text-xs font-bold rounded shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer select-none">STATS</button>
+          <button id="btn-toggle-quick" class="px-3 py-1.5 text-xs font-bold rounded text-gray-500 dark:bg-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer select-none transition-colors">QUICK</button>
+        </div>
+      </div>
+
+      <!-- Quick Actions Container (Floating Buttons) -->
+      <div id="quick-actions-container" class="hidden w-full mt-4 pb-12">
+        <!-- Center wrapper -->
+        <div class="max-w-5xl mx-auto flex flex-col items-center justify-center">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-6 w-full">
+            
+            <!-- 1. Manage System Hexagon -->
+            <div class="flex flex-col items-center">
+              <button class="w-full group relative flex flex-col items-center justify-center h-48 -skew-x-12 bg-blue-700 dark:bg-blue-600 md:bg-[#f4f5f7] md:dark:bg-gray-800 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors border border-blue-700 dark:border-blue-600 md:border-gray-200 md:dark:border-gray-700 hover:border-blue-700 dark:hover:border-blue-600 rounded-xl cursor-pointer shadow-sm">
+                <div class="skew-x-12 flex flex-col items-center gap-4">
+                  <svg class="w-12 h-12 text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.35709 16V5.78571c0-.43393.34822-.78571.77777-.78571H18.5793c.4296 0 .7778.35178.7778.78571V16M5.35709 16h-1c-.55229 0-1 .4477-1 1v1c0 .5523.44771 1 1 1H20.3571c.5523 0 1-.4477 1-1v-1c0-.5523-.4477-1-1-1h-1M5.35709 16H19.3571M9.35709 8l2.62501 2.5L9.35709 13m4.00001 0h2"/>
+                  </svg>
+                  <span class="text-sm font-black uppercase tracking-widest text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors">SYSTEM</span>
+                </div>
+              </button>
+              <span class="mt-6 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">MANAGE SYSTEMS</span>
+            </div>
+
+            <!-- 2. Dark Mode Hexagon -->
+            <div class="flex flex-col items-center">
+              <button class="w-full group relative flex flex-col items-center justify-center h-48 -skew-x-12 bg-blue-700 dark:bg-blue-600 md:bg-[#f4f5f7] md:dark:bg-gray-800 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors border border-blue-700 dark:border-blue-600 md:border-gray-200 md:dark:border-gray-700 hover:border-blue-700 dark:hover:border-blue-600 rounded-xl cursor-pointer shadow-sm">
+                <div class="skew-x-12 flex flex-col items-center gap-4">
+                  <svg class="w-12 h-12 text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                  </svg>
+                  <span class="text-sm font-black uppercase tracking-widest text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors">DARK</span>
+                </div>
+              </button>
+              <span class="mt-6 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">DARK MODE</span>
+            </div>
+            
+            <!-- 3. Staff Hexagon -->
+            <div class="flex flex-col items-center">
+              <button class="w-full group relative flex flex-col items-center justify-center h-48 -skew-x-12 bg-blue-700 dark:bg-blue-600 md:bg-[#f4f5f7] md:dark:bg-gray-800 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors border border-blue-700 dark:border-blue-600 md:border-gray-200 md:dark:border-gray-700 hover:border-blue-700 dark:hover:border-blue-600 rounded-xl cursor-pointer shadow-sm">
+                <div class="skew-x-12 flex flex-col items-center gap-4">
+                  <svg class="w-12 h-12 text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                  </svg>
+                  <span class="text-sm font-black uppercase tracking-widest text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors">STAFF</span>
+                </div>
+              </button>
+              <span class="mt-6 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">MANAGE STAFF</span>
+            </div>
+
+            <!-- 4. Tickets Hexagon -->
+            <div class="flex flex-col items-center">
+              <button class="w-full group relative flex flex-col items-center justify-center h-48 -skew-x-12 bg-blue-700 dark:bg-blue-600 md:bg-[#f4f5f7] md:dark:bg-gray-800 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors border border-blue-700 dark:border-blue-600 md:border-gray-200 md:dark:border-gray-700 hover:border-blue-700 dark:hover:border-blue-600 rounded-xl cursor-pointer shadow-sm">
+                <div class="skew-x-12 flex flex-col items-center gap-4">
+                  <svg class="w-12 h-12 text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                  </svg>
+                  <span class="text-sm font-black uppercase tracking-widest text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors">TICKETS</span>
+                </div>
+              </button>
+              <span class="mt-6 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">VIEW TICKETS</span>
+            </div>
+
+            <!-- 5. Reports Hexagon -->
+            <div class="flex flex-col items-center">
+              <button class="w-full group relative flex flex-col items-center justify-center h-48 -skew-x-12 bg-blue-700 dark:bg-blue-600 md:bg-[#f4f5f7] md:dark:bg-gray-800 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors border border-blue-700 dark:border-blue-600 md:border-gray-200 md:dark:border-gray-700 hover:border-blue-700 dark:hover:border-blue-600 rounded-xl cursor-pointer shadow-sm">
+                <div class="skew-x-12 flex flex-col items-center gap-4">
+                  <svg class="w-12 h-12 text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                  </svg>
+                  <span class="text-sm font-black uppercase tracking-widest text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors">REPORTS</span>
+                </div>
+              </button>
+              <span class="mt-6 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">GENERATE REPORTS</span>
+            </div>
+
+            <!-- 6. Settings Hexagon -->
+            <div class="flex flex-col items-center">
+              <button class="w-full group relative flex flex-col items-center justify-center h-48 -skew-x-12 bg-blue-700 dark:bg-blue-600 md:bg-[#f4f5f7] md:dark:bg-gray-800 hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors border border-blue-700 dark:border-blue-600 md:border-gray-200 md:dark:border-gray-700 hover:border-blue-700 dark:hover:border-blue-600 rounded-xl cursor-pointer shadow-sm">
+                <div class="skew-x-12 flex flex-col items-center gap-4">
+                  <svg class="w-12 h-12 text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                  <span class="text-sm font-black uppercase tracking-widest text-white md:text-gray-800 md:dark:text-gray-100 group-hover:text-white transition-colors">SETTINGS</span>
+                </div>
+              </button>
+              <span class="mt-6 text-xs font-black uppercase tracking-widest text-gray-900 dark:text-white">SYSTEM SETTINGS</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats View Container -->
+      <div id="stats-view-container">
+        <!-- Grid for Charts and Active Staff -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Left: Bar Chart Card -->
+          <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full">
+            <div class="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
+              <div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-gray-500 dark:text-gray-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.866 8.21 8.21 0 003 2.48z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z"></path></svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">Reasons for tickets</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Top reasons for tickets this week</p>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+              <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Tickets received: <span class="font-extrabold text-gray-900 dark:text-white">3,232</span>
+              </div>
+              <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Response rate: <span class="font-extrabold text-gray-900 dark:text-white">93%</span>
+              </div>
+            </div>
+
+            <!-- Bar Chart container -->
+            <div id="bar-chart" class="w-full"></div>
+              
+            <div class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
+              <div class="flex justify-between items-center">
+                <a href="#" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
+                  View All Tickets
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        <!-- Right: Current Active Staff Card Container -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors relative h-full">
+          <div>
+            <div class="border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
+              <h3 class="text-lg font-extrabold text-gray-900 dark:text-white">Staff list</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">Current active and offline staff</p>
+            </div>
+
+            <!-- Staff list -->
+            <div id="staff-list-container" class="space-y-4 text-left">
+              <!-- Item 1 -->
+              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-3">
+                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-1.jpg" alt="Neil Sims">
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Neil Sims</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">neil.sims@flowbite.com</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div>
+                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Active</span>
+                </div>
+              </div>
+
+              <!-- Item 2 -->
+              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-3">
+                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-3.jpg" alt="Bonnie Green">
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Bonnie Green</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">bonnie@flowbite.com</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div>
+                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Active</span>
+                </div>
+              </div>
+
+              <!-- Item 3 -->
+              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-3">
+                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-2.jpg" alt="Jese Leos">
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Jese Leos</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">jese@flowbite.com</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                  <div class="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0"></div>
+                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 text-wrap md:text-nowrap md:w-auto leading-tight text-left w-16">Offline 23 hrs ago</span>
+                </div>
+              </div>
+
+              <!-- Item 4 -->
+              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-3">
+                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Thomas Lean">
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Thomas Lean</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">thomas@flowbite.com</p>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div>
+                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Active</span>
+                </div>
+              </div>
+
+              <!-- Item 5 -->
+              <div class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-3">
+                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-4.jpg" alt="Leslie Livingston">
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Leslie Livingston</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">leslie@flowbite.com</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                  <div class="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0"></div>
+                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 text-wrap md:text-nowrap md:w-auto leading-tight text-left w-16">Offline 3 days ago</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
+            <div class="flex justify-between items-center relative">
+              <!-- Dropdown Trigger -->
+              <button id="dropdownLastDays3Button" class="cursor-pointer text-xs font-bold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 flex items-center gap-1.5 transition-colors" type="button">
+                Last 7 days
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+              </button>
+              
+              <!-- Dropdown Menu inside card container -->
+              <div id="LastDays3dropdown" class="z-10 hidden absolute bottom-8 left-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-72 p-3">
+                <ul class="space-y-1 text-sm text-gray-700 dark:text-gray-200 font-medium" aria-labelledby="dropdownLastDays3Button">
+                  <li>
+                    <a href="#" class="flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer">Yesterday</a>
+                  </li>
+                  <li>
+                    <a href="#" class="flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer">Today</a>
+                  </li>
+                  <li>
+                    <a href="#" class="flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer">Last 7 days</a>
+                  </li>
+                  <li>
+                    <a href="#" class="flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer">Last 30 days</a>
+                  </li>
+                  <li>
+                    <a href="#" class="flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer">Last 90 days</a>
+                  </li>
+                </ul>
+                
+                <div class="border-t border-gray-100 dark:border-gray-700 my-2 pt-2 text-left">
+                  <span class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Custom period:</span>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button id="datepicker-start-btn" type="button" class="cursor-pointer inline-flex items-center justify-center gap-1.5 py-1.5 px-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
+                      </svg>
+                      Start date
+                    </button>
+                    <button id="datepicker-end-btn" type="button" class="cursor-pointer inline-flex items-center justify-center gap-1.5 py-1.5 px-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path>
+                      </svg>
+                      End date
+                    </button>
+                  </div>
+                  
+                  <div id="mini-calendar" class="hidden mt-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2.5 rounded shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-bold text-gray-700 dark:text-gray-200">July 2026</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-[10px] text-center text-gray-500 font-bold mb-1">
+                      <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-[10px] text-center" id="calendar-days"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Link -->
+              <a href="#" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
+                Staff Lists
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Area Chart (Tickets Support) -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm w-full transition-colors mt-6">
+        <div class="flex justify-between">
+          <div>
+            <h5 class="text-2xl font-bold text-gray-900 dark:text-white">4,232</h5>
+            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">Tickets this week</p>
+          </div>
+          <div class="flex items-center px-2.5 py-0.5 font-bold text-green-600 dark:text-green-400 text-center">
+            <svg class="w-5 h-5 me-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13 4 4m-4-4-4 4"/></svg>
+            12%
+          </div>
+        </div>
+        <div id="labels-chart" class="py-4 md:py-6"></div>
+        <div class="grid grid-cols-1 items-center border-t border-gray-100 dark:border-gray-800 justify-between">
+          <div class="flex justify-between items-center pt-4 md:pt-6 relative">
+            <!-- Button -->
+            <button id="dropdownLastDays9Button" class="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-500 text-center inline-flex items-center cursor-pointer transition-colors" type="button">
+                Last 7 days
+                <svg class="w-4 h-4 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+            </button>
+            <!-- Dropdown menu -->
+            <div id="LastDays9dropdown" class="z-10 hidden absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-44">
+                <ul class="p-2 text-sm text-gray-700 dark:text-gray-200 font-medium" aria-labelledby="dropdownLastDays9Button">
+                  <li>
+                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Yesterday</a>
+                  </li>
+                  <li>
+                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Today</a>
+                  </li>
+                  <li>
+                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 7 days</a>
+                  </li>
+                  <li>
+                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 30 days</a>
+                  </li>
+                  <li>
+                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 90 days</a>
+                  </li>
+                </ul>
+            </div>
+            <a href="#" class="inline-flex items-center text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 gap-1 uppercase tracking-wider cursor-pointer transition-colors">
+              Progress report
+              <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
