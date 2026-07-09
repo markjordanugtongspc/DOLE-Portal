@@ -230,10 +230,11 @@ export const initStaffsManage = () => {
             const gips = [];
             if (targetClass) {
                 document.querySelectorAll(`.${targetClass}`).forEach(childRow => {
-                    const gipName  = childRow.querySelector('.font-semibold.text-sm')?.textContent.trim() || '';
-                    const gipEmail = childRow.querySelector('.flex-col span:nth-child(2)')?.textContent.trim()
-                                  || childRow.querySelector('.flex-col span:last-child')?.textContent.trim() || '';
-                    const gipImg   = childRow.querySelector('img')?.getAttribute('src') || '';
+                    const identityBlock = childRow.querySelector('td:nth-child(2) .flex-col');
+                    const identityText  = identityBlock ? Array.from(identityBlock.querySelectorAll('span')) : [];
+                    const gipName       = identityText[0]?.textContent.trim() || '';
+                    const gipEmail      = identityText[1]?.textContent.trim() || '';
+                    const gipImg        = childRow.querySelector('img')?.getAttribute('src') || '';
                     if (gipName) gips.push({ name: gipName, email: gipEmail, img: gipImg });
                 });
             }

@@ -123,7 +123,7 @@ th.text-left .datatable-sorter {
   border-top-color: transparent !important;
 }
 /* Hide the empty datatable-bottom bar since we have our own custom footer */
-.dataTable-bottom {
+.datatable-bottom, .datatable-pagination {
   display: none !important;
 }
 
