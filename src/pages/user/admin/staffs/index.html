@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link class="cursor-pointer" rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Staffs - DOLE Portal</title>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@9.0.3/dist/style.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+    <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+    <div id="sidebar" data-role="admin" data-active="staffs"></div>
+
+    <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+    <div class="sm:ml-64 min-h-screen flex flex-col">
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6 md:p-8 space-y-6 transition-all duration-300">
+            <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white">Manage Staffs</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage personnel, assign offices, and
+                        configure system access.</p>
+                </div>
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                        <li class="inline-flex items-center">
+                            <a href="/"
+                                class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4 me-1.5" viewBox="0 0 24 24" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g transform="matrix(0.77 0 0 0.77 12 12)">
+                                        <path style="stroke: none; fill: currentColor;" transform="translate(-16, -16)"
+                                            d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z" />
+                                    </g>
+                                </svg>
+                                Login
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m9 5 7 7-7 7" />
+                                </svg>
+                                <a href="#"
+                                    class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Manage
+                                    Staffs</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m9 5 7 7-7 7" />
+                                </svg>
+                                <span
+                                    class="inline-flex items-center text-sm font-medium text-gray-400 dark:text-gray-500 select-none">Admin</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- Add Staff Button Container -->
+            <div class="flex justify-end mt-4 mb-6">
+                <button id="btn-add-staff"
+                    class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 font-bold text-sm px-5 py-2.5 shadow-sm transition-all duration-300 group hover:-skew-x-12 select-none border border-transparent"
+                    type="button" data-modal-target="editUserModal" data-modal-show="editUserModal">
+                    <div class="group-hover:skew-x-12 inline-flex items-center gap-2 transition-transform duration-300">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+                        </svg>
+                        <span>Add Staff</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Table Section -->
+            <div
+                class="relative overflow-x-auto bg-white dark:bg-gray-900 shadow-md rounded-xl border border-gray-200 dark:border-gray-800">
+                <div
+                    class="flex items-center justify-between flex-column md:flex-row flex-wrap space-y-4 md:space-y-0 p-4 border-2 border-blue-600 dark:border-blue-500 bg-gray-50/50 dark:bg-gray-900/50 rounded-t-xl">
+                    <div>
+                        <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown"
+                            class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-bold rounded-lg text-sm px-4 py-2 transition-colors shadow-sm"
+                            type="button">
+                            Action
+                            <svg class="w-4 h-4 ms-1.5 -me-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m19 9-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div id="dropdown"
+                            class="z-10 hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-32">
+                            <ul class="p-2 text-sm text-gray-700 dark:text-gray-300"
+                                aria-labelledby="dropdownDefaultButton">
+                                <li>
+                                    <a href="#"
+                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Reward</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Promote</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Archive</a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                        class="cursor-pointer inline-flex items-center w-full p-2 text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Delete</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <label for="input-group-1" class="sr-only">Search</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="input-group-1"
+                            class="block w-64 md:w-80 py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+                            placeholder="Search staffs...">
+                    </div>
+                </div>
+
+                <!-- Hidden Dummy Button to Programmatically Trigger the View Modal -->
+                <button id="trigger-view-modal-dummy" data-modal-target="viewUserModal" data-modal-show="viewUserModal" class="hidden cursor-pointer" type="button"></button>
+
+                <table id="sorting-table"
+                    class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead
+                        class="text-xs text-white uppercase bg-blue-800 dark:bg-blue-950 border-b border-gray-200 dark:border-gray-800">
+                        <tr>
+                            <th scope="col" class="p-4 w-4 text-center" data-sortable="false">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-45" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-45" class="sr-only">Table checkbox</label>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 font-semibold text-left">Full Name</th>
+                            <th scope="col" class="px-6 py-3 font-semibold text-left">Position</th>
+                            <th scope="col" class="px-6 py-3 font-semibold text-left">Office/Location</th>
+                            <th scope="col" class="px-6 py-3 font-semibold text-left">Status</th>
+                            <th scope="col" class="px-6 py-3 font-semibold text-left" data-sortable="false">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Parent User 1 -->
+                        <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-46" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-46" class="sr-only">Table checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Lace+Admin&background=random"
+                                        alt="Lace image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base font-semibold text-gray-900 dark:text-white leading-tight">Maam Lace</span>
+                                            <!-- Collapsible chevron toggle button -->
+                                            <button data-collapse-toggle="impl-row-1" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View Implementors">
+                                                <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                                            lace.admin@dole.gov.ph</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                                Admin/HR Head
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                                Iligan City
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start">
+                                    <span
+                                        class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Online
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start gap-1.5">
+                                    <!-- Edit Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                            class="cursor-pointer p-2 rounded-lg text-blue-600 hover:text-gray-500 dark:text-blue-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Edit
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Archive Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button
+                                            class="cursor-pointer p-2 rounded-lg text-red-600 hover:text-gray-500 dark:text-red-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                                <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Archive
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 1 - Implementor 1 -->
+                        <tr class="impl-row-1 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <!-- Subdued bullet indicator instead of checkbox -->
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Juan+Dela+Cruz&background=random"
+                                        alt="Juan image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Juan Dela Cruz</span>
+                                        <span class="text-[10px] text-gray-400">juan.delacruz@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Iligan City
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 1 - Implementor 2 -->
+                        <tr class="impl-row-1 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Maria+Clara&background=random"
+                                        alt="Maria image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Maria Clara</span>
+                                        <span class="text-[10px] text-gray-400">maria.clara@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Iligan City
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Parent User 2 -->
+                        <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-47" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-47" class="sr-only">Table checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=John+Doe&background=random"
+                                        alt="John image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base font-semibold text-gray-900 dark:text-white leading-tight">John Doe</span>
+                                            <!-- Collapsible chevron toggle button -->
+                                            <button data-collapse-toggle="impl-row-2" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View Implementors">
+                                                <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                                            john.doe@dole.gov.ph</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                                Implementor
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                                Baloi
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start">
+                                    <span
+                                        class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Online
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start gap-1.5">
+                                    <!-- Edit Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                            class="cursor-pointer p-2 rounded-lg text-blue-600 hover:text-gray-500 dark:text-blue-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Edit
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Archive Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button
+                                            class="cursor-pointer p-2 rounded-lg text-red-600 hover:text-gray-500 dark:text-red-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                                <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Archive
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 2 - Implementor 1 -->
+                        <tr class="impl-row-2 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Cardo+Dalisay&background=random"
+                                        alt="Cardo image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Cardo Dalisay</span>
+                                        <span class="text-[10px] text-gray-400">cardo.dalisay@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Baloi
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 2 - Implementor 2 -->
+                        <tr class="impl-row-2 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Alyana+Arevalo&background=random"
+                                        alt="Alyana image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Alyana Arevalo</span>
+                                        <span class="text-[10px] text-gray-400">alyana.arevalo@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Baloi
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 hover:opacity-75 transition-colors relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Parent User 3 -->
+                        <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-48" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-48" class="sr-only">Table checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Jane+Smith&background=random"
+                                        alt="Jane image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base font-semibold text-gray-900 dark:text-white leading-tight">Jane Smith</span>
+                                            <!-- Collapsible chevron toggle button -->
+                                            <button data-collapse-toggle="impl-row-3" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View Implementors">
+                                                <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                                            jane.smith@dole.gov.ph</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                                Implementor
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                                Linamon
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start">
+                                    <span
+                                        class="inline-flex items-center bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                                        Offline
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start gap-1.5">
+                                    <!-- Edit Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                            class="cursor-pointer p-2 rounded-lg text-blue-600 hover:text-gray-500 dark:text-blue-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Edit
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Archive Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button
+                                            class="cursor-pointer p-2 rounded-lg text-red-600 hover:text-gray-500 dark:text-red-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                                <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Archive
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 3 - Implementor 1 -->
+                        <tr class="impl-row-3 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Pedro+Penduko&background=random"
+                                        alt="Pedro image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Pedro Penduko</span>
+                                        <span class="text-[10px] text-gray-400">pedro.penduko@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Linamon
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 3 - Implementor 2 -->
+                        <tr class="impl-row-3 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Lola+Basyang&background=random"
+                                        alt="Lola image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Lola Basyang</span>
+                                        <span class="text-[10px] text-gray-400">lola.basyang@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Linamon
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                             </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Parent User 4 -->
+                        <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-49" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-49" class="sr-only">Table checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Robert+Lim&background=random"
+                                        alt="Robert image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base font-semibold text-gray-900 dark:text-white leading-tight">Robert Lim</span>
+                                            <!-- Collapsible chevron toggle button -->
+                                            <button data-collapse-toggle="impl-row-4" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View GIP Implementors">
+                                                <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                                            robert.lim@dole.gov.ph</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                                Implementor
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                                Kauswagan
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start">
+                                    <span
+                                        class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Online
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start gap-1.5">
+                                    <!-- Edit Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                            class="cursor-pointer p-2 rounded-lg text-blue-600 hover:text-gray-500 dark:text-blue-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Edit
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Archive Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button
+                                            class="cursor-pointer p-2 rounded-lg text-red-600 hover:text-gray-500 dark:text-red-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                                <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Archive
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 4 - GIP 1 -->
+                        <tr class="impl-row-4 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Gerry+Tan&background=random"
+                                        alt="Gerry image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Gerry Tan</span>
+                                        <span class="text-[10px] text-gray-400">gerry.tan@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Kauswagan
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Parent User 5 -->
+                        <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-50" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-50" class="sr-only">Table checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Sarah+Geronimo&background=random"
+                                        alt="Sarah image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base font-semibold text-gray-900 dark:text-white leading-tight">Sarah Geronimo</span>
+                                            <!-- Collapsible chevron toggle button -->
+                                            <button data-collapse-toggle="impl-row-5" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View GIP Implementors">
+                                                <svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                                            sarah.geronimo@dole.gov.ph</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                                Implementor
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                                Baloi
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start">
+                                    <span
+                                        class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Online
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start gap-1.5">
+                                    <!-- Edit Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                            class="cursor-pointer p-2 rounded-lg text-blue-600 hover:text-gray-500 dark:text-blue-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Edit
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Archive Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button
+                                            class="cursor-pointer p-2 rounded-lg text-red-600 hover:text-gray-500 dark:text-red-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                                <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Archive
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Child User 5 - GIP 1 -->
+                        <tr class="impl-row-5 hidden bg-blue-50/10 dark:bg-blue-950/[0.04] border-b border-gray-100 dark:border-gray-800/50 hover:bg-blue-500/[0.04] dark:hover:bg-blue-500/10 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <div class="w-1.5 h-1.5 bg-blue-400 dark:bg-blue-500 rounded-full"></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 font-normal text-gray-600 dark:text-gray-300 whitespace-nowrap text-left">
+                                <div class="flex items-center gap-2 pl-6">
+                                    <span class="text-gray-400 dark:text-gray-600 font-mono text-sm select-none">└─</span>
+                                    <img class="w-8 h-8 rounded-full object-cover ring-1 ring-gray-100 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Nora+Aunor&background=random"
+                                        alt="Nora image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <span class="font-semibold text-sm text-gray-900 dark:text-white leading-tight">Nora Aunor</span>
+                                        <span class="text-[10px] text-gray-400">nora.aunor@gip.dole.gov.ph</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs text-gray-500 dark:text-gray-400 font-bold">
+                                GIP Assistant
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-gray-400 dark:text-gray-500 text-xs">
+                                Baloi
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start">
+                                    <span class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        Active
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-3 text-left align-middle text-xs">
+                                <div class="flex items-center justify-start gap-1">
+                                    <!-- Edit Action (Small) -->
+                                    <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                        class="cursor-pointer p-1.5 rounded-md text-blue-600 hover:text-blue-500 dark:text-blue-500 dark:hover:text-gray-400 transition-colors hover:opacity-75 relative group">
+                                        <svg class="w-4 h-4 text-current block group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
+                                        </svg>
+                                        <svg class="w-4 h-4 text-current hidden group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M5 8a4 4 0 1 1 7.796 1.263l-2.533 2.534A4 4 0 0 1 5 8Zm4.06 5H7a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h2.172a2.999 2.999 0 0 1-.114-1.588l.674-3.372a3 3 0 0 1 .82-1.533L9.06 13Zm9.032-5a2.907 2.907 0 0 0-2.056.852L9.967 14.92a1 1 0 0 0-.273.51l-.675 3.373a1 1 0 0 0 1.177 1.177l3.372-.675a1 1 0 0 0 .511-.273l6.07-6.07a2.91 2.91 0 0 0-.944-4.742A2.907 2.907 0 0 0 18.092 8Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Archive Action (Small) -->
+                                    <button class="cursor-pointer p-1.5 rounded-md text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors hover:opacity-75">
+                                        <svg id='Archive_24' class="w-4 h-4 text-current" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
+                                            <rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
+                                            <g transform="matrix(0.45 0 0 0.45 12 12)">
+                                                <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-25, -25)" d="M 7 3 L 7 47 L 43 47 L 43 3 Z M 23 5 L 27 5 L 27 7 L 25 7 L 25 9 L 27 9 L 27 13 L 25 13 L 25 15 L 27 15 L 27 19 L 25 19 L 25 21 L 27 21 L 27 23 L 23 23 L 23 18 L 25 18 L 25 16 L 23 16 L 23 12 L 25 12 L 25 10 L 23 10 Z M 23 25 L 27 25 C 27.550781 25 28 25.449219 28 26 L 28 27 C 28 27.550781 27.550781 28 27 28 L 23 28 C 22.449219 28 22 27.550781 22 27 L 22 26 C 22 25.449219 22.449219 25 23 25 Z M 23.003906 30 L 26.996094 30 C 27.441406 31.792969 28 34.148438 28 34.960938 C 28 36.632813 26.648438 38 25 38 C 23.351563 38 22 36.632813 22 34.960938 C 22 34.148438 22.558594 31.792969 23.003906 30 Z M 25 34 C 24.457031 34 24.011719 34.449219 24.015625 35 C 24.011719 35.550781 24.457031 36 25 36 C 25.542969 36 25.988281 35.550781 25.984375 35 C 25.988281 34.449219 25.542969 34 25 34 Z" stroke-linecap="round" />
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Parent User 6 -->
+                        <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="w-4 p-4 text-center align-middle">
+                                <div class="flex items-center justify-center">
+                                    <input id="table-checkbox-51" type="checkbox" value=""
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                    <label for="table-checkbox-51" class="sr-only">Table checkbox</label>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                                <div class="flex items-center gap-3">
+                                    <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800"
+                                        src="https://ui-avatars.com/api/?name=Jose+Mari+Chan&background=random"
+                                        alt="Jose image">
+                                    <div class="flex flex-col justify-start text-left">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-base font-semibold text-gray-900 dark:text-white leading-tight">Jose Mari Chan</span>
+                                            <!-- Collapsible chevron toggle button (disabled style since no children) -->
+                                            <button class="cursor-not-allowed text-gray-300 dark:text-gray-700 focus:outline-none transition-colors" type="button" disabled title="No GIP Implementors">
+                                                <svg class="w-5 h-5 opacity-40" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                                            jose.mari.chan@dole.gov.ph</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                                Implementor
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                                Linamon
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start">
+                                    <span
+                                        class="inline-flex items-center bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                        <span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
+                                        Offline
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-left align-middle">
+                                <div class="flex items-center justify-start gap-1.5">
+                                    <!-- Edit Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button data-modal-target="editUserModal" data-modal-show="editUserModal"
+                                            class="cursor-pointer p-2 rounded-lg text-blue-600 hover:text-gray-500 dark:text-blue-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Edit
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Archive Action -->
+                                    <div class="relative group flex items-center justify-center">
+                                        <button
+                                            class="cursor-pointer p-2 rounded-lg text-red-600 hover:text-gray-500 dark:text-red-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                                <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Tooltip -->
+                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:inline-block px-2.5 py-1.5 text-xs font-semibold text-white bg-gray-900 dark:bg-gray-800 rounded-lg shadow-sm whitespace-nowrap z-50">
+                                            Archive
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- Table Footer showing indicator number -->
+                <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 rounded-b-xl">
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-400">
+                        Showing <span class="font-bold text-gray-900 dark:text-white">1</span> to <span class="font-bold text-gray-900 dark:text-white">14</span> of <span class="font-bold text-gray-900 dark:text-white">14</span> entries
+                    </span>
+                    <span class="text-xs font-bold text-blue-600 dark:text-blue-500 select-none">
+                        Infinite Scroll Enabled
+                    </span>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Edit Staff Modal (Flowbite) -->
+    <div id="editUserModal" tabindex="-1" aria-hidden="true"
+        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <!-- Modal content -->
+            <div
+                class="relative bg-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl dark:bg-gray-800">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                    <h3 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">
+                        Edit Staff
+                    </h3>
+                    <button type="button"
+                        class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                        data-modal-hide="editUserModal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+                <!-- Modal body -->
+                <form class="p-4 md:p-5">
+                    <div class="grid gap-4 mb-4 grid-cols-2">
+                        <!-- Full Name (Text Input) -->
+                        <div class="col-span-2" id="modal-staff-selector-sec">
+                            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter staff full name" required>
+                        </div>
+                        <!-- Name input (GIP Mode) -->
+                        <div class="col-span-2 hidden" id="modal-gip-name-sec">
+                            <label for="gip-name-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="gip-name-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter full name">
+                        </div>
+
+                        <!-- Position Selector -->
+                        <div class="col-span-2 sm:col-span-1" id="modal-position-sec">
+                            <label for="position" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Position <span class="text-red-500">*</span></label>
+                            <select id="position" name="position" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required="">
+                                <option value="" disabled selected>Select a position...</option>
+                                <option value="Admin/HR Head">Admin/HR Head</option>
+                                <option value="Implementor">Implementor</option>
+                            </select>
+                        </div>
+
+                        <!-- Office/Location Selector -->
+                        <div class="col-span-2 sm:col-span-1" id="modal-office-sec">
+                            <label for="office" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Office / Location <span class="text-red-500">*</span></label>
+                            <select id="office" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                <option selected="">Iligan City</option>
+                                <option value="Baloi">Baloi</option>
+                                <option value="Linamon">Linamon</option>
+                                <option value="Kauswagan">Kauswagan</option>
+                            </select>
+                        </div>
+
+                        <!-- Username (Required) -->
+                        <div class="col-span-2 sm:col-span-1">
+                            <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username <span class="text-red-500">*</span></label>
+                            <input type="text" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. jdoe_admin" required>
+                        </div>
+
+                        <!-- Email (Required) -->
+                        <div class="col-span-2 sm:col-span-1">
+                            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Address <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="staff@dole.gov.ph" required>
+                        </div>
+
+                        <!-- Phone Number (Optional) -->
+                        <div class="col-span-2 sm:col-span-1">
+                            <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone Number <span class="text-gray-400 font-normal text-xs">(Optional)</span></label>
+                            <input type="tel" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. +63 912 345 6789">
+                        </div>
+
+                        <!-- Password -->
+                        <div class="col-span-2 sm:col-span-1" id="modal-password-sec">
+                            <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="col-span-2 sm:col-span-1" id="modal-confirm-password-sec">
+                            <label for="confirm-password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="confirm-password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
+                        </div>
+
+                        <!-- Dynamic GIP Section -->
+                        <div class="col-span-2" id="modal-gip-list-sec">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-sm font-medium text-gray-900 dark:text-white">GIP Assistants</label>
+                                <button type="button" id="btn-add-gip" class="cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 px-3 py-1.5 rounded-lg shadow-sm transition-all duration-200">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+                                    </svg>
+                                    Add GIP
+                                </button>
+                            </div>
+                            <div id="gips-form-container" class="space-y-3">
+                                <!-- Dynamic GIP input forms will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
+                        <button type="submit"
+                            class="cursor-pointer text-white inline-flex items-center bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                            Save Changes
+                        </button>
+                        <button data-modal-hide="editUserModal" type="button"
+                            class="cursor-pointer py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                            Discard
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Staff Modal (Flowbite) -->
+    <div id="viewUserModal" tabindex="-1" aria-hidden="true"
+        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-2xl overflow-hidden">
+                <!-- Top accent stripe -->
+                <div class="h-1.5 w-full bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 dark:from-blue-500 dark:via-blue-600 dark:to-blue-700"></div>
+
+                <!-- Close button (floating top-right) -->
+                <button type="button"
+                    class="cursor-pointer absolute top-4 right-4 z-10 text-gray-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-gray-100 hover:text-gray-900 rounded-full text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition-all shadow-sm border border-gray-200 dark:border-gray-700"
+                    data-modal-hide="viewUserModal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+
+                <!-- Profile hero section -->
+                <div class="relative px-6 pt-8 pb-6 bg-gradient-to-b from-blue-50/50 via-white to-white dark:from-blue-950/20 dark:via-gray-800 dark:to-gray-800">
+                    <div class="flex items-start gap-5">
+                        <!-- Avatar with online indicator -->
+                        <div class="relative shrink-0">
+                            <img id="view-avatar" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-white dark:ring-gray-700 shadow-lg" src="https://ui-avatars.com/api/?name=Lace+Admin&background=random" alt="Avatar">
+                            <div id="view-online-dot" class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-[3px] border-white dark:border-gray-800 rounded-full"></div>
+                        </div>
+                        <!-- Name, email, and quick badges -->
+                        <div class="flex-1 min-w-0 pt-1">
+                            <h3 id="view-name" class="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">Maam Lace</h3>
+                            <p id="view-email" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">lace.admin@dole.gov.ph</p>
+                            <!-- Inline status badge -->
+                            <div class="mt-3">
+                                <span id="view-status" class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
+                                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                    Online
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail cards row -->
+                <div class="px-6 -mt-1">
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Position card -->
+                        <div class="bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/50 rounded-lg p-3.5 group hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Position</span>
+                            </div>
+                            <span id="view-position" class="text-sm font-bold text-gray-900 dark:text-white leading-tight whitespace-nowrap">Admin/HR Head</span>
+                        </div>
+                        <!-- Office card -->
+                        <div class="bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/50 rounded-lg p-3.5 group hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                                    </svg>
+                                </div>
+                                <span class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Office</span>
+                            </div>
+                            <span id="view-office" class="text-sm font-bold text-gray-900 dark:text-white leading-tight whitespace-nowrap">Iligan City</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GIP Implementors section -->
+                <div class="px-6 pt-5 pb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                            <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
+                            </svg>
+                        </div>
+                        <h4 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Linked GIP Implementors</h4>
+                    </div>
+                    <div id="view-gips-container" class="space-y-2">
+                        <!-- GIP 1 -->
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
+                            <img class="w-9 h-9 rounded-lg object-cover ring-2 ring-white dark:ring-gray-700 shadow-sm" src="https://ui-avatars.com/api/?name=Juan+Dela+Cruz&background=random" alt="Juan">
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">Juan Dela Cruz</h5>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">juan.delacruz@gip.dole.gov.ph</p>
+                            </div>
+                            <span class="inline-flex items-center bg-gradient-to-r from-blue-800 to-blue-950 text-white dark:from-blue-500 dark:via-blue-600 dark:to-blue-400 dark:shadow-[0_0_8px_rgba(59,130,246,0.5)] font-semibold px-1.5 py-0.5 rounded text-[9px] select-none border-none shrink-0">GIP</span>
+                        </div>
+                        <!-- GIP 2 -->
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800/50 transition-colors">
+                            <img class="w-9 h-9 rounded-lg object-cover ring-2 ring-white dark:ring-gray-700 shadow-sm" src="https://ui-avatars.com/api/?name=Maria+Clara&background=random" alt="Maria">
+                            <div class="flex-1 min-w-0">
+                                <h5 class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">Maria Clara</h5>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">maria.clara@gip.dole.gov.ph</p>
+                            </div>
+                            <span class="inline-flex items-center bg-gradient-to-r from-blue-800 to-blue-950 text-white dark:from-blue-500 dark:via-blue-600 dark:to-blue-400 dark:shadow-[0_0_8px_rgba(59,130,246,0.5)] font-semibold px-1.5 py-0.5 rounded text-[9px] select-none border-none shrink-0">GIP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex justify-end px-6 py-4 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20">
+                    <button data-modal-hide="viewUserModal" type="button" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 font-bold rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-sm">
+                        Close Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@9.0.3"></script>
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

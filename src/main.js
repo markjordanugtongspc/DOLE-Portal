@@ -52,3 +52,4 @@ import '@/scripts/modules/drawer.js';
 import '@/scripts/modules/sidebar.js';
 import '@/scripts/modules/charts.js';
 import '@/scripts/modules/dashboard.js';
+import '@/scripts/modules/staffs-manage.js';

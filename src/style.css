@@ -40,3 +40,91 @@ body {
   background: linear-gradient(to bottom right, #0f172a, color-mix(in srgb, var(--sys-color) 30%, transparent), color-mix(in srgb, var(--sys-color) 60%, transparent)) !important;
   --glow-color: color-mix(in srgb, var(--sys-color) 70%, transparent);
 }
+
+/* Simple-DataTables sort icon positioning next to the header text */
+.datatable-sorter {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: auto !important;
+  padding-right: 1.25rem !important;
+  position: relative !important;
+}
+
+/* Force table headers to respect alignment classes, overriding simple-datatables defaults */
+.datatable-table > thead > tr > th.text-center,
+th.text-center {
+  text-align: center !important;
+}
+
+.datatable-table > thead > tr > th.text-right,
+th.text-right {
+  text-align: right !important;
+}
+
+.datatable-table > thead > tr > th.text-left,
+th.text-left {
+  text-align: left !important;
+}
+
+/* Align simple-datatables sorters inside centered, right-aligned, or left-aligned headers */
+th.text-center .datatable-sorter {
+  margin: 0 auto !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+th.text-right .datatable-sorter {
+  margin-left: auto !important;
+}
+
+th.text-left .datatable-sorter {
+  justify-content: flex-start !important;
+  margin: 0 !important;
+}
+
+/* Custom Table Header styling to match the blue reference design */
+.datatable-table > thead > tr {
+  background-color: #1e40af !important; /* Tailwind blue-800 */
+  color: #ffffff !important;
+}
+
+/* In darkmode, the primary color shines a little (using blue-600 with drop shadow glow) */
+.dark .datatable-table > thead > tr {
+  background-color: #2563eb !important; 
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Ensure sorting buttons are always white against the blue header background */
+.datatable-table > thead > tr > th button.datatable-sorter,
+.datatable-sorter {
+  color: #ffffff !important;
+}
+
+/* Custom row hover style using a slight opacity of our primary color, and hiding borders on hover */
+.datatable-table > tbody > tr {
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.datatable-table > tbody > tr:hover {
+  background-color: rgba(30, 64, 175, 0.08) !important;
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
+}
+
+.dark .datatable-table > tbody > tr:hover {
+  background-color: rgba(37, 99, 235, 0.15) !important;
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
+}
+
+/* Sibling element top border is hidden when previous row is hovered to maintain clean borders */
+.datatable-table > tbody > tr:hover + tr {
+  border-top-color: transparent !important;
+}
+/* Hide the empty datatable-bottom bar since we have our own custom footer */
+.dataTable-bottom {
+  display: none !important;
+}
+
+

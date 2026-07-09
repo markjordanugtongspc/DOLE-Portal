@@ -53,7 +53,7 @@ const setupDynamicSidebar = () => {
         admin: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
             { id: 'systems', label: 'Manage Systems', url: '/src/pages/user/admin/systems/', svg: SVG_SYSTEMS_ADMIN },
-            { id: 'staffs', label: 'Manage Staffs', url: '#', svg: SVG_STAFFS_ADMIN },
+            { id: 'staffs', label: 'Manage Staffs', url: '/src/pages/user/admin/staffs/', svg: SVG_STAFFS_ADMIN },
             { id: 'tickets', label: 'Manage Tickets', url: '#', svg: SVG_TICKETS_ADMIN, badge: '8' },
             { id: 'exports', label: 'Exports', url: '#', svg: SVG_EXPORTS_ADMIN }
         ],
