@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link class="cursor-pointer" rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Tickets - DOLE Portal</title>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <style>
+        /* Subtle scrollbar customization to hide or make them thin and low opacity */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.15);
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.35);
+        }
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.15) transparent;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+    <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+    <div id="sidebar" data-role="admin" data-active="tickets"></div>
+
+    <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+    <div class="sm:ml-64 min-h-screen flex flex-col">
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6 md:p-8 space-y-6 transition-all duration-300">
+            
+            <!-- Header Section containing breadcrumbs and full horizontal separator line -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-300 dark:border-gray-700 pb-4">
+                
+                <!-- Table breadcrumbs -->
+                <nav id="table-breadcrumbs" class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                        <li class="inline-flex items-center">
+                            <a href="/"
+                                class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4 me-1.5" viewBox="0 0 24 24" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g transform="matrix(0.77 0 0 0.77 12 12)">
+                                        <path style="stroke: none; fill: currentColor;" transform="translate(-16, -16)"
+                                            d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z" />
+                                    </g>
+                                </svg>
+                                LOGIN
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m9 5 7 7-7 7" />
+                                </svg>
+                                <a href="#"
+                                    class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Manage Tickets</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m9 5 7 7-7 7" />
+                                </svg>
+                                <span
+                                    class="inline-flex items-center text-sm font-semibold text-gray-400 dark:text-gray-500 select-none">Admin</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+
+                <!-- Chat breadcrumbs (initially hidden) -->
+                <div id="chat-breadcrumbs" class="hidden flex items-center justify-between w-full">
+                    <div class="flex items-center gap-3">
+                        <button id="btn-back-to-table" class="cursor-pointer text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Back to table">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"></path>
+                            </svg>
+                        </button>
+                        <span id="chat-header-ticket-id" class="text-lg font-bold text-gray-900 dark:text-white leading-none">#TK-2401</span>
+                        <span class="text-gray-400 dark:text-gray-600 select-none font-bold">•</span>
+                        <p id="chat-header-ticket-subject" class="text-sm text-gray-500 dark:text-gray-400 font-medium truncate max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl">Loading Ticket Title...</p>
+                    </div>
+                    <button id="btn-close-chat" class="cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                        <span>Close</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Navigation right is kept empty as requested -->
+                <div></div>
+            </div>
+
+            <!-- VIEW 1: Table List View Container -->
+            <div id="table-view-container" class="flex flex-col lg:flex-row gap-6 relative items-start">
+                
+                <!-- Persistent Collapsible Category Drawer -->
+                <aside id="category-drawer" class="w-72 flex-shrink-0 transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-xs">
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
+                        <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider select-none">Category</h2>
+                        <!-- Collapse Trigger Button -->
+                        <button class="toggle-category-drawer text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer" title="Hide Category Drawer">
+                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Categories Nav Menu -->
+                    <nav class="space-y-1.5">
+                        <button data-category="Support Requests" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>Support Requests</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                        </button>
+                        <button data-category="Bug Report" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>Bug Report</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                        </button>
+                        <button data-category="Feature Request" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>Feature Request</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                        </button>
+                        <button data-category="All" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>All</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                        </button>
+                    </nav>
+                </aside>
+
+                <!-- Literal Content (Table Container) -->
+                <div class="flex-1 w-full space-y-4">
+                    
+                    <!-- Content Title Header with Hamburger Drawer Toggle -->
+                    <div class="flex items-center gap-3">
+                        <button class="toggle-category-drawer text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer" title="Show Category Drawer">
+                            <svg class="w-5.5 h-5.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2.5" d="M5 7h14M5 12h14M5 17h14"/>
+                            </svg>
+                        </button>
+                        <!-- dynamic category title -->
+                        <h1 id="selected-category-title" class="text-2xl font-black text-gray-950 dark:text-white">All</h1>
+                    </div>
+
+                    <!-- Tickets Table wrapper with shadows, borders & overflow -->
+                    <div class="bg-white dark:bg-gray-900 shadow-md rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                        
+                        <!-- Toolbar for Search and Sorting Dropdown -->
+                        <div class="flex flex-col sm:flex-row items-center gap-4 p-4 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800/50">
+                            
+                            <!-- Search Field -->
+                            <div class="relative w-full sm:w-80">
+                                <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="search-tickets"
+                                    class="block w-full py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200"
+                                    placeholder="Search tickets...">
+                            </div>
+
+                            <!-- Filter Controls next to Search Field -->
+                            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                <select id="filter-type" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2 pr-10 w-44 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-colors cursor-pointer">
+                                    <option value="All">All Types</option>
+                                </select>
+
+                                <select id="filter-date" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2 pr-10 w-44 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-colors cursor-pointer">
+                                    <option value="All">All Dates</option>
+                                </select>
+
+                                <select id="filter-priority" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2 pr-10 w-44 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-colors cursor-pointer">
+                                    <option value="All">All Priorities</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Data Table with Sorting Chevrons -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                <thead class="text-xs text-white uppercase bg-blue-800 dark:bg-blue-950 border-b border-gray-200 dark:border-gray-800">
+                                    <tr>
+                                        <!-- Columns set to sortable with sorting chevrons in sort-icon-container -->
+                                        <th scope="col" class="px-6 py-3 font-semibold text-left" data-sort="id">
+                                            <div class="flex items-center gap-1.5">
+                                                <span>Ticket ID</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 font-semibold text-left" data-sort="subject">
+                                            <div class="flex items-center gap-1.5">
+                                                <span>Subject</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 font-semibold text-left" data-sort="priority">
+                                            <div class="flex items-center gap-1.5">
+                                                <span>Priority</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 font-semibold text-left" data-sort="implementor">
+                                            <div class="flex items-center gap-1.5">
+                                                <span>Implementor</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 font-semibold text-left" data-sort="date">
+                                            <div class="flex items-center gap-1.5">
+                                                <span>Date Submitted</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 font-semibold text-left" data-sort="lastActivity">
+                                            <div class="flex items-center gap-1.5">
+                                                <span>Last Activity</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickets-table-body">
+                                    <!-- Populated Dynamically via ticket-support.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>            <!-- VIEW 2: Dynamic Chat Messenger View Container (initially hidden) -->
+            <div id="chat-view-container" class="hidden flex flex-col lg:flex-row gap-6 relative items-start h-[calc(100vh-170px)]">
+                
+                <!-- Chat Left Sidebar / Drawer (rectangular: rounded-none) -->
+                <aside id="chat-tickets-drawer" class="w-80 flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-none p-5 shadow-xs h-full flex flex-col transition-all duration-300 overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+                        <span class="text-sm font-bold text-gray-800 dark:text-gray-200 select-none">Total ticket <span id="chat-tickets-count">8</span></span>
+                        
+                        <!-- borderless select dropdown -->
+                        <select id="chat-sort-dropdown" class="bg-transparent border-0 text-xs font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 focus:ring-0 py-1 pl-2 pr-8 cursor-pointer">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                        </select>
+                    </div>
+
+                    <!-- Medium Search Bar -->
+                    <div class="relative mb-3">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="chat-search-tickets" class="block w-full py-1.5 ps-8 pr-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200" placeholder="Search chats...">
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-b border-gray-100 dark:border-gray-800 mb-2"></div>
+
+                    <!-- Scrollable list of tickets -->
+                    <div id="chat-tickets-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                        <!-- Loaded Dynamically by ticket-support.js -->
+                    </div>
+                </aside>
+
+                <!-- Center Conversation Messenger Area (rectangular: rounded-none) -->
+                <div class="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-none shadow-xs h-full flex flex-col overflow-hidden relative">
+                    
+                    <!-- Scrollable Messages Container -->
+                    <div id="chat-messages-viewport" class="flex-1 p-4 md:p-6 overflow-y-auto space-y-5 bg-gray-50/20 dark:bg-gray-900/10 custom-scrollbar">
+                        <!-- Loaded Dynamically by ticket-support.js -->
+                    </div>
+
+                    <!-- Bottom Rich Editor / Input Chat Box -->
+                    <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+                        <form id="chat-input-form" class="space-y-3">
+                            <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 shadow-xs overflow-hidden">
+                                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                    <div class="flex flex-wrap items-center sm:divide-x sm:divide-gray-200 dark:sm:divide-gray-700">
+                                        <div class="flex items-center space-x-1 sm:pe-4">
+                                            <!-- Attach File pin -->
+                                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Attach file">
+                                                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8"/></svg>
+                                            </button>
+                                            <!-- Smiley face -->
+                                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Add emoji">
+                                                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h.01M8.99 9H9m12 3a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM6.6 13a5.5 5.5 0 0 0 10.81 0H6.6Z"/></svg>
+                                            </button>
+                                            <!-- Mic -->
+                                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Voice record">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="flex items-center space-x-1 sm:ps-4">
+                                            <!-- Upload image -->
+                                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Upload image">
+                                                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M16 18H8l2.5-6 2 4 1.5-2 2 4Zm-1-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 18h8l-2-4-1.5 2-2-4L8 18Zm7-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-2 bg-transparent">
+                                    <textarea id="chat-editor" rows="3" class="block w-full px-0 text-sm text-gray-900 dark:text-white bg-transparent border-0 focus:ring-0 placeholder-gray-400 dark:placeholder-gray-500 outline-none" placeholder="Type your reply here..." required></textarea>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 font-bold text-sm px-5 py-2.5 shadow-sm transition-all duration-300 hover:-skew-x-12 select-none border border-transparent">
+                                    <span class="inline-block hover:skew-x-12 transition-transform">Send Reply</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- VIEW 2 Right Panel: Ticket Details / Knowledge Base (rectangular, w-96 flex-shrink-0) -->
+                <aside id="chat-details-panel" class="w-96 flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-none h-full flex flex-row overflow-hidden">
+                    <!-- Left Content Section -->
+                    <div class="flex-1 p-4 overflow-y-auto min-w-0 h-full custom-scrollbar">
+                        
+                        <!-- TAB CONTENT 1: Ticket Details -->
+                        <div id="details-tab-content" class="space-y-4">
+                            <h2 class="text-sm font-bold text-gray-900 dark:text-white mb-3">Ticket details</h2>
+                            
+                            <!-- Assignee (Implementor) dropdown -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Assignee</label>
+                                <select id="details-assignee" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 cursor-pointer focus:ring-2 focus:ring-blue-500/30">
+                                    <option value="Juan Dela Cruz">Juan Dela Cruz</option>
+                                    <option value="Cardo Dalisay">Cardo Dalisay</option>
+                                    <option value="Jane Smith">Jane Smith</option>
+                                    <option value="Maria Clara">Maria Clara</option>
+                                    <option value="Robert Lim">Robert Lim</option>
+                                    <option value="Pedro Penduko">Pedro Penduko</option>
+                                    <option value="Alyana Arevalo">Alyana Arevalo</option>
+                                    <option value="Lola Basyang">Lola Basyang</option>
+                                </select>
+                            </div>
+
+                            <!-- Team Dropdown -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Team</label>
+                                <select id="details-team" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 cursor-pointer focus:ring-2 focus:ring-blue-500/30">
+                                    <option value="Technical Support">Technical Support</option>
+                                    <option value="Customer Service">Customer Service</option>
+                                    <option value="Billing & Accounts">Billing & Accounts</option>
+                                </select>
+                            </div>
+
+                            <!-- Ticket Type Dropdown -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Ticket Type</label>
+                                <select id="details-type" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 cursor-pointer focus:ring-2 focus:ring-blue-500/30">
+                                    <option value="Support Requests">Support Requests</option>
+                                    <option value="Bug Report">Bug Report</option>
+                                    <option value="Feature Request">Feature Request</option>
+                                </select>
+                            </div>
+
+                            <!-- Set Status Dropdown -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Set Status</label>
+                                <select id="details-status" class="w-full bg-gray-50 dark:bg-gray-850 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 cursor-pointer focus:ring-2 focus:ring-blue-500/30">
+                                    <option value="Open">🏁 Open</option>
+                                    <option value="Pending">⏳ Pending</option>
+                                    <option value="Closed">✅ Closed</option>
+                                </select>
+                            </div>
+
+                            <!-- Set Priority (Low/Medium/High Pill Selectors) -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Set Priority</label>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" data-priority-btn="Low" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Low
+                                    </button>
+                                    <button type="button" data-priority-btn="Medium" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> Medium
+                                    </button>
+                                    <button type="button" data-priority-btn="High" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> High
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Subject Field -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Subject</label>
+                                <textarea id="details-subject" rows="2" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500/30 outline-none" placeholder="Ticket Subject..."></textarea>
+                            </div>
+
+                            <!-- Tags -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Tags</label>
+                                <div id="details-tags-container" class="flex flex-wrap gap-1.5 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg min-h-12">
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-900 text-white dark:bg-gray-950 dark:text-white px-2 py-0.5 rounded-md">
+                                        Question <button class="cursor-pointer text-gray-400 hover:text-white font-bold select-none">×</button>
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-900 text-white dark:bg-gray-950 dark:text-white px-2 py-0.5 rounded-md">
+                                        Problem <button class="cursor-pointer text-gray-400 hover:text-white font-bold select-none">×</button>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Attributes Table -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Attributes</label>
+                                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-xs space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400 font-semibold select-none">ID</span>
+                                        <span id="attr-id" class="font-bold text-gray-900 dark:text-white">TC-0002</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 dark:text-gray-400 font-semibold select-none">Customer</span>
+                                        <div class="flex items-center gap-1">
+                                            <img id="attr-cust-img" class="w-4.5 h-4.5 rounded-full object-cover" src="https://ui-avatars.com/api/?name=Juan&background=random" />
+                                            <span id="attr-cust-name" class="font-bold text-gray-900 dark:text-white truncate max-w-[100px]">Emily Johnson</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400 font-semibold select-none">Language</span>
+                                        <span class="font-bold text-gray-900 dark:text-white">English UK 🇬🇧</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500 dark:text-gray-400 font-semibold select-none">Date Submitted</span>
+                                        <span id="attr-date" class="font-bold text-gray-900 dark:text-white">04 Feb 2024</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Note</label>
+                                <textarea id="details-notes" rows="2" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500/30 outline-none" placeholder="Add administrative notes here..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- TAB CONTENT 2: Knowledge Base (initially hidden) -->
+                        <div id="kb-tab-content" class="hidden space-y-3">
+                            <h2 class="text-sm font-bold text-gray-900 dark:text-white mb-2">Knowledge base</h2>
+                            
+                            <!-- Search & Filter Controls -->
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="relative flex-1">
+                                    <div class="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none">
+                                        <svg class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" id="kb-search" class="block w-full py-1.5 ps-7 pr-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg focus:ring-2 focus:ring-blue-500/30 outline-none placeholder-gray-400 dark:placeholder-gray-500" placeholder="Search...">
+                                </div>
+                                <button type="button" class="cursor-pointer p-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                                </button>
+                                <button type="button" class="cursor-pointer p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- List of Knowledge Base Articles -->
+                            <div class="space-y-2.5 mt-2">
+                                <div data-kb-id="kb-art-1" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                    <div class="w-8 h-8 rounded-lg bg-pink-105 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Account Creation and Management</h4>
+                                        <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">Steps for office user creation.</p>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase">Article</span>
+                                            <span class="text-[8px] text-gray-400 dark:text-gray-500">Mar 17, 2026</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div data-kb-id="kb-art-2" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Adding Systems & Services</h4>
+                                        <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">How to link new portals into DOLE systems.</p>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase font-medium">User Guide</span>
+                                            <span class="text-[8px] text-gray-400 dark:text-gray-500">Mar 15, 2026</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div data-kb-id="kb-art-3" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Configuring GIP Payroll Options</h4>
+                                        <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">Solving GIP payroll login limitations.</p>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase">Tutorial</span>
+                                            <span class="text-[8px] text-gray-400 dark:text-gray-500">Feb 28, 2026</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div data-kb-id="kb-art-4" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Resetting Staff Account Credentials</h4>
+                                        <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">Password policy and security practices.</p>
+                                        <div class="flex items-center justify-between mt-1">
+                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase">FAQ</span>
+                                            <span class="text-[8px] text-gray-400 dark:text-gray-500">Jan 12, 2026</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Vertical Navigation Tabs Bar -->
+                    <div class="w-12 bg-gray-50 dark:bg-gray-950 border-l border-gray-200 dark:border-gray-800 flex flex-col items-center py-4 space-y-4 shrink-0 select-none">
+                        <!-- Details Tab Icon -->
+                        <button type="button" id="tab-btn-details" class="tab-icon-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all bg-blue-600 text-white dark:bg-blue-600 dark:text-white" title="Ticket details">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        </button>
+                        <!-- KB Tab Icon -->
+                        <button type="button" id="tab-btn-kb" class="tab-icon-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800" title="Knowledge base">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        </button>
+                        <!-- Spacer to push next buttons or placeholders if needed -->
+                        <div class="flex-1"></div>
+                        <!-- Extra decorative placeholders matches the images -->
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-700 cursor-not-allowed" title="Assignees Settings">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                        </div>
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-700 cursor-not-allowed" title="Audit Log">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- KB Article Popover (absolutely positioned overlaying the center chat, aligned to the right sidebar's left) -->
+                <div id="kb-article-popover" class="hidden absolute top-10 right-[410px] w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl z-50 flex flex-col rounded-lg overflow-hidden transition-all duration-300">
+                    <!-- Header Pattern Banner -->
+                    <div class="h-28 bg-rose-50 dark:bg-rose-950 flex items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-rose-100/50 dark:bg-rose-900/20 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-rose-500/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Body Content -->
+                    <div class="p-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span id="popover-badge" class="text-[10px] font-bold bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 px-2 py-0.5 rounded">Server</span>
+                            <span id="popover-readtime" class="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">5 Minutes read</span>
+                        </div>
+                        <h3 id="popover-title" class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Server Capacity options</h3>
+                        <p id="popover-summary" class="text-xs text-gray-500 dark:text-gray-400 leading-normal">
+                            I'll just need to gather a bit more information. Then we can schedule a quick assessment and propose a solution. Wait i'll sent you so...
+                        </p>
+                    </div>
+                    <!-- Footer Buttons -->
+                    <div class="px-4 pb-4 flex items-center gap-3">
+                        <button type="button" id="popover-btn-suggest" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-gray-250 text-xs font-bold rounded-lg shadow-xs transition-colors">
+                            <span>+ Suggest</span>
+                        </button>
+                        <button type="button" id="popover-btn-edit" class="cursor-pointer text-xs font-bold text-gray-550 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Edit</button>
+                        <div class="flex-1"></div>
+                        <button type="button" id="popover-btn-close" class="cursor-pointer text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-250">Close</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

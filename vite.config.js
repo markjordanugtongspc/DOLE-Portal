@@ -16,8 +16,21 @@ function autoVersion() {
       try {
         const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'))
         const parts = pkg.version.split('.')
-        parts[2] = String(Number(parts[2]) + 1)
-        pkg.version = parts.join('.')
+        let major = Number(parts[0])
+        let minor = Number(parts[1])
+        let patch = Number(parts[2])
+
+        patch += 1
+        if (patch > 9) {
+          patch = 0
+          minor += 1
+        }
+        if (minor > 9) {
+          minor = 0
+          major += 1
+        }
+
+        pkg.version = `${major}.${minor}.${patch}`
         fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n')
         console.log(`\n[auto-version] Bumped version to: ${pkg.version}\n`)
       } catch (err) {

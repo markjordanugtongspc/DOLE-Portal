@@ -127,4 +127,8 @@ th.text-left .datatable-sorter {
   display: none !important;
 }
 
-
+/* Global Click Pulse Animation */
+.cursor-pointer:active, button:active, a:active {
+  transform: scale(0.97) !important;
+  transition: transform 0.1s ease-in-out !important;
+}
