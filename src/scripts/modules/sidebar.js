@@ -23,7 +23,13 @@ const setupDynamicSidebar = () => {
     }
 
     // Role-based navigation items configuration with SVGs
-    const SVG_DASHBOARD = `<svg class="w-5 h-5 transition duration-75 group-hover:text-blue-600 dark:group-hover:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"/></svg>`;
+    const SVG_DASHBOARD = `
+<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"/></svg>
+<svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M13.5 2c-.178 0-.356.013-.492.022l-.074.005a1 1 0 0 0-.934.998V11a1 1 0 0 0 1 1h7.975a1 1 0 0 0 .998-.934l.005-.074A7.04 7.04 0 0 0 22 10.5 8.5 8.5 0 0 0 13.5 2Z"/>
+  <path d="M11 6.025a1 1 0 0 0-1.065-.998 8.5 8.5 0 1 0 9.038 9.039A1 1 0 0 0 17.975 13H11V6.025Z"/>
+</svg>
+`;
     const SVG_STAFFS_ADMIN = `
 <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"/></svg>
 <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm-1.5 8a4 4 0 0 0-4 4 2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-3Zm6.82-3.096a5.51 5.51 0 0 0-2.797-6.293 3.5 3.5 0 1 1 2.796 6.292ZM19.5 18h.5a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-1.1a5.503 5.503 0 0 1-.471.762A5.998 5.998 0 0 1 19.5 18ZM4 7.5a3.5 3.5 0 0 1 5.477-2.889 5.5 5.5 0 0 0-2.796 6.293A3.501 3.501 0 0 1 4 7.5ZM7.1 12H6a4 4 0 0 0-4 4 2 2 0 0 0 2 2h.5a5.998 5.998 0 0 1 3.071-5.238A5.505 5.505 0 0 1 7.1 12Z" clip-rule="evenodd"/></svg>`;
@@ -45,14 +51,14 @@ const setupDynamicSidebar = () => {
 
     const navConfigurations = {
         admin: [
-            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/index.html', svg: SVG_DASHBOARD },
-            { id: 'systems', label: 'Manage Systems', url: '#', svg: SVG_SYSTEMS_ADMIN },
+            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
+            { id: 'systems', label: 'Manage Systems', url: '/src/pages/user/admin/systems/', svg: SVG_SYSTEMS_ADMIN },
             { id: 'staffs', label: 'Manage Staffs', url: '#', svg: SVG_STAFFS_ADMIN },
-            { id: 'tickets', label: 'Manage Tickets', url: '#', svg: SVG_TICKETS_ADMIN },
+            { id: 'tickets', label: 'Manage Tickets', url: '#', svg: SVG_TICKETS_ADMIN, badge: '8' },
             { id: 'exports', label: 'Exports', url: '#', svg: SVG_EXPORTS_ADMIN }
         ],
         staff: [
-            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/index.html', svg: SVG_DASHBOARD },
+            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
             { id: 'records', label: 'Employment Records', url: '#', svg: SVG_REPORTS },
             { id: 'exports', label: 'Data Exports', url: '#', svg: SVG_EXPORTS }
         ]
@@ -74,7 +80,8 @@ const setupDynamicSidebar = () => {
                 <li>
                     <a href="${item.url}" class="${linkClass}">
                         ${item.svg}
-                        <span class="ms-3">${item.label}</span>
+                        <span class="flex-1 ms-3">${item.label}</span>
+                        ${item.badge ? `<span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black text-white bg-red-600 dark:bg-red-500 rounded-full animate-pulse">${item.badge}</span>` : ''}
                     </a>
                 </li>
             `;

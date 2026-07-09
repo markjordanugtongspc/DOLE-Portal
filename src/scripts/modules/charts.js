@@ -26,12 +26,25 @@ const initDashboardChartsAndPopovers = () => {
                     show: false,
                 }
             },
+            fill: {
+                type: "gradient",
+                gradient: {
+                    shade: "dark",
+                    type: "vertical",
+                    shadeIntensity: 0.5,
+                    inverseColors: false,
+                    opacityFrom: 1,
+                    opacityTo: 1,
+                    stops: [0, 100],
+                    gradientToColors: ['#0f172a', '#0f172a', '#0f172a', '#0f172a', '#0f172a']
+                }
+            },
             plotOptions: {
                 bar: {
                     horizontal: false,
                     columnWidth: "50%",
                     borderRadiusApplication: "end",
-                    borderRadius: 4,
+                    borderRadius: 6,
                     distributed: true,
                     dataLabels: {
                         position: "top",

@@ -20,3 +20,23 @@
 body {
   font-family: "Inter", sans-serif;
 }
+
+/* Fix Flowbite backdrop overlay to sit behind sidebar (z-40) but above page content */
+[drawer-backdrop] {
+  z-index: 35 !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  background-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* System Card Theme-Responsive Gradients */
+.system-card {
+  --sys-color: #3b82f6;
+  background: linear-gradient(to bottom right, color-mix(in srgb, var(--sys-color) 60%, black), color-mix(in srgb, var(--sys-color) 80%, black)) !important;
+  --glow-color: color-mix(in srgb, var(--sys-color) 40%, transparent);
+}
+
+.dark .system-card {
+  background: linear-gradient(to bottom right, #0f172a, color-mix(in srgb, var(--sys-color) 30%, transparent), color-mix(in srgb, var(--sys-color) 60%, transparent)) !important;
+  --glow-color: color-mix(in srgb, var(--sys-color) 70%, transparent);
+}

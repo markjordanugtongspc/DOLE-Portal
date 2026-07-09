@@ -41,6 +41,7 @@ export default defineConfig({
         main: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'index.html'),
         admin: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src/pages/user/admin/dashboard/index.html'),
         staff: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src/pages/user/staff/dashboard/index.html'),
+        systems: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src/pages/user/admin/systems/index.html'),
       }
     }
   }
