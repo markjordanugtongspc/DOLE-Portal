@@ -97,7 +97,10 @@ class TicketSupportApp {
         if (window.DEBUG) {
             window.DEBUG.log('TICKET-SUPPORT', 'Initializing TicketSupportApp...');
         }
-        this.tickets = [...MOCK_TICKETS];
+        this.tickets = [...MOCK_TICKETS].map(t => ({
+            ...t,
+            tags: t.tags || ['Question', 'Problem']
+        }));
         this.selectedCategory = 'All';
         this.searchQuery = '';
         this.priorityFilter = 'All';
@@ -123,6 +126,26 @@ class TicketSupportApp {
         this.updateBadgeCounts();
         await this.populateFilterDropdowns();
         this.bindChatViewEvents();
+
+        // Check URL or localStorage for ticket query parameters to auto-open ticket on load/refresh
+        const urlParams = new URLSearchParams(window.location.search);
+        let ticketIdFromUrl = urlParams.get('ticket') || urlParams.get('id');
+        if (!ticketIdFromUrl) {
+            const rawSearch = decodeURIComponent(window.location.search);
+            const match = rawSearch.match(/(TK-\d+|TC-\d+)/i);
+            if (match) {
+                ticketIdFromUrl = match[1].toUpperCase();
+            }
+        }
+        if (!ticketIdFromUrl) {
+            ticketIdFromUrl = localStorage.getItem('active-ticket-id');
+        }
+        if (ticketIdFromUrl) {
+            const ticketExists = this.tickets.some(t => t.id === ticketIdFromUrl);
+            if (ticketExists) {
+                this.openTicket(ticketIdFromUrl);
+            }
+        }
 
         if (window.DEBUG) {
             window.DEBUG.success('TICKET-SUPPORT', 'TicketSupportApp fully initialized.');
@@ -377,7 +400,7 @@ class TicketSupportApp {
         kbArticles.forEach(art => {
             art.addEventListener('click', () => {
                 const kbId = art.getAttribute('data-kb-id');
-                this.showKBArticlePopover(kbId);
+                this.showKBArticlePopover(kbId, art);
             });
         });
     }
@@ -387,6 +410,13 @@ class TicketSupportApp {
     openTicket(ticketId) {
         this.selectedTicketId = ticketId;
         this.activeView = 'chat';
+
+        // Update URL dynamically without page reload
+        const cleanUrl = `${window.location.pathname}?ticket=${ticketId}`;
+        window.history.pushState({ ticketId }, '', cleanUrl);
+
+        // Save active ticket to localStorage
+        localStorage.setItem('active-ticket-id', ticketId);
 
         // UI transitions: Hide table view containers, show chat containers
         document.getElementById('table-breadcrumbs').classList.add('hidden');
@@ -431,6 +461,9 @@ class TicketSupportApp {
 
             // Highlight priority selector buttons
             this.updatePriorityPillsUI(ticket.priority);
+
+            // Render ticket tags
+            this.renderTags(ticket);
         }
 
         // Return to standard details tab when opening a new ticket
@@ -458,6 +491,13 @@ class TicketSupportApp {
         this.activeView = 'table';
         this.selectedTicketId = null;
 
+        // Reset URL query parameter
+        const cleanUrl = window.location.pathname;
+        window.history.pushState({}, '', cleanUrl);
+
+        // Remove active ticket from localStorage
+        localStorage.removeItem('active-ticket-id');
+
         // UI transitions: Hide chat containers, show table containers
         document.getElementById('chat-breadcrumbs').classList.add('hidden');
         document.getElementById('chat-view-container').classList.add('hidden');
@@ -471,6 +511,56 @@ class TicketSupportApp {
         this.table.render();
     }
     /* END closeTicket */
+
+    /* START renderTags */
+    renderTags(ticket) {
+        const container = document.getElementById('details-tags-container');
+        if (!container) return;
+
+        let html = '';
+        const tags = ticket.tags || [];
+        tags.forEach((tag, idx) => {
+            html += `
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-900 text-white dark:bg-gray-950 dark:text-white px-2 py-0.5 rounded-md">
+                    ${tag} <button type="button" class="cursor-pointer text-gray-400 hover:text-white font-bold select-none remove-tag-btn" data-tag-idx="${idx}">×</button>
+                </span>
+            `;
+        });
+
+        // Add inline input to add tags
+        html += `
+            <input type="text" id="details-tags-input" class="bg-transparent border-0 outline-none text-[10px] text-gray-900 dark:text-white p-0 focus:ring-0 flex-1 min-w-[60px]" placeholder="+ Add tag..." />
+        `;
+        container.innerHTML = html;
+
+        // Bind delete events
+        container.querySelectorAll('.remove-tag-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-tag-idx'));
+                ticket.tags.splice(idx, 1);
+                this.renderTags(ticket);
+            });
+        });
+
+        // Bind keypress for Enter key on the inline tags input
+        const input = document.getElementById('details-tags-input');
+        if (input) {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const newTag = input.value.trim();
+                    if (newTag) {
+                        if (!ticket.tags) ticket.tags = [];
+                        if (!ticket.tags.includes(newTag)) {
+                            ticket.tags.push(newTag);
+                        }
+                        this.renderTags(ticket);
+                    }
+                }
+            });
+        }
+    }
+    /* END renderTags */
 
     /* START updatePriorityPillsUI */
     updatePriorityPillsUI(priority) {
@@ -486,7 +576,7 @@ class TicketSupportApp {
                     pill.className = 'priority-pill flex-1 py-1.5 text-xs rounded-md bg-rose-50 border-2 border-rose-500 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-400 font-bold cursor-pointer transition-colors flex items-center justify-center gap-1 shadow-xs';
                 }
             } else {
-                pill.className = 'priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1';
+                pill.className = 'priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1';
             }
         });
     }
@@ -508,7 +598,7 @@ class TicketSupportApp {
 
         // Remove active highlights on KB articles
         document.querySelectorAll('[data-kb-id]').forEach(card => {
-            card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors';
+            card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors';
         });
 
         if (tab === 'details') {
@@ -528,7 +618,7 @@ class TicketSupportApp {
     /* END switchDetailsTab */
 
     /* START showKBArticlePopover */
-    showKBArticlePopover(kbId) {
+    showKBArticlePopover(kbId, element) {
         const article = MOCK_KB_ARTICLES[kbId];
         if (!article) return;
 
@@ -547,7 +637,7 @@ class TicketSupportApp {
             if (cardId === kbId) {
                 card.className = 'flex gap-2.5 p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer border border-blue-200 dark:border-blue-800 transition-all duration-200 shadow-xs';
             } else {
-                card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-all duration-200';
+                card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-all duration-200';
             }
         });
 
@@ -575,7 +665,7 @@ class TicketSupportApp {
             popover.classList.add('hidden');
             // Reset active card highlights
             document.querySelectorAll('[data-kb-id]').forEach(card => {
-                card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors';
+                card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors';
             });
         });
 
@@ -601,12 +691,33 @@ class TicketSupportApp {
         newCloseBtn.addEventListener('click', () => {
             popover.classList.add('hidden');
             document.querySelectorAll('[data-kb-id]').forEach(card => {
-                card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors';
+                card.className = 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors';
             });
         });
 
         // Toggle popover visible
         popover.classList.remove('hidden');
+
+        // Dynamically position the popover relative to the clicked article element
+        if (element) {
+            const container = document.getElementById('chat-view-container');
+            if (container) {
+                const containerRect = container.getBoundingClientRect();
+                const elemRect = element.getBoundingClientRect();
+                let topPos = elemRect.top - containerRect.top;
+
+                const popoverHeight = popover.offsetHeight;
+                const containerHeight = container.clientHeight;
+
+                // Keep popover within container boundaries
+                if (topPos + popoverHeight > containerHeight) {
+                    topPos = Math.max(10, containerHeight - popoverHeight - 16);
+                }
+                topPos = Math.max(10, topPos);
+
+                popover.style.top = `${topPos}px`;
+            }
+        }
     }
     /* END showKBArticlePopover */
 

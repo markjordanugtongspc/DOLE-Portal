@@ -135,19 +135,19 @@
                     <nav class="space-y-1.5">
                         <button data-category="Support Requests" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
                             <span>Support Requests</span>
-                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
                         </button>
                         <button data-category="Bug Report" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
                             <span>Bug Report</span>
-                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
                         </button>
                         <button data-category="Feature Request" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
                             <span>Feature Request</span>
-                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
                         </button>
                         <button data-category="All" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
                             <span>All</span>
-                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-850 dark:text-gray-400">0</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
                         </button>
                     </nav>
                 </aside>
@@ -287,8 +287,8 @@
                         
                         <!-- borderless select dropdown -->
                         <select id="chat-sort-dropdown" class="bg-transparent border-0 text-xs font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 focus:ring-0 py-1 pl-2 pr-8 cursor-pointer">
-                            <option value="newest">Newest</option>
-                            <option value="oldest">Oldest</option>
+                            <option value="newest" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Newest</option>
+                            <option value="oldest" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Oldest</option>
                         </select>
                     </div>
 
@@ -407,7 +407,7 @@
                             <!-- Set Status Dropdown -->
                             <div class="space-y-1.5">
                                 <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Set Status</label>
-                                <select id="details-status" class="w-full bg-gray-50 dark:bg-gray-850 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 cursor-pointer focus:ring-2 focus:ring-blue-500/30">
+                                <select id="details-status" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2.5 cursor-pointer focus:ring-2 focus:ring-blue-500/30">
                                     <option value="Open">🏁 Open</option>
                                     <option value="Pending">⏳ Pending</option>
                                     <option value="Closed">✅ Closed</option>
@@ -418,13 +418,13 @@
                             <div class="space-y-1.5">
                                 <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block select-none">Set Priority</label>
                                 <div class="flex items-center gap-2">
-                                    <button type="button" data-priority-btn="Low" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                                    <button type="button" data-priority-btn="Low" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Low
                                     </button>
-                                    <button type="button" data-priority-btn="Medium" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                                    <button type="button" data-priority-btn="Medium" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
                                         <span class="w-2 h-2 rounded-full bg-amber-500"></span> Medium
                                     </button>
-                                    <button type="button" data-priority-btn="High" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                                    <button type="button" data-priority-btn="High" class="priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
                                         <span class="w-2 h-2 rounded-full bg-rose-500"></span> High
                                     </button>
                                 </div>
@@ -506,7 +506,7 @@
 
                             <!-- List of Knowledge Base Articles -->
                             <div class="space-y-2.5 mt-2">
-                                <div data-kb-id="kb-art-1" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                <div data-kb-id="kb-art-1" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors">
                                     <div class="w-8 h-8 rounded-lg bg-pink-105 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 shrink-0">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
                                     </div>
@@ -514,13 +514,13 @@
                                         <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Account Creation and Management</h4>
                                         <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">Steps for office user creation.</p>
                                         <div class="flex items-center justify-between mt-1">
-                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase">Article</span>
+                                            <span class="text-[9px] bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-500 dark:text-gray-400 uppercase">Article</span>
                                             <span class="text-[8px] text-gray-400 dark:text-gray-500">Mar 17, 2026</span>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div data-kb-id="kb-art-2" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                <div data-kb-id="kb-art-2" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors">
                                     <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                     </div>
@@ -528,13 +528,13 @@
                                         <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Adding Systems & Services</h4>
                                         <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">How to link new portals into DOLE systems.</p>
                                         <div class="flex items-center justify-between mt-1">
-                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase font-medium">User Guide</span>
+                                            <span class="text-[9px] bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-500 dark:text-gray-400 uppercase font-medium">User Guide</span>
                                             <span class="text-[8px] text-gray-400 dark:text-gray-500">Mar 15, 2026</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div data-kb-id="kb-art-3" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                <div data-kb-id="kb-art-3" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors">
                                     <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 shrink-0">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </div>
@@ -542,13 +542,13 @@
                                         <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Configuring GIP Payroll Options</h4>
                                         <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">Solving GIP payroll login limitations.</p>
                                         <div class="flex items-center justify-between mt-1">
-                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase">Tutorial</span>
+                                            <span class="text-[9px] bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-500 dark:text-gray-400 uppercase">Tutorial</span>
                                             <span class="text-[8px] text-gray-400 dark:text-gray-500">Feb 28, 2026</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div data-kb-id="kb-art-4" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-150 dark:hover:border-gray-800 transition-colors">
+                                <div data-kb-id="kb-art-4" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors">
                                     <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 shrink-0">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </div>
@@ -556,7 +556,7 @@
                                         <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">Resetting Staff Account Credentials</h4>
                                         <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">Password policy and security practices.</p>
                                         <div class="flex items-center justify-between mt-1">
-                                            <span class="text-[9px] bg-gray-150 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-555 dark:text-gray-400 uppercase">FAQ</span>
+                                            <span class="text-[9px] bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-bold text-gray-500 dark:text-gray-400 uppercase">FAQ</span>
                                             <span class="text-[8px] text-gray-400 dark:text-gray-500">Jan 12, 2026</span>
                                         </div>
                                     </div>
@@ -611,12 +611,12 @@
                     </div>
                     <!-- Footer Buttons -->
                     <div class="px-4 pb-4 flex items-center gap-3">
-                        <button type="button" id="popover-btn-suggest" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-750 text-gray-800 dark:text-gray-250 text-xs font-bold rounded-lg shadow-xs transition-colors">
+                        <button type="button" id="popover-btn-suggest" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-bold rounded-lg shadow-xs transition-colors">
                             <span>+ Suggest</span>
                         </button>
-                        <button type="button" id="popover-btn-edit" class="cursor-pointer text-xs font-bold text-gray-550 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Edit</button>
+                        <button type="button" id="popover-btn-edit" class="cursor-pointer text-xs font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">Edit</button>
                         <div class="flex-1"></div>
-                        <button type="button" id="popover-btn-close" class="cursor-pointer text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-250">Close</button>
+                        <button type="button" id="popover-btn-close" class="cursor-pointer text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Close</button>
                     </div>
                 </div>
             </div>

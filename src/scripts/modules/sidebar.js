@@ -75,11 +75,19 @@ const setupDynamicSidebar = () => {
             const linkClass = isActive
                 ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group'
                 : 'cursor-pointer flex items-center px-2 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group';
+            let svgContent = item.svg;
+            if (isActive) {
+                // If it is active, we force the hover/active state of the SVG icons
+                // by replacing 'group-hover:hidden' with 'hidden' and 'hidden group-hover:block' with 'block'
+                svgContent = svgContent
+                    .replace('group-hover:hidden', 'hidden')
+                    .replace('hidden group-hover:block', 'block');
+            }
             
             listHTML += `
                 <li>
                     <a href="${item.url}" class="${linkClass}">
-                        ${item.svg}
+                        ${svgContent}
                         <span class="flex-1 ms-3">${item.label}</span>
                         ${item.badge ? `<span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black text-white bg-red-600 dark:bg-red-500 rounded-full animate-pulse">${item.badge}</span>` : ''}
                     </a>
