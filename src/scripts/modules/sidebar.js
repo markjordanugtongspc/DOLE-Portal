@@ -49,12 +49,25 @@ const setupDynamicSidebar = () => {
 <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.35709 16V5.78571c0-.43393.34822-.78571.77777-.78571H18.5793c.4296 0 .7778.35178.7778.78571V16M5.35709 16h-1c-.55229 0-1 .4477-1 1v1c0 .5523.44771 1 1 1H20.3571c.5523 0 1-.4477 1-1v-1c0-.5523-.4477-1-1-1h-1M5.35709 16H19.3571M9.35709 8l2.62501 2.5L9.35709 13m4.00001 0h2"/></svg>
 <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 5.78571C4 4.80909 4.78639 4 5.77778 4H18.2222C19.2136 4 20 4.80909 20 5.78571V15H4V5.78571ZM12 12c0-.5523.4477-1 1-1h2c.5523 0 1 .4477 1 1s-.4477 1-1 1h-2c-.5523 0-1-.4477-1-1ZM8.27586 6.31035c.38089-.39993 1.01387-.41537 1.4138-.03449l2.62504 2.5c.1981.18875.3103.45047.3103.72414 0 .27368-.1122.5354-.3103.7241l-2.62504 2.5c-.39993.3809-1.03291.3655-1.4138-.0344-.38088-.4-.36544-1.033.03449-1.4138L10.175 9.5 8.31035 7.72414c-.39993-.38089-.41537-1.01386-.03449-1.41379Z" clip-rule="evenodd"/><path d="M2 17v1c0 1.1046.89543 2 2 2h16c1.1046 0 2-.8954 2-2v-1H2Z"/></svg>`;
 
+    const SVG_ARTICLES_ADMIN = `
+<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v13H7a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h12M9 3v14m7 0v4"/></svg>
+<svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M6 2a2 2 0 0 0-2 2v15a3 3 0 0 0 3 3h12a1 1 0 1 0 0-2h-2v-2h2a1 1 0 0 0 1-1V4a2 2 0 0 0-2-2h-8v16h5v2H7a1 1 0 1 1 0-2h1V2H6Z" clip-rule="evenodd"/></svg>`;
+
     const navConfigurations = {
         admin: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
             { id: 'systems', label: 'Manage Systems', url: '/src/pages/user/admin/systems/', svg: SVG_SYSTEMS_ADMIN },
             { id: 'staffs', label: 'Manage Staffs', url: '/src/pages/user/admin/staffs/', svg: SVG_STAFFS_ADMIN },
-            { id: 'tickets', label: 'Manage Tickets', url: '/src/pages/user/admin/tickets/', svg: SVG_TICKETS_ADMIN, badge: '8' },
+            { 
+                id: 'tickets', 
+                label: 'Manage Tickets', 
+                url: '/src/pages/user/admin/tickets/', 
+                svg: SVG_TICKETS_ADMIN, 
+                badge: '8',
+                dropdown: [
+                    { id: 'articles', label: 'Manage Articles', url: '/src/pages/user/admin/articles/', svg: SVG_ARTICLES_ADMIN }
+                ]
+            },
             { id: 'exports', label: 'Exports', url: '#', svg: SVG_EXPORTS_ADMIN }
         ],
         staff: [
@@ -70,21 +83,66 @@ const setupDynamicSidebar = () => {
     if (listEl) {
         let listHTML = '';
         items.forEach(item => {
+            const isChildActive = item.dropdown ? item.dropdown.some(child => child.id === activeItem) : false;
             const isActive = item.id === activeItem;
+
             // Style matching Flowbite defaults with rich support
             const linkClass = isActive
-                ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group'
+                ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group transition-colors'
                 : 'cursor-pointer flex items-center px-2 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group';
+
             let svgContent = item.svg;
             if (isActive) {
-                // If it is active, we force the hover/active state of the SVG icons
-                // by replacing 'group-hover:hidden' with 'hidden' and 'hidden group-hover:block' with 'block'
-                svgContent = svgContent
-                    .replace('group-hover:hidden', 'hidden')
-                    .replace('hidden group-hover:block', 'block');
+                svgContent = svgContent.replace('group-hover:hidden', 'hidden').replace('hidden group-hover:block', 'block');
+                // For single SVG items
+                svgContent = svgContent.replace('group-hover:text-blue-600 dark:group-hover:text-blue-500', 'text-blue-700 dark:text-blue-500');
             }
-            
-            listHTML += `
+
+            if (item.dropdown) {
+                listHTML += `
+                <li>
+                    <div class="w-full relative">
+                        <a href="${item.url}" class="${linkClass} flex items-center w-full">
+                            ${svgContent}
+                            <span class="ms-3 mr-1">${item.label}</span>
+                            <span class="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 z-10" data-collapse-toggle="dropdown-${item.id}" aria-controls="dropdown-${item.id}" onclick="event.preventDefault();">
+                                <svg class="w-4 h-4 transition duration-200" aria-hidden="true" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                            </span>
+                            <div class="flex-1"></div>
+                            ${item.badge ? `<span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black text-white bg-red-600 dark:bg-red-500 rounded-full animate-pulse ml-2">${item.badge}</span>` : ''}
+                        </a>
+                    </div>
+                    <ul id="dropdown-${item.id}" class="${isChildActive ? '' : 'hidden'} py-1 space-y-1 mt-1 ml-7">
+                `;
+                item.dropdown.forEach(child => {
+                    const isSubActive = child.id === activeItem;
+                    const subLinkClass = isSubActive
+                        ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group transition-colors'
+                        : 'cursor-pointer flex items-center px-2 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group';
+                    
+                    let childSvg = child.svg;
+                    if (isSubActive) {
+                        childSvg = childSvg.replace('group-hover:hidden', 'hidden').replace('hidden group-hover:block', 'block');
+                        childSvg = childSvg.replace('group-hover:text-blue-600 dark:group-hover:text-blue-500', 'text-blue-700 dark:text-blue-500');
+                    }
+
+                    listHTML += `
+                        <li class="relative">
+                            <!-- L-shaped tree branch bend -->
+                            <div class="absolute -left-3 top-0 w-3 h-1/2 border-l-2 border-b-2 border-gray-200 dark:border-gray-700 rounded-bl-lg"></div>
+                            <a href="${child.url}" class="${subLinkClass}">
+                                ${childSvg}
+                                <span class="flex-1 ms-3 text-sm">${child.label}</span>
+                            </a>
+                        </li>
+                    `;
+                });
+                listHTML += `
+                    </ul>
+                </li>
+                `;
+            } else {
+                listHTML += `
                 <li>
                     <a href="${item.url}" class="${linkClass}">
                         ${svgContent}
@@ -92,7 +150,8 @@ const setupDynamicSidebar = () => {
                         ${item.badge ? `<span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black text-white bg-red-600 dark:bg-red-500 rounded-full animate-pulse">${item.badge}</span>` : ''}
                     </a>
                 </li>
-            `;
+                `;
+            }
         });
         listEl.innerHTML = listHTML;
     }

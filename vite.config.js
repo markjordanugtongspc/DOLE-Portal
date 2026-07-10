@@ -78,35 +78,6 @@ function copyStaticAssets() {
     }
   }
 }
-/* START findHtmlFiles */
-// Function to dynamically find all HTML files in a directory and return a rollup input object
-function findHtmlFiles(dir, baseDir = dir) {
-  const inputs = {}
-  
-  function traverse(currentDir) {
-    if (!fs.existsSync(currentDir)) return
-    const list = fs.readdirSync(currentDir, { withFileTypes: true })
-    for (const item of list) {
-      const fullPath = path.join(currentDir, item.name)
-      if (item.isDirectory()) {
-        traverse(fullPath)
-      } else if (item.isFile() && item.name.endsWith('.html')) {
-        const relativePath = path.relative(baseDir, fullPath)
-        const name = relativePath
-          .replace(/\\/g, '/')
-          .replace(/\/index\.html$/, '')
-          .replace(/\.html$/, '')
-          .replace(/\//g, '-')
-        
-        inputs[name || 'index'] = fullPath
-      }
-    }
-  }
-  
-  traverse(dir)
-  return inputs
-}
-/* END findHtmlFiles */
 
 export default defineConfig({
   plugins: [
@@ -124,10 +95,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        ...findHtmlFiles(path.resolve(__dirname, 'src/pages')),
-        ...findHtmlFiles(path.resolve(__dirname, 'src/components')),
-        ...findHtmlFiles(path.resolve(__dirname, 'src/assets')),
+        main:    path.resolve(__dirname, 'index.html'),
+        admin:   path.resolve(__dirname, 'src/pages/user/admin/dashboard/index.html'),
+        staff:   path.resolve(__dirname, 'src/pages/user/staff/dashboard/index.html'),
+        systems: path.resolve(__dirname, 'src/pages/user/admin/systems/index.html'),
+        staffs:  path.resolve(__dirname, 'src/pages/user/admin/staffs/index.html'),
+        tickets: path.resolve(__dirname, 'src/pages/user/admin/tickets/index.html'),
+        articles: path.resolve(__dirname, 'src/pages/user/admin/articles/index.html')
       }
     }
   }

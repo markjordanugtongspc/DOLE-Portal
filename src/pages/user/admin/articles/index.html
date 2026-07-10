@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Articles - DOLE Portal</title>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+  <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+  <div id="sidebar" data-role="admin" data-active="articles"></div>
+
+  <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+  <div class="sm:ml-64 min-h-screen flex flex-col">
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 transition-all duration-300">
+      
+      <!-- Flowbite Blog Block replacing original content -->
+      <section class="bg-white dark:bg-gray-900 h-full min-h-screen border-l border-gray-200 dark:border-gray-800">
+        
+        <!-- Breadcrumbs Header -->
+        <div class="p-6 md:px-8 pt-8 border-b border-gray-200 dark:border-gray-800">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                    <li class="inline-flex items-center">
+                        <a href="/src/pages/user/admin/tickets/" class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg class="w-4 h-4 me-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 12A2.5 2.5 0 0 1 21 9.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v2.5a2.5 2.5 0 0 1 0 5V17a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
+                            Manage Tickets
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center space-x-1.5">
+                            <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                            <span class="inline-flex items-center text-sm font-semibold text-gray-400 dark:text-gray-500 select-none">Manage Articles</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-12 lg:px-6">
+            <div class="mx-auto max-w-screen-sm text-center lg:mb-16 mb-8 pt-4">
+                <h2 class="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">Knowledge Base Articles</h2>
+                <p class="font-light text-gray-500 sm:text-xl dark:text-gray-400">Manage and create articles to help staff resolve tickets faster. We use an agile approach to test assumptions and connect with the needs of your audience early and often.</p>
+                
+                <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                  
+                  <!-- Filter Dropdown -->
+                  <button id="dropdownCategoryButton" data-dropdown-toggle="dropdownCategory" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 flex items-center shadow-sm cursor-pointer transition-colors" type="button">
+                    <svg class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M6 12h12m-9 6h6"/></svg>
+                    Filter by Category
+                    <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
+                  </button>
+                  
+                  <!-- Dropdown menu -->
+                  <div id="dropdownCategory" class="z-50 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600 border border-gray-200 dark:border-gray-600">
+                      <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownCategoryButton">
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer font-bold text-blue-600 dark:text-blue-500 bg-gray-50 dark:bg-gray-800/50">All Articles</a></li>
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Tutorials</a></li>
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">User Guides</a></li>
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Policies</a></li>
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Alerts</a></li>
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Releases</a></li>
+                      </ul>
+                  </div>
+
+                  <!-- Create Button -->
+                  <button type="button" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 transition-colors flex items-center shadow-sm">
+                    <svg class="w-4 h-4 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Create New Article
+                  </button>
+                </div>
+            </div> 
+            
+            <div class="grid gap-6 lg:gap-8 lg:grid-cols-3">
+                <!-- 1: Tutorial -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                            <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+                            Tutorial
+                        </span>
+                        <span class="text-sm">4 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Account Creation and Management</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Instructions on establishing new user directories, allocating staff credentials, and managing security parameters for GIP payroll and portal accounts.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=Admin+Sys&background=random" alt="Admin Sys avatar" />
+                            <span class="font-medium dark:text-white text-sm">System Admin</span>
+                        </div>
+                    </div>
+                </article> 
+
+                <!-- 2: User Guide -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-amber-100 text-amber-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-amber-900/60 dark:text-amber-400">
+                            <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"></path><path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"></path></svg>
+                            User Guide
+                        </span>
+                        <span class="text-sm">6 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Adding Systems & Services</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Detailed instructions on linking separate district portals, web applications, and database indexes directly into the DOLE unified portal administration console.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=Dev+Ops&background=random" alt="Dev Ops avatar" />
+                            <span class="font-medium dark:text-white text-sm">Dev Ops Team</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 3: Troubleshooting -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-red-100 text-red-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-red-900/60 dark:text-red-400">
+                            <svg class="mr-1 w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Troubleshooting
+                        </span>
+                        <span class="text-sm">2 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Troubleshooting Login Errors</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">How to identify and resolve common authentication errors, invalid session tokens, and Active Directory sync delays.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=IT+Support&background=random" alt="IT Support avatar" />
+                            <span class="font-medium dark:text-white text-sm">IT Support</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 4: Tutorial -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                            <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+                            Tutorial
+                        </span>
+                        <span class="text-sm">5 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Password Recovery Methods</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Step-by-step tutorial on helping staff and end-users safely reset their passwords via Email OTP and admin overrides.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=IT+Support&background=random" alt="IT Support avatar" />
+                            <span class="font-medium dark:text-white text-sm">IT Support</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 5: User Guide -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-amber-100 text-amber-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-amber-900/60 dark:text-amber-400">
+                            <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"></path><path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"></path></svg>
+                            User Guide
+                        </span>
+                        <span class="text-sm">8 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Managing Service Tickets</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Comprehensive guide on navigating the new ticketing interface, assigning tasks, interpreting metadata, and closing resolutions.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=System+Admin&background=random" alt="System Admin avatar" />
+                            <span class="font-medium dark:text-white text-sm">System Admin</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 6: Troubleshooting -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-red-100 text-red-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-red-900/60 dark:text-red-400">
+                            <svg class="mr-1 w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Troubleshooting
+                        </span>
+                        <span class="text-sm">3 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Fixing Dashboard Sync Issues</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Actions to take if the dashboard metrics are not updating in real-time or if Supabase WebSocket connections drop unexpectedly.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=Dev+Team&background=random" alt="Dev Team avatar" />
+                            <span class="font-medium dark:text-white text-sm">Dev Team</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 7: User Guide -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-amber-100 text-amber-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-amber-900/60 dark:text-amber-400">
+                            <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 002 2H4a2 2 0 01-2-2V5zm3 1h6v4H5V6zm6 6H5v2h6v-2z" clip-rule="evenodd"></path><path d="M15 7h1a2 2 0 012 2v5.5a1.5 1.5 0 01-3 0V7z"></path></svg>
+                            User Guide
+                        </span>
+                        <span class="text-sm">3 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Navigating the Knowledge Base</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Learn how to efficiently search, filter by categories, and utilize the knowledge base articles to resolve staff concerns faster.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=Admin+Sys&background=random" alt="Admin Sys avatar" />
+                            <span class="font-medium dark:text-white text-sm">System Admin</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 8: Tutorial -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                            <svg class="mr-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+                            Tutorial
+                        </span>
+                        <span class="text-sm">7 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Exporting Metrics Data</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">Learn how to generate Excel and PDF reports from the dashboard metrics and manage historical analytics logs.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=Data+Analyst&background=random" alt="Data Analyst avatar" />
+                            <span class="font-medium dark:text-white text-sm">Data Analyst</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 9: Troubleshooting -->
+                <article class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-colors group relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-5 text-gray-500 relative z-10">
+                        <span class="bg-red-100 text-red-800 text-xs font-medium inline-flex items-center px-2.5 py-0.5 rounded dark:bg-red-900/60 dark:text-red-400">
+                            <svg class="mr-1 w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Troubleshooting
+                        </span>
+                        <span class="text-sm">5 Minutes read</span>
+                    </div>
+                    <h2 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors relative z-10">
+                        <a href="#">Resolving GIP Payroll Mismatches</a>
+                    </h2>
+                    <p class="mb-5 font-light text-sm text-gray-500 dark:text-gray-400 relative z-10">A detailed walkthrough on auditing user records against database indexes to resolve active GIP payroll discrepancies and mismatches.</p>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex items-center space-x-4">
+                            <img class="w-7 h-7 rounded-full" src="https://ui-avatars.com/api/?name=Database+Admin&background=random" alt="Database Admin avatar" />
+                            <span class="font-medium dark:text-white text-sm">Database Admin</span>
+                        </div>
+                    </div>
+                </article>
+            </div>  
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

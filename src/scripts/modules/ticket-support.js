@@ -59,7 +59,7 @@ const MOCK_CONVERSATIONS = {
 const MOCK_KB_ARTICLES = {
     'kb-art-1': {
         title: 'Account Creation and Management',
-        category: 'Article',
+        category: 'Tutorial',
         readTime: '4 Minutes read',
         summary: 'Instructions on establishing new user directories, allocating staff credentials, and managing security parameters for GIP payroll and portal accounts.',
         suggestText: 'For GIP account creation, please head to the Systems Roster tab, choose "Add Staff", and configure their access group details.'
@@ -72,18 +72,18 @@ const MOCK_KB_ARTICLES = {
         suggestText: 'To add a new service portal, register its host domain inside the Systems module, copy the credentials token, and add it to theme-toggler config.'
     },
     'kb-art-3': {
-        title: 'Configuring GIP Payroll Options',
-        category: 'Tutorial',
+        title: 'Troubleshooting Login Errors',
+        category: 'Troubleshooting',
         readTime: '5 Minutes read',
-        summary: 'Guide to diagnosing user access tokens, resetting 403 Forbidden permission errors, and editing municipal payroll lists correctly.',
-        suggestText: 'I\'ll just need to gather a bit more information. Then we can schedule a quick assessment and propose a solution. Wait i\'ll send you the reset link.'
+        summary: 'Guide to diagnosing user access tokens, fixing Active Directory syncs, and repairing session failures.',
+        suggestText: 'I\'ll need to check the Active Directory sync logs for your session. Can you please wait a moment while I pull up the audit trail?'
     },
     'kb-art-4': {
-        title: 'Resetting Staff Account Credentials',
-        category: 'FAQ',
+        title: 'Password Recovery Methods',
+        category: 'Tutorial',
         readTime: '3 Minutes read',
-        summary: 'Procedures for managing passwords, resetting user profiles, and generating temporary security passes for office staff and implementors.',
-        suggestText: 'Temporary password reset: default credentials have been configured as DoleLinamon2026!. Please ask the staff to change it immediately after login.'
+        summary: 'Procedures for managing passwords, handling Email OTPs, and executing admin overrides for locked out credentials.',
+        suggestText: 'Temporary password reset: default credentials have been configured as DoleLinamon2026!. Please ask the staff to change it immediately after login via Email OTP.'
     }
 };
 
@@ -131,15 +131,14 @@ class TicketSupportApp {
         const urlParams = new URLSearchParams(window.location.search);
         let ticketIdFromUrl = urlParams.get('ticket') || urlParams.get('id');
         if (!ticketIdFromUrl) {
+            // Check for TK- pattern in raw search string
             const rawSearch = decodeURIComponent(window.location.search);
             const match = rawSearch.match(/(TK-\d+|TC-\d+)/i);
             if (match) {
                 ticketIdFromUrl = match[1].toUpperCase();
             }
         }
-        if (!ticketIdFromUrl) {
-            ticketIdFromUrl = localStorage.getItem('active-ticket-id');
-        }
+        
         if (ticketIdFromUrl) {
             const ticketExists = this.tickets.some(t => t.id === ticketIdFromUrl);
             if (ticketExists) {
@@ -414,9 +413,6 @@ class TicketSupportApp {
         // Update URL dynamically without page reload
         const cleanUrl = `${window.location.pathname}?ticket=${ticketId}`;
         window.history.pushState({ ticketId }, '', cleanUrl);
-
-        // Save active ticket to localStorage
-        localStorage.setItem('active-ticket-id', ticketId);
 
         // UI transitions: Hide table view containers, show chat containers
         document.getElementById('table-breadcrumbs').classList.add('hidden');
@@ -697,6 +693,8 @@ class TicketSupportApp {
 
         // Toggle popover visible
         popover.classList.remove('hidden');
+
+        popover.classList.remove('top-10'); // Remove static top utility
 
         // Dynamically position the popover relative to the clicked article element
         if (element) {
