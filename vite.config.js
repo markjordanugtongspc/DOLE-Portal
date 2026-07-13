@@ -79,6 +79,30 @@ function copyStaticAssets() {
   }
 }
 
+// ─── Helper: Auto-discover all HTML files ───────────────────────────────────────
+function getHtmlEntries() {
+  const entries = { main: path.resolve(__dirname, 'index.html') }
+  const srcDir = path.resolve(__dirname, 'src')
+
+  function findHtml(dir) {
+    if (!fs.existsSync(dir)) return
+    for (const file of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, file.name)
+      if (file.isDirectory()) {
+        findHtml(fullPath)
+      } else if (file.name.endsWith('.html')) {
+        // Create a unique key for rollup (e.g. src_pages_user_admin_index)
+        const relativePath = path.relative(__dirname, fullPath)
+        const key = relativePath.replace(/\.html$/, '').replace(/[\\/]/g, '_')
+        entries[key] = fullPath
+      }
+    }
+  }
+
+  findHtml(srcDir)
+  return entries
+}
+
 export default defineConfig({
   plugins: [
     tailwindcss(),
@@ -94,15 +118,7 @@ export default defineConfig({
   publicDir: 'public',
   build: {
     rollupOptions: {
-      input: {
-        main:    path.resolve(__dirname, 'index.html'),
-        admin:   path.resolve(__dirname, 'src/pages/user/admin/dashboard/index.html'),
-        staff:   path.resolve(__dirname, 'src/pages/user/staff/dashboard/index.html'),
-        systems: path.resolve(__dirname, 'src/pages/user/admin/systems/index.html'),
-        staffs:  path.resolve(__dirname, 'src/pages/user/admin/staffs/index.html'),
-        tickets: path.resolve(__dirname, 'src/pages/user/admin/tickets/index.html'),
-        articles: path.resolve(__dirname, 'src/pages/user/admin/articles/index.html')
-      }
+      input: getHtmlEntries()
     }
   }
 })

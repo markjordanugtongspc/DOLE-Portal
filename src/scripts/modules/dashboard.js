@@ -1,6 +1,7 @@
 import { getPreference, setPreference } from './cookies.js';
 import ApexCharts from 'apexcharts';
 import { Modal } from 'flowbite';
+import { DashboardCarousel } from './slider.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -215,6 +216,8 @@ class StaffDashboardController {
         this.initEvents();
         this.render();
         this.initNetworkChart();
+        this.initMobileCarousel();
+        this.initChartsMobileCarousel();
     }
 
     initEvents() {
@@ -267,79 +270,131 @@ class StaffDashboardController {
         ).length;
     }
 
-    render() {
-        this.gridEl.innerHTML = '';
+    createSystemCardHtml(sys) {
+        const card = document.createElement('div');
+        const sysColor = sys.color || '#3b82f6';
+        card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white';
+        card.style.setProperty('--sys-color', sysColor);
+        card.setAttribute('data-url', sys.url);
+        card.setAttribute('data-id', sys.id);
+
+        const clickCount = localStorage.getItem('sys_clicks_' + sys.id) || 0;
         
-        // Filter systems based on search text
+        card.innerHTML = `
+            <div class="relative z-10 flex flex-col h-full justify-between">
+                <!-- System Preview Image Full Width at Top -->
+                <div class="w-full overflow-hidden">
+                    <img class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100" src="${sys.image || '/src/assets/logos/dole_logo.png'}" alt="${sys.name}" />
+                </div>
+                
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-bold text-white transition-colors">${sys.name}</h3>
+                            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-extrabold uppercase select-none flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-6 6m0 0l-6-6m6 6V9a6 6 0 0112 0v3"/>
+                                </svg>
+                                Clicks: <span class="click-display">${clickCount}</span>
+                            </span>
+                        </div>
+                        <p class="text-xs font-semibold text-white/70">${sys.desc}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        return card;
+    }
+
+    bindCardClick(card) {
+        card.addEventListener('click', () => {
+            const id = card.getAttribute('data-id');
+            const url = card.getAttribute('data-url');
+            
+            // Track click
+            let clickCount = parseInt(localStorage.getItem('sys_clicks_' + id) || '0', 10);
+            clickCount++;
+            localStorage.setItem('sys_clicks_' + id, clickCount);
+
+            // Update card UI click display instantly across all matching cards (desktop & mobile)
+            document.querySelectorAll(`.system-card[data-id="${id}"] .click-display`).forEach(el => {
+                el.textContent = clickCount;
+            });
+
+            // Redirect
+            if (url && url !== '#' && url.trim() !== '') {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        });
+    }
+
+    render() {
+        // 1. Render Desktop Grid
+        this.gridEl.innerHTML = '';
         const filteredSystems = this.systems.filter(sys => 
             sys.name.toLowerCase().includes(this.searchFilter.toLowerCase()) || 
             sys.desc.toLowerCase().includes(this.searchFilter.toLowerCase())
         );
 
-        // Determine if we show paginated limit or show all when search is active
         const visibleSystems = (this.searchFilter.length > 0) ? filteredSystems : filteredSystems.slice(0, this.limit);
 
         visibleSystems.forEach(sys => {
-            const card = document.createElement('div');
-            const sysColor = sys.color || '#3b82f6';
-            card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-base overflow-hidden text-white';
-            card.style.setProperty('--sys-color', sysColor);
-            card.setAttribute('data-url', sys.url);
-            card.setAttribute('data-id', sys.id);
-
-            const clickCount = localStorage.getItem('sys_clicks_' + sys.id) || 0;
-            
-            card.innerHTML = `
-                <div class="relative z-10 flex flex-col h-full justify-between">
-                    <!-- System Preview Image Full Width at Top -->
-                    <div class="w-full overflow-hidden">
-                        <img class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100" src="${sys.image || '/src/assets/logos/dole_logo.png'}" alt="${sys.name}" />
-                    </div>
-                    
-                    <div class="p-6 flex-1 flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-bold text-white transition-colors">${sys.name}</h3>
-                                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-extrabold uppercase select-none flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-6 6m0 0l-6-6m6 6V9a6 6 0 0112 0v3"/>
-                                    </svg>
-                                    Clicks: <span class="click-display">${clickCount}</span>
-                                </span>
-                            </div>
-                            <p class="text-xs font-semibold text-white/70">${sys.desc}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const card = this.createSystemCardHtml(sys);
             this.gridEl.appendChild(card);
         });
 
-        // Add Click listener to cards
+        // Add Click listener to desktop cards
         this.gridEl.querySelectorAll('.system-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const id = card.getAttribute('data-id');
-                const url = card.getAttribute('data-url');
-                
-                // Track click
-                let clickCount = parseInt(localStorage.getItem('sys_clicks_' + id) || '0', 10);
-                clickCount++;
-                localStorage.setItem('sys_clicks_' + id, clickCount);
-
-                // Update card UI click display instantly
-                const clickDisplay = card.querySelector('.click-display');
-                if (clickDisplay) {
-                    clickDisplay.textContent = clickCount;
-                }
-
-                // Redirect
-                if (url && url !== '#' && url.trim() !== '') {
-                    window.open(url, '_blank', 'noopener,noreferrer');
-                }
-            });
+            this.bindCardClick(card);
         });
 
-        // Update Show More Button State
+        // 2. Render Mobile Carousel
+        const mobileWrapper = document.getElementById('systems-mobile-carousel-wrapper');
+        const mobileIndicators = document.getElementById('systems-mobile-indicators');
+
+        if (mobileWrapper && mobileIndicators) {
+            mobileWrapper.innerHTML = '';
+            mobileIndicators.innerHTML = '';
+
+            if (filteredSystems.length === 0) {
+                mobileWrapper.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                        <p class="text-sm font-semibold">No systems match your search query.</p>
+                    </div>
+                `;
+            } else {
+                filteredSystems.forEach((sys, index) => {
+                    const slideItem = document.createElement('div');
+                    slideItem.className = 'hidden duration-700 ease-in-out px-2';
+                    slideItem.setAttribute('data-carousel-item', index === 0 ? 'active' : '');
+
+                    const card = this.createSystemCardHtml(sys);
+                    // Force full height to fit carousel bounds
+                    card.classList.remove('min-h-[320px]');
+                    card.classList.add('h-[320px]', 'w-full');
+                    
+                    slideItem.appendChild(card);
+                    mobileWrapper.appendChild(slideItem);
+
+                    // Add click handler
+                    this.bindCardClick(card);
+
+                    // Create indicator dot
+                    const indicator = document.createElement('button');
+                    indicator.type = 'button';
+                    indicator.className = 'w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer';
+                    indicator.setAttribute('aria-current', index === 0 ? 'true' : 'false');
+                    indicator.setAttribute('aria-label', `Slide ${index + 1}`);
+                    indicator.setAttribute('data-carousel-slide-to', index.toString());
+                    mobileIndicators.appendChild(indicator);
+                });
+
+                // Dynamically re-initialize systems carousel script
+                this.initMobileSystemsCarousel();
+            }
+        }
+
+        // Update Show More Button State (Desktop only)
         const btnShowMore = document.getElementById('btn-show-more');
         const btnShowMoreText = document.getElementById('btn-show-more-text');
         
@@ -359,9 +414,6 @@ class StaffDashboardController {
     }
 
     initNetworkChart() {
-        const chartEl = document.getElementById('staff-network-chart');
-        if (!chartEl) return;
-
         const brandColor = '#1A56DB'; // Tailwind blue-700
         const brandSecondaryColor = '#0E9F6E'; // Tailwind emerald-600
 
@@ -388,19 +440,19 @@ class StaffDashboardController {
                         cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
                     },
                     formatter: function (value) {
-                        return value + ' Gbps';
+                        return Math.round(value);
                     }
                 }
             },
             series: [
                 {
-                    name: "Incoming Traffic",
-                    data: [2.5, 3.1, 2.8, 3.5, 3.8, 3.2, 4.0],
+                    name: "Peak Users",
+                    data: [420, 580, 810, 850, 720, 930, 890],
                     color: brandColor,
                 },
                 {
-                    name: "Outgoing Traffic",
-                    data: [1.2, 1.8, 1.5, 2.1, 2.4, 2.0, 2.6],
+                    name: "Active Users",
+                    data: [310, 420, 680, 710, 620, 780, 750],
                     color: brandSecondaryColor,
                 },
             ],
@@ -442,9 +494,183 @@ class StaffDashboardController {
             }
         };
 
-        const areaChart = new ApexCharts(chartEl, areaOptions);
-        areaChart.render();
+        const chartEl = document.getElementById('staff-active-users-chart');
+        if (chartEl) {
+            const areaChart = new ApexCharts(chartEl, areaOptions);
+            areaChart.render();
+        }
+
+        const chartElMobile = document.getElementById('staff-active-users-chart-mobile');
+        if (chartElMobile) {
+            const mobileOptions = { ...areaOptions, chart: { ...areaOptions.chart, height: 240 } };
+            const areaChartMobile = new ApexCharts(chartElMobile, mobileOptions);
+            areaChartMobile.render();
+        }
     }
+
+    /* START MOBILE CAROUSEL INITIALIZATION */
+    initMobileCarousel() {
+        const carouselEl = document.getElementById('stats-mobile-carousel');
+        if (!carouselEl) return;
+
+        // Collect all slide items and indicators
+        const items = Array.from(carouselEl.querySelectorAll('[data-carousel-item]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const indicatorItems = Array.from(carouselEl.querySelectorAll('[data-carousel-slide-to]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const options = {
+            defaultPosition: 0,
+            interval: 0,
+            type: 'slide',
+            indicators: {
+                activeClasses: 'bg-blue-600 dark:bg-white scale-110',
+                inactiveClasses: 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600',
+                items: indicatorItems
+            }
+        };
+
+        // Initialize Flowbite Carousel programmatically using DashboardCarousel
+        this.statsCarousel = new DashboardCarousel(carouselEl, items, options);
+
+        // Bind touch swipe support manually
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        carouselEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 50) {
+                this.statsCarousel.next();
+            }
+            if (touchEndX > touchStartX + 50) {
+                this.statsCarousel.prev();
+            }
+        }, { passive: true });
+    }
+    /* END MOBILE CAROUSEL INITIALIZATION */
+
+    /* START MOBILE SYSTEMS CAROUSEL INITIALIZATION */
+    initMobileSystemsCarousel() {
+        const carouselEl = document.getElementById('systems-mobile-carousel');
+        if (!carouselEl) return;
+
+        const items = Array.from(carouselEl.querySelectorAll('[data-carousel-item]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const indicatorItems = Array.from(carouselEl.querySelectorAll('[data-carousel-slide-to]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const options = {
+            defaultPosition: 0,
+            interval: 0,
+            type: 'slide',
+            indicators: {
+                activeClasses: 'bg-blue-600 dark:bg-white scale-110',
+                inactiveClasses: 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600',
+                items: indicatorItems
+            }
+        };
+
+        if (this.systemsCarousel) {
+            // Clean up intervals of previous carousel instance
+            this.systemsCarousel.pause();
+        }
+
+        // Initialize Flowbite Carousel programmatically using DashboardCarousel
+        this.systemsCarousel = new DashboardCarousel(carouselEl, items, options);
+
+        // Bind touch swipe support manually (ensure only bound once)
+        if (!this.systemsSwipeBound) {
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            carouselEl.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            carouselEl.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (this.systemsCarousel) {
+                    if (touchEndX < touchStartX - 50) {
+                        this.systemsCarousel.next();
+                    }
+                    if (touchEndX > touchStartX + 50) {
+                        this.systemsCarousel.prev();
+                    }
+                }
+            }, { passive: true });
+
+            this.systemsSwipeBound = true;
+        }
+    }
+    /* END MOBILE SYSTEMS CAROUSEL INITIALIZATION */
+
+    /* START MOBILE CHARTS CAROUSEL INITIALIZATION */
+    initChartsMobileCarousel() {
+        const carouselEl = document.getElementById('charts-mobile-carousel');
+        if (!carouselEl) return;
+
+        const items = Array.from(carouselEl.querySelectorAll('[data-carousel-item]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const indicatorItems = Array.from(carouselEl.querySelectorAll('[data-carousel-slide-to]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const options = {
+            defaultPosition: 0,
+            interval: 0,
+            type: 'slide',
+            indicators: {
+                activeClasses: 'bg-blue-600 dark:bg-white scale-110',
+                inactiveClasses: 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600',
+                items: indicatorItems
+            },
+            onChange: () => {
+                // Trigger window resize so ApexCharts recalculates its dimensions when shown
+                window.dispatchEvent(new Event('resize'));
+            }
+        };
+
+        this.chartsCarousel = new DashboardCarousel(carouselEl, items, options);
+
+        // Bind touch swipe support manually
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        carouselEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselEl.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (this.chartsCarousel) {
+                if (touchEndX < touchStartX - 50) {
+                    this.chartsCarousel.next();
+                }
+                if (touchEndX > touchStartX + 50) {
+                    this.chartsCarousel.prev();
+                }
+            }
+        }, { passive: true });
+    }
+    /* END MOBILE CHARTS CAROUSEL INITIALIZATION */
 }
 /* END STAFF-EXCLUSIVE DASHBOARD CONTROLLER */
 

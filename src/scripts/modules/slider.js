@@ -76,3 +76,33 @@ if (container && Object.keys(imagesObj).length > 0) {
         carousel.cycle();
     });
 }
+
+export class DashboardCarousel {
+    constructor(carouselEl, items, options = {}, instanceOptions = {}) {
+        this.carouselEl = carouselEl;
+        this.items = items;
+        
+        // Enforce no auto cycle
+        const defaultOptions = {
+            ...options,
+            interval: 0,
+            type: 'slide'
+        };
+        
+        this.carousel = new Carousel(carouselEl, items, defaultOptions, instanceOptions);
+        this.carousel.pause();
+    }
+    
+    next() {
+        if (this.carousel) this.carousel.next();
+    }
+    
+    prev() {
+        if (this.carousel) this.carousel.prev();
+    }
+    
+    pause() {
+        if (this.carousel) this.carousel.pause();
+    }
+}
+
