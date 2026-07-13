@@ -132,3 +132,26 @@ th.text-left .datatable-sorter {
   transform: scale(0.97) !important;
   transition: transform 0.1s ease-in-out !important;
 }
+
+/* polygon-gradient */
+::view-transition-group(root) {
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* using expo-out fallback if var not defined */
+}
+::view-transition-new(root) {
+  mask: url('./assets/custom-svg.svg') top left / 0 no-repeat;
+  mask-origin: top left;
+  animation: scale 1.5s;
+  animation-fill-mode: both;
+}
+::view-transition-old(root),
+.dark::view-transition-old(root) {
+  animation: scale 1.5s;
+  animation-fill-mode: both;
+  z-index: -1;
+  transform-origin: top left;
+}
+@keyframes scale {
+  to {
+    mask-size: 200vmax;
+  }
+}

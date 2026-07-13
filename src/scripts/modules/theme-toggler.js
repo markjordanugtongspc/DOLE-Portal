@@ -24,14 +24,22 @@ syncIcons(isDark);
 
 // Bind event listeners to all theme toggle buttons
 themeToggleBtns.forEach(btn => {
-  btn.addEventListener('click', function() {
-    // Toggle dark mode class on html
-    const isNewDark = document.documentElement.classList.toggle('dark');
-    
-    // Save preference to localStorage
-    localStorage.setItem('color-theme', isNewDark ? 'dark' : 'light');
-    
-    // Update all icons
-    syncIcons(isNewDark);
+  btn.addEventListener('click', function(e) {
+    const toggleTheme = () => {
+      // Toggle dark mode class on html
+      const isNewDark = document.documentElement.classList.toggle('dark');
+      
+      // Save preference to localStorage
+      localStorage.setItem('color-theme', isNewDark ? 'dark' : 'light');
+      
+      // Update all icons
+      syncIcons(isNewDark);
+    };
+
+    if (document.startViewTransition) {
+      document.startViewTransition(toggleTheme);
+    } else {
+      toggleTheme();
+    }
   });
 });

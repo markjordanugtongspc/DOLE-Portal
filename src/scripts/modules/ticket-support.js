@@ -655,7 +655,14 @@ class TicketSupportApp {
         newSuggestBtn.addEventListener('click', () => {
             const editor = document.getElementById('chat-editor');
             if (editor) {
-                editor.value = article.suggestText;
+                const linkUrl = `https://portal.dole.gov.ph/kb/${kbId}`;
+                editor.value = `${article.suggestText}\n\nRead more: ${linkUrl}`;
+                
+                // Set metadata attributes for handleSendMessage to create an embed
+                editor.setAttribute('data-embed-url', linkUrl);
+                editor.setAttribute('data-embed-title', article.title);
+                editor.setAttribute('data-embed-domain', 'portal.dole.gov.ph');
+                
                 editor.focus();
             }
             popover.classList.add('hidden');
@@ -945,14 +952,37 @@ class TicketSupportApp {
         const val = editor.value.trim();
         if (!val) return;
 
-        // Create new message object
-        const newMessage = {
-            sender: 'Admin',
-            avatar: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff',
-            time: 'Just now',
-            type: 'text',
-            content: val
-        };
+        let newMessage;
+
+        // Check if there is an embed linked to this message
+        const embedUrl = editor.getAttribute('data-embed-url');
+        if (embedUrl) {
+            newMessage = {
+                sender: 'Admin',
+                avatar: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff',
+                time: 'Just now',
+                type: 'link',
+                content: val,
+                url: embedUrl,
+                previewImage: 'https://placehold.co/600x400/0f172a/ffffff?text=KB+Article',
+                previewTitle: editor.getAttribute('data-embed-title'),
+                previewDomain: editor.getAttribute('data-embed-domain')
+            };
+
+            // Clean up attributes
+            editor.removeAttribute('data-embed-url');
+            editor.removeAttribute('data-embed-title');
+            editor.removeAttribute('data-embed-domain');
+        } else {
+            // Create regular text message object
+            newMessage = {
+                sender: 'Admin',
+                avatar: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff',
+                time: 'Just now',
+                type: 'text',
+                content: val
+            };
+        }
 
         // Push to conversations mock database
         if (!MOCK_CONVERSATIONS[this.selectedTicketId]) {
