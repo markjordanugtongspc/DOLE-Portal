@@ -1,7 +1,10 @@
 export const initStaffsManage = () => {
-    // Only run on the staffs page (or wherever sorting-table is present)
+    // Only run on the staffs page
+    const btnAddStaff = document.getElementById('btn-add-staff');
     const tableEl = document.getElementById("sorting-table");
-    if (tableEl && typeof simpleDatatables !== 'undefined' && typeof simpleDatatables.DataTable !== 'undefined') {
+    if (!btnAddStaff || !tableEl) return;
+
+    if (typeof simpleDatatables !== 'undefined' && typeof simpleDatatables.DataTable !== 'undefined') {
         const dataTable = new simpleDatatables.DataTable("#sorting-table", {
             searchable: false,
             perPageSelect: false,

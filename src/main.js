@@ -54,3 +54,4 @@ import '@/scripts/modules/charts.js';
 import '@/scripts/modules/dashboard.js';
 import '@/scripts/modules/staffs-manage.js';
 import '@/scripts/modules/ticket-support.js';
+import '@/scripts/modules/assistants-manage.js';

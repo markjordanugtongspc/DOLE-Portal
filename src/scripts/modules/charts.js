@@ -98,11 +98,12 @@ const initDashboardChartsAndPopovers = () => {
             grid: {
                 show: true,
                 strokeDashArray: 4,
-                borderColor: '#e5e7eb',
+                borderColor: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb',
                 padding: {
-                    left: 10,
-                    right: 10,
-                    top: 20
+                    left: 15,
+                    right: 35,
+                    top: 20,
+                    bottom: 10
                 },
             }
         };
@@ -184,7 +185,17 @@ const initDashboardChartsAndPopovers = () => {
             dataLabels: { enabled: false },
             stroke: { width: 4 },
             legend: { show: false },
-            grid: { show: false },
+            grid: {
+                show: true,
+                strokeDashArray: 4,
+                borderColor: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb',
+                padding: {
+                    left: 15,
+                    right: 35,
+                    top: 15,
+                    bottom: 10
+                }
+            },
         };
 
         const areaChart = new ApexCharts(labelsChartEl, areaOptions);
