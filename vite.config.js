@@ -114,6 +114,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  // Read .env from src/backend/config/ — all Supabase credentials are stored there
+  envDir: path.resolve(__dirname, 'src/backend/config'),
   // public/ is copied as-is to dist/ root by Vite automatically (favicon, icons.svg, etc.)
   publicDir: 'public',
   build: {

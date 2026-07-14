@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment & Sensitive Config — DO NOT COMMIT
+.env
+.env.local
+.env.production
+src/backend/config/.env
+src/backend/config/.env.local

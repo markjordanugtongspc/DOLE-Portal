@@ -44,6 +44,11 @@ if (document.readyState === 'loading') {
 import './style.css'
 import 'flowbite';
 
+/* START BACKEND — Initialize Supabase Client */
+// Must be imported first so all page modules can use the shared client instance
+import '@/backend/api/supabase.js';
+/* END BACKEND */
+
 // Import our modules
 import '@/scripts/modules/auth.js';
 import '@/scripts/modules/theme-toggler.js';
