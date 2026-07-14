@@ -2,6 +2,9 @@ import { getPreference, setPreference } from './cookies.js';
 import ApexCharts from 'apexcharts';
 import { Modal } from 'flowbite';
 import { DashboardCarousel } from './slider.js';
+import { fetchUserDashboardCounts } from '@/backend/api/users.api.js';
+import { fetchSystems } from '@/backend/api/systems.api.js';
+import { fetchTickets } from '@/backend/api/tickets.api.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -108,6 +111,60 @@ const initQuickActionsSwitcher = () => {
 };
 /* END QUICK ACTIONS SWITCHER */
 
+/* START ADMIN-EXCLUSIVE DASHBOARD CONTROLLER */
+class AdminDashboardController {
+    constructor() {
+        this.metricEls = {
+            totalStaff: document.getElementById('admin-total-staff-value'),
+            totalTickets: document.getElementById('admin-total-tickets-value'),
+            openTickets: document.getElementById('admin-open-tickets-value'),
+            totalResigned: document.getElementById('admin-total-resigned-value'),
+        };
+
+        if (!Object.values(this.metricEls).some(Boolean)) return;
+
+        this.renderUserMetrics();
+        this.renderTicketMetrics();
+    }
+
+    setMetric(metricName, value) {
+        const el = this.metricEls[metricName];
+        if (!el) return;
+
+        const hasValue = Number.isFinite(value) && value > 0;
+        el.textContent = hasValue ? value.toLocaleString() : 'N/A';
+        el.classList.toggle('text-red-100', !hasValue);
+    }
+
+    async renderUserMetrics() {
+        const { data, error } = await fetchUserDashboardCounts();
+        if (error) {
+            this.setMetric('totalStaff', null);
+            this.setMetric('totalResigned', null);
+            return;
+        }
+
+        this.setMetric('totalStaff', data.totalStaff);
+        this.setMetric('totalResigned', data.totalResigned);
+    }
+
+    async renderTicketMetrics() {
+        const { data: tickets, error } = await fetchTickets();
+        if (error) {
+            this.setMetric('totalTickets', null);
+            this.setMetric('openTickets', null);
+            return;
+        }
+
+        const openStatuses = new Set(['open', 'pending']);
+        const totalTickets = tickets.length;
+        const openTickets = tickets.filter(ticket => openStatuses.has(String(ticket.status || '').toLowerCase())).length;
+
+        this.setMetric('totalTickets', totalTickets);
+        this.setMetric('openTickets', openTickets);
+    }
+}
+/* END ADMIN-EXCLUSIVE DASHBOARD CONTROLLER */
 /* START STAFF-EXCLUSIVE DASHBOARD CONTROLLER */
 /**
  * Class exclusive for the `/src/pages/user/staff` user dashboard operations.
@@ -121,90 +178,7 @@ class StaffDashboardController {
         if (window.DEBUG) {
             window.DEBUG.log('STAFF_DASHBOARD', 'Initializing staff dashboard sub-systems and charts...');
         }
-
-        this.defaultSystems = [
-            {
-                id: 'sys-1',
-                name: 'GIP Monitoring System',
-                desc: 'Government Internship Program monitoring portal for tracking student interns across all regional offices.',
-                url: 'https://gip.dole.gov.ph',
-                color: '#10b981', // Emerald
-                image: '/src/assets/images/slider/sl1.jpg'
-            },
-            {
-                id: 'sys-2',
-                name: 'SPES Monitoring System',
-                desc: 'Special Program for Employment of Students system for managing beneficiary records and work assignments.',
-                url: 'https://spes.dole.gov.ph',
-                color: '#3b82f6', // Blue
-                image: '/src/assets/images/slider/sl3.jpg'
-            },
-            {
-                id: 'sys-3',
-                name: 'TUPAD System',
-                desc: 'Tulong Panghanapbuhay sa Ating Displaced/Disadvantaged Workers — assistance distribution tracking system.',
-                url: '#',
-                color: '#ef4444', // Red
-                image: '/src/assets/images/slider/sl5.jpg'
-            },
-            {
-                id: 'sys-4',
-                name: 'Livelihood Assistance System',
-                desc: 'Tracks livelihood grants, project proposals, and beneficiary disbursements across all target municipalities.',
-                url: '#',
-                color: '#8b5cf6', // Violet
-                image: '/src/assets/images/slider/sl1.jpg'
-            },
-            {
-                id: 'sys-5',
-                name: 'Career Guidance Portal',
-                desc: 'Provides graduating students with career matching algorithms, vocational counseling, and guidance tools.',
-                url: '#',
-                color: '#ec4899', // Pink
-                image: '/src/assets/images/slider/sl3.jpg'
-            },
-            {
-                id: 'sys-6',
-                name: 'Labor Inspectorate System',
-                desc: 'Manages establishment inspection schedules, compliance report checklists, and enforcement alerts.',
-                url: '#',
-                color: '#f59e0b', // Amber
-                image: '/src/assets/images/slider/sl5.jpg'
-            },
-            {
-                id: 'sys-7',
-                name: 'Single Entry Approach (SENA)',
-                desc: 'Coordinates labor dispute facilitation, case scheduling, and settlement agreements dynamically.',
-                url: '#',
-                color: '#06b6d4', // Cyan
-                image: '/src/assets/images/slider/sl1.jpg'
-            },
-            {
-                id: 'sys-8',
-                name: 'Alien Employment Permit (AEP)',
-                desc: 'Processes work permit applications, foreign national credentials auditing, and visa issuance logs.',
-                url: '#',
-                color: '#14b8a6', // Teal
-                image: '/src/assets/images/slider/sl3.jpg'
-            },
-            {
-                id: 'sys-9',
-                name: 'JobFair Portal',
-                desc: 'Coordinating system for nationwide employment fairs, registration barcodes, and employer slots.',
-                url: '#',
-                color: '#6366f1', // Indigo
-                image: '/src/assets/images/slider/sl5.jpg'
-            }
-        ];
-
-        // Load systems from localStorage or set default list containing 9 systems
-        this.systems = JSON.parse(localStorage.getItem('dole_systems'));
-        // If it does not exist or has less than 4 systems, populate the full default set of 9 systems
-        if (!this.systems || this.systems.length < 4) {
-            this.systems = this.defaultSystems;
-            localStorage.setItem('dole_systems', JSON.stringify(this.systems));
-        }
-
+        this.systems = [];
         // Pagination limit
         this.limit = 3;
         this.searchFilter = '';
@@ -212,14 +186,66 @@ class StaffDashboardController {
         // Initialize Flowbite Modal for Intruder Detection
         const modalEl = document.getElementById('intruder-modal');
         this.intruderModal = modalEl ? new Modal(modalEl) : null;
-
         this.initEvents();
-        this.render();
+        this.loadSystems();
         this.initNetworkChart();
         this.initMobileCarousel();
         this.initChartsMobileCarousel();
     }
 
+    async loadSystems() {
+        this.renderLoading();
+        const { data, error } = await fetchSystems({ activeOnly: false });
+        if (error) {
+            this.systems = [];
+            this.renderError('Unable to load systems from the database.');
+            return;
+        }
+
+        this.systems = data.map(system => {
+            const systemUrl = system.system_url?.trim() || '';
+
+            return {
+                id: String(system.id),
+                title: system.title || 'Untitled System',
+                description: system.description || 'No description provided.',
+                systemUrl: systemUrl === '#' ? '' : systemUrl,
+                color: system.color || '#3b82f6',
+                imageUrl: system.image_url || '/src/assets/logos/dole_logo.png'
+            };
+        });
+        this.render();
+    }
+
+    renderLoading() {
+        this.gridEl.innerHTML = Array.from({ length: 3 }).map(() => `
+            <div role="status" class="min-h-[320px] rounded-none overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 animate-pulse">
+                <div class="h-40 bg-gray-200 dark:bg-gray-700"></div>
+                <div class="p-6">
+                    <div class="h-5 w-2/3 rounded-full bg-gray-200 dark:bg-gray-700 mb-4"></div>
+                    <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700 mb-2"></div>
+                    <div class="h-3 w-4/5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+                <span class="sr-only">Loading systems...</span>
+            </div>
+        `).join('');
+    }
+
+    renderError(message) {
+        this.gridEl.innerHTML = `
+            <div class="col-span-full border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-6 text-center">
+                <p class="text-sm font-bold text-red-700 dark:text-red-300">${message}</p>
+            </div>
+        `;
+    }
+    escapeHtml(value = '') {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
     initEvents() {
         // Show More Action
         const btnShowMore = document.getElementById('btn-show-more');
@@ -265,8 +291,8 @@ class StaffDashboardController {
 
     getFilteredCount() {
         return this.systems.filter(sys => 
-            sys.name.toLowerCase().includes(this.searchFilter.toLowerCase()) || 
-            sys.desc.toLowerCase().includes(this.searchFilter.toLowerCase())
+            sys.title.toLowerCase().includes(this.searchFilter.toLowerCase()) ||
+            sys.description.toLowerCase().includes(this.searchFilter.toLowerCase())
         ).length;
     }
 
@@ -275,30 +301,25 @@ class StaffDashboardController {
         const sysColor = sys.color || '#3b82f6';
         card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white';
         card.style.setProperty('--sys-color', sysColor);
-        card.setAttribute('data-url', sys.url);
+        card.setAttribute('data-url', sys.systemUrl);
+        card.setAttribute('data-has-link', sys.systemUrl ? 'true' : 'false');
+        card.setAttribute('data-system-id', sys.id);
         card.setAttribute('data-id', sys.id);
-
-        const clickCount = localStorage.getItem('sys_clicks_' + sys.id) || 0;
-        
         card.innerHTML = `
             <div class="relative z-10 flex flex-col h-full justify-between">
                 <!-- System Preview Image Full Width at Top -->
                 <div class="w-full overflow-hidden">
-                    <img class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100" src="${sys.image || '/src/assets/logos/dole_logo.png'}" alt="${sys.name}" />
+                    <img class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100" src="${this.escapeHtml(sys.imageUrl)}" alt="${this.escapeHtml(sys.title)}" />
                 </div>
                 
                 <div class="p-6 flex-1 flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-bold text-white transition-colors">${sys.name}</h3>
-                            <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded font-extrabold uppercase select-none flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-6 6m0 0l-6-6m6 6V9a6 6 0 0112 0v3"/>
-                                </svg>
-                                Clicks: <span class="click-display">${clickCount}</span>
-                            </span>
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-white transition-colors">${this.escapeHtml(sys.title)}</h3>
+                            <span class="shrink-0 whitespace-nowrap text-[10px] bg-white/20 px-2 py-0.5 font-extrabold uppercase">ID #${this.escapeHtml(sys.id)}</span>
                         </div>
-                        <p class="text-xs font-semibold text-white/70">${sys.desc}</p>
+                        <p class="text-xs font-semibold text-white/70">${this.escapeHtml(sys.description)}</p>
+                        <p class="mt-4 break-words text-[10px] font-semibold text-white/50">${this.escapeHtml(sys.systemUrl || 'No link')}</p>
                     </div>
                 </div>
             </div>
@@ -308,21 +329,11 @@ class StaffDashboardController {
 
     bindCardClick(card) {
         card.addEventListener('click', () => {
-            const id = card.getAttribute('data-id');
             const url = card.getAttribute('data-url');
             
-            // Track click
-            let clickCount = parseInt(localStorage.getItem('sys_clicks_' + id) || '0', 10);
-            clickCount++;
-            localStorage.setItem('sys_clicks_' + id, clickCount);
-
-            // Update card UI click display instantly across all matching cards (desktop & mobile)
-            document.querySelectorAll(`.system-card[data-id="${id}"] .click-display`).forEach(el => {
-                el.textContent = clickCount;
-            });
-
             // Redirect
-            if (url && url !== '#' && url.trim() !== '') {
+
+            if (url && url.trim() !== '') {
                 window.open(url, '_blank', 'noopener,noreferrer');
             }
         });
@@ -332,8 +343,8 @@ class StaffDashboardController {
         // 1. Render Desktop Grid
         this.gridEl.innerHTML = '';
         const filteredSystems = this.systems.filter(sys => 
-            sys.name.toLowerCase().includes(this.searchFilter.toLowerCase()) || 
-            sys.desc.toLowerCase().includes(this.searchFilter.toLowerCase())
+            sys.title.toLowerCase().includes(this.searchFilter.toLowerCase()) ||
+            sys.description.toLowerCase().includes(this.searchFilter.toLowerCase())
         );
 
         const visibleSystems = (this.searchFilter.length > 0) ? filteredSystems : filteredSystems.slice(0, this.limit);
@@ -678,11 +689,13 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         initThemeToggler();
         initQuickActionsSwitcher();
+        new AdminDashboardController();
         new StaffDashboardController();
     });
 } else {
     initThemeToggler();
     initQuickActionsSwitcher();
+    new AdminDashboardController();
     new StaffDashboardController();
 }
 

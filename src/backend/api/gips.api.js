@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabase.js';
+import { hashCredential } from './auth.api.js';
 
 /**
  * Fetch all active GIP assistants created by a specific staff user.
@@ -70,15 +71,18 @@ export async function countGipsByStaff(createdBy) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function createGip(payload) {
+    const safePayload = { ...payload };
+    if (safePayload.password) safePayload.password = await hashCredential(safePayload.password);
+
     // Enforce max 2 per staff
-    const currentCount = await countGipsByStaff(payload.created_by);
+    const currentCount = await countGipsByStaff(safePayload.created_by);
     if (currentCount >= 2) {
         return { data: null, error: 'Maximum of 2 GIP assistants allowed per staff member.' };
     }
 
     const { data, error } = await supabase
         .from('gips')
-        .insert([payload])
+        .insert([safePayload])
         .select()
         .single();
 
@@ -97,9 +101,12 @@ export async function createGip(payload) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function updateGip(gipId, updates) {
+    const safeUpdates = { ...updates };
+    if (safeUpdates.password) safeUpdates.password = await hashCredential(safeUpdates.password);
+
     const { data, error } = await supabase
         .from('gips')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...safeUpdates, updated_at: new Date().toISOString() })
         .eq('id', gipId)
         .select()
         .single();

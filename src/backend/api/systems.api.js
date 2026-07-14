@@ -14,16 +14,26 @@ import { supabase } from './supabase.js';
 const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'system-images';
 
 /**
- * Fetch all active systems for the staff dashboard grid.
+ * Fetch systems from the database.
+ * Staff pages pass the default active-only view; admin pages can include inactive rows.
+ * @param {{ activeOnly?: boolean, includeArchived?: boolean }} options
  * @returns {{ data: Array, error: string|null }}
  */
-export async function fetchSystems() {
-    const { data, error } = await supabase
+export async function fetchSystems({ activeOnly = true, includeArchived = false } = {}) {
+    let query = supabase
         .from('systems')
-        .select('id, title, description, system_url, image_url, color, is_active, created_at')
-        .eq('is_active', true)
-        .is('archived_at', null)
+        .select('id, title, description, system_url, image_url, color, is_active, created_at, archived_at')
         .order('created_at', { ascending: true });
+
+    if (!includeArchived) {
+        query = query.is('archived_at', null);
+    }
+
+    if (activeOnly) {
+        query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
         if (window.DEBUG) window.DEBUG.error('SYSTEMS-API', 'Failed to fetch systems', error.message);

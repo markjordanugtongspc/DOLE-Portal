@@ -14,6 +14,7 @@ export {
     getCurrentUser,
     saveSession,
     logout,
+    hashCredential,
 } from './auth.api.js';
 
 // ─── Users ─────────────────────────────────────────────────────────────────────

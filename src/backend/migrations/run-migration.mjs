@@ -1,52 +1,59 @@
 /**
- * DOLE Iligan Portal — Supabase Migration Runner
- * Executes the SQL migration against the live Supabase PostgreSQL database.
+ * DOLE Iligan Portal - Local migration runner.
  *
- * Usage: node src/backend/migrations/run-migration.mjs
+ * This file intentionally contains no project URL, service role key, or database
+ * password. Keep real credentials in a local, gitignored env file.
  *
- * Requires: @supabase/supabase-js installed
- * Run: npm install @supabase/supabase-js
+ * Usage:
+ *   SUPABASE_DB_URL="your_local_database_connection_string" MIGRATION_SQL_PATH="C:/secure/schema.sql" node src/backend/migrations/run-migration.mjs
+ *
+ * Optional local env files loaded automatically when present:
+ *   src/backend/config/.env.local
+ *   src/backend/config/.env
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { createClient } from '@supabase/supabase-js';
+import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '../../..');
+const envFiles = [
+    resolve(projectRoot, 'src/backend/config/.env.local'),
+    resolve(projectRoot, 'src/backend/config/.env')
+];
 
-// ─── Supabase connection (using service role for DDL permissions) ──────────────
-const SUPABASE_URL     = 'https://byrmafeczbxutgkicmtu.supabase.co';
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5cm1hZmVjemJ4dXRna2ljbXR1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzkyNjA1NSwiZXhwIjoyMDk5NTAyMDU1fQ.Ivw2geXXXSdS0MkLJFpSpr9rjeW9LiZBrkz3Q-9hhL0';
+function loadLocalEnv() {
+    for (const envPath of envFiles) {
+        if (!existsSync(envPath)) continue;
 
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
-});
+        const lines = readFileSync(envPath, 'utf-8').split(/\r?\n/);
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#')) continue;
 
-// ─── Read SQL file ─────────────────────────────────────────────────────────────
-const sqlPath = join(__dirname, '001_initial_schema.sql');
-const sql = readFileSync(sqlPath, 'utf-8');
+            const separatorIndex = trimmed.indexOf('=');
+            if (separatorIndex === -1) continue;
 
-// ─── Split SQL into individual statements for execution ───────────────────────
-// Splits on semicolons but respects $$ dollar-quoted blocks (PL/pgSQL functions)
+            const key = trimmed.slice(0, separatorIndex).trim();
+            const value = trimmed.slice(separatorIndex + 1).trim().replace(/^['"]|['"]$/g, '');
+            if (key && process.env[key] === undefined) {
+                process.env[key] = value;
+            }
+        }
+    }
+}
+
 function parseSqlStatements(rawSql) {
     const statements = [];
     let current = '';
     let inDollarQuote = false;
     let dollarTag = '';
 
-    const lines = rawSql.split('\n');
-    for (const line of lines) {
+    for (const line of rawSql.split('\n')) {
         const trimmed = line.trim();
-
-        // Skip pure comment lines
-        if (trimmed.startsWith('--')) {
-            current += line + '\n';
-            continue;
-        }
-
-        // Detect dollar-quote start/end (e.g. $$ or $BODY$)
         const dollarMatches = line.match(/\$[a-zA-Z_]*\$/g);
+
         if (dollarMatches) {
             for (const tag of dollarMatches) {
                 if (!inDollarQuote) {
@@ -59,121 +66,85 @@ function parseSqlStatements(rawSql) {
             }
         }
 
-        current += line + '\n';
-
+        current += `${line}\n`;
         if (!inDollarQuote && trimmed.endsWith(';')) {
-            const stmt = current.trim();
-            if (stmt && stmt !== ';') {
-                statements.push(stmt);
-            }
+            const statement = current.trim();
+            if (statement && statement !== ';') statements.push(statement);
             current = '';
         }
     }
 
-    if (current.trim()) {
-        statements.push(current.trim());
-    }
-
-    return statements.filter(s => s.replace(/--.*$/gm, '').trim().length > 0);
+    if (current.trim()) statements.push(current.trim());
+    return statements.filter((statement) => statement.replace(/--.*$/gm, '').trim().length > 0);
 }
 
-// ─── Execute via Supabase REST API (rpc exec_sql) ─────────────────────────────
-// Since Supabase JS client doesn't support raw DDL directly, we use the
-// Management API's database query endpoint with the service role.
-async function executeSql(sqlStatement) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'apikey': SERVICE_ROLE_KEY,
-            'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({ sql: sqlStatement })
-    });
+async function runMigration() {
+    loadLocalEnv();
 
-    // Fallback: use Supabase Management API
-    if (!response.ok) {
-        return { error: await response.text() };
+    const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+    const migrationPath = process.env.MIGRATION_SQL_PATH;
+
+    if (!connectionString) {
+        throw new Error('Missing SUPABASE_DB_URL or DATABASE_URL. Put it in a local gitignored env file or pass it before the command.');
     }
-    return { data: await response.json() };
-}
 
-// ─── Alternative: Use pg directly via connection string ───────────────────────
-async function runMigrationViaPg() {
+    if (!migrationPath) {
+        throw new Error('Missing MIGRATION_SQL_PATH. Keep migration SQL outside git or in a gitignored local path.');
+    }
+
+    const resolvedMigrationPath = resolve(projectRoot, migrationPath);
+    if (!existsSync(resolvedMigrationPath)) {
+        throw new Error(`Migration SQL file was not found: ${resolvedMigrationPath}`);
+    }
+
     let pg;
     try {
         pg = await import('pg');
     } catch {
-        console.error('❌  pg package not found. Run: npm install pg');
-        process.exit(1);
+        throw new Error('Missing pg dependency. Run npm install first.');
     }
 
     const { Client } = pg.default || pg;
+    const sql = readFileSync(resolvedMigrationPath, 'utf-8');
+    const statements = parseSqlStatements(sql);
     const client = new Client({
-        connectionString: 'postgresql://postgres:zCtWCwKye3cfgVUl@db.byrmafeczbxutgkicmtu.supabase.co:5432/postgres',
+        connectionString,
         ssl: { rejectUnauthorized: false }
     });
 
+    console.log('Connecting to Supabase PostgreSQL...');
+    await client.connect();
+    console.log(`Connected. Running ${statements.length} SQL statements.`);
+
+    let successCount = 0;
     try {
-        console.log('🔗  Connecting to Supabase PostgreSQL...');
-        await client.connect();
-        console.log('✅  Connected.\n');
-
-        const statements = parseSqlStatements(sql);
-        console.log(`📋  Found ${statements.length} SQL statements to execute.\n`);
-
-        let successCount = 0;
-        let errorCount = 0;
-
-        for (let i = 0; i < statements.length; i++) {
-            const stmt = statements[i];
-
-            // Get a readable label for the statement
-            const firstLine = stmt.split('\n').find(l => l.trim() && !l.trim().startsWith('--')) || '';
+        for (let i = 0; i < statements.length; i += 1) {
+            const statement = statements[i];
+            const firstLine = statement.split('\n').find((line) => line.trim() && !line.trim().startsWith('--')) || '';
             const label = firstLine.substring(0, 80).trim();
-
             process.stdout.write(`  [${i + 1}/${statements.length}] ${label}... `);
 
             try {
-                await client.query(stmt);
-                console.log('✅');
-                successCount++;
-            } catch (err) {
-                // Skip "already exists" errors gracefully
-                if (err.code === '42P07' || err.message.includes('already exists')) {
-                    console.log('⏭️  (already exists — skipped)');
-                    successCount++;
-                } else if (err.code === '42710') {
-                    // Duplicate object
-                    console.log('⏭️  (duplicate — skipped)');
-                    successCount++;
+                await client.query(statement);
+                successCount += 1;
+                console.log('done');
+            } catch (error) {
+                if (error.code === '42P07' || error.code === '42710' || error.message.includes('already exists')) {
+                    successCount += 1;
+                    console.log('already exists, skipped');
                 } else {
-                    console.log(`❌  ERROR: ${err.message}`);
-                    errorCount++;
+                    throw error;
                 }
             }
         }
-
-        console.log('\n─────────────────────────────────────');
-        console.log(`✅  Success: ${successCount} statements`);
-        if (errorCount > 0) {
-            console.log(`❌  Errors:  ${errorCount} statements`);
-        }
-        console.log('─────────────────────────────────────');
-        console.log('\n🎉  Migration complete!\n');
-
-    } catch (err) {
-        console.error('❌  Fatal connection error:', err.message);
-        process.exit(1);
     } finally {
         await client.end();
     }
+
+    console.log(`Migration complete. Successful statements: ${successCount}`);
 }
 
-// ─── Run ───────────────────────────────────────────────────────────────────────
-console.log('═══════════════════════════════════════════════════════');
-console.log('  DOLE Iligan Portal — Supabase Migration Runner');
-console.log('  Migration: 001_initial_schema.sql');
-console.log('═══════════════════════════════════════════════════════\n');
-
-runMigrationViaPg();
+runMigration().catch((error) => {
+    console.error(`Migration failed: ${error.message}`);
+    process.exit(1);
+});

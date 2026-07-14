@@ -5,7 +5,7 @@ const MOCK_TICKETS = [
     { id: 'TK-2401', subject: 'Access Denied to GIP Payroll System', priority: 'High', implementor: 'Juan Dela Cruz', date: '2026-07-01', lastActivity: '2 hours ago', category: 'Support Requests', unreadCount: 2, status: 'Open', team: 'Technical Support', notes: 'User reported 403 Forbidden error on GIP payroll.' },
     { id: 'TK-2402', subject: 'Implementor dropdown search crash', priority: 'High', implementor: 'Cardo Dalisay', date: '2026-07-02', lastActivity: '1 day ago', category: 'Bug Report', unreadCount: 0, status: 'Open', team: 'Technical Support', notes: 'Regex parsing crash due to whitespaces.' },
     { id: 'TK-2403', subject: 'Request Export to Excel for GIP roster', priority: 'Low', implementor: 'Jane Smith', date: '2026-07-03', lastActivity: '3 hours ago', category: 'Feature Request', unreadCount: 1, status: 'Pending', team: 'Customer Service', notes: 'Backlog item for data reports.' },
-    { id: 'TK-2404', subject: 'Password reset for office encoder', priority: 'Medium', implementor: 'Maria Clara', date: '2026-07-04', lastActivity: 'Just now', category: 'Support Requests', unreadCount: 0, status: 'Closed', team: 'Customer Service', notes: 'Reset done to standard DoleLinamon2026!.' },
+    { id: 'TK-2404', subject: 'Password reset for office encoder', priority: 'Medium', implementor: 'Maria Clara', date: '2026-07-04', lastActivity: 'Just now', category: 'Support Requests', unreadCount: 0, status: 'Closed', team: 'Customer Service', notes: 'Password reset completed using the approved secure reset workflow.' },
     { id: 'TK-2405', subject: 'Sidebar navigation items layout shift', priority: 'Medium', implementor: 'Robert Lim', date: '2026-07-05', lastActivity: '12 mins ago', category: 'Bug Report', unreadCount: 3, status: 'Open', team: 'Technical Support', notes: 'Layout issue on small viewports.' },
     { id: 'TK-2406', subject: 'Add filter by municipality to report', priority: 'Low', implementor: 'Pedro Penduko', date: '2026-07-05', lastActivity: '5 hours ago', category: 'Feature Request', unreadCount: 0, status: 'Pending', team: 'Technical Support', notes: 'Needs database schema updates.' },
     { id: 'TK-2407', subject: 'HR portal file upload size limit increase', priority: 'High', implementor: 'Alyana Arevalo', date: '2026-07-06', lastActivity: '2 days ago', category: 'Support Requests', unreadCount: 0, status: 'Closed', team: 'Customer Service', notes: 'Increased to 50MB handbooks limit.' },
@@ -83,7 +83,7 @@ const MOCK_KB_ARTICLES = {
         category: 'Tutorial',
         readTime: '3 Minutes read',
         summary: 'Procedures for managing passwords, handling Email OTPs, and executing admin overrides for locked out credentials.',
-        suggestText: 'Temporary password reset: default credentials have been configured as DoleLinamon2026!. Please ask the staff to change it immediately after login via Email OTP.'
+        suggestText: 'Password reset has been completed through the approved secure reset workflow. Please ask the staff to change it immediately after login via Email OTP.'
     }
 };
 

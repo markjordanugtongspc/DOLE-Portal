@@ -13,6 +13,39 @@
       document.documentElement.classList.remove('dark')
     }
   </script>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var match = path.match(/\/src\/pages\/user\/(admin|staff)\//);
+      if (!match) return;
+
+      var rawSession = localStorage.getItem('dole_session');
+      if (!rawSession) {
+        window.location.replace('/?auth=login_required');
+        return;
+      }
+
+      try {
+        var user = JSON.parse(rawSession);
+        var roleId = Number(user && user.role_id);
+        var requiredRole = match[1];
+        var actualRole = roleId === 1 || roleId === 2 ? 'admin' : roleId === 3 || roleId === 4 ? 'staff' : null;
+
+        if (!actualRole) {
+          localStorage.removeItem('dole_session');
+          window.location.replace('/?auth=login_required');
+          return;
+        }
+
+        if (actualRole !== requiredRole) {
+          window.location.replace(actualRole === 'admin' ? '/src/pages/user/admin/dashboard/' : '/src/pages/user/staff/dashboard/');
+        }
+      } catch (error) {
+        localStorage.removeItem('dole_session');
+        window.location.replace('/?auth=login_required');
+      }
+    })();
+  </script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">

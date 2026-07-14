@@ -5,6 +5,7 @@
  */
 
 import { supabase } from './supabase.js';
+import { hashCredential } from './auth.api.js';
 
 /**
  * Fetch all active users (non-archived), optionally filtered by role.
@@ -45,6 +46,40 @@ export async function fetchUsers(roleId = null) {
     return { data: data || [], error: null };
 }
 
+
+/**
+ * Fetch count metrics used by the admin dashboard cards.
+ * Counts active users by id from the users table.
+ * @returns {{ data: { totalStaff: number|null, totalResigned: number|null }, error: string|null }}
+ */
+export async function fetchUserDashboardCounts() {
+    const [activeUsersResult, resignedResult] = await Promise.all([
+        supabase
+            .from('users')
+            .select('id', { count: 'exact', head: true })
+            .is('archived_at', null),
+        supabase
+            .from('users')
+            .select('id', { count: 'exact', head: true })
+            .not('archived_at', 'is', null),
+    ]);
+
+    const error = activeUsersResult.error || resignedResult.error;
+    if (error) {
+        if (window.DEBUG) window.DEBUG.error('USERS-API', 'Failed to fetch dashboard user counts', error.message);
+        return { data: { totalStaff: null, totalResigned: null }, error: error.message };
+    }
+    const totalStaff = activeUsersResult.count ?? 0;
+
+    return {
+        data: {
+            totalStaff,
+            totalResigned: resignedResult.count ?? 0,
+        },
+        error: null,
+    };
+}
+
 /**
  * Fetch a single user by ID.
  * @param {number} userId
@@ -72,9 +107,13 @@ export async function fetchUserById(userId) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function createUser(payload) {
+    const safePayload = { ...payload };
+    if (safePayload.password) safePayload.password = await hashCredential(safePayload.password);
+    if (safePayload.pin) safePayload.pin = await hashCredential(safePayload.pin);
+
     const { data, error } = await supabase
         .from('users')
-        .insert([payload])
+        .insert([safePayload])
         .select()
         .single();
 
@@ -93,9 +132,13 @@ export async function createUser(payload) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function updateUser(userId, updates) {
+    const safeUpdates = { ...updates };
+    if (safeUpdates.password) safeUpdates.password = await hashCredential(safeUpdates.password);
+    if (safeUpdates.pin) safeUpdates.pin = await hashCredential(safeUpdates.pin);
+
     const { data, error } = await supabase
         .from('users')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...safeUpdates, updated_at: new Date().toISOString() })
         .eq('id', userId)
         .select()
         .single();

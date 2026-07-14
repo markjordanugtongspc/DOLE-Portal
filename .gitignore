@@ -23,9 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment & Sensitive Config — DO NOT COMMIT
+# Environment & Sensitive Config - DO NOT COMMIT
 .env
-.env.local
-.env.production
+.env.*
+!.env.example
 src/backend/config/.env
-src/backend/config/.env.local
+src/backend/config/.env.*
+!src/backend/config/.env.example
+
+# Local-only project memory and migration dumps
+LLMS_GUIDE.md
+src/backend/migrations/*.sql

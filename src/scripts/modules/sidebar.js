@@ -1,6 +1,31 @@
 import sidebarTemplate from '@/components/sidebar.html?raw';
 import pkg from '../../../package.json';
+import { logout } from '@/backend/api/auth.api.js';
 
+
+/* START SIDEBAR LOGOUT SYSTEM */
+const setupSidebarLogout = () => {
+    const logoutBtn = document.getElementById('sidebar-logout-btn');
+    if (!logoutBtn || logoutBtn.dataset.logoutBound) return;
+
+    logoutBtn.dataset.logoutBound = 'true';
+    logoutBtn.addEventListener('click', async () => {
+        logoutBtn.disabled = true;
+        logoutBtn.classList.add('opacity-70', 'pointer-events-none');
+        const label = logoutBtn.querySelector('span');
+        if (label) label.textContent = 'Logging out...';
+
+        try {
+            await logout();
+        } catch (error) {
+            if (window.DEBUG) window.DEBUG.error('SIDEBAR', 'Logout failed', error);
+            localStorage.removeItem('dole_session');
+        } finally {
+            window.location.replace('/');
+        }
+    });
+};
+/* END SIDEBAR LOGOUT SYSTEM */
 /* START DYNAMIC ROLE-BASED SIDEBAR SYSTEM */
 const setupDynamicSidebar = () => {
     const sidebarEl = document.getElementById('sidebar');
@@ -176,6 +201,8 @@ const setupDynamicSidebar = () => {
         window.DEBUG.success('SIDEBAR', `Sidebar loaded for role: ${role}`);
     }
     
+    setupSidebarLogout();
+
     // Inject Version
     const versionEl = document.getElementById('app-version-display');
     if (versionEl) {

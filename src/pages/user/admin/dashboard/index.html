@@ -13,6 +13,39 @@
       document.documentElement.classList.remove('dark')
     }
   </script>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var match = path.match(/\/src\/pages\/user\/(admin|staff)\//);
+      if (!match) return;
+
+      var rawSession = localStorage.getItem('dole_session');
+      if (!rawSession) {
+        window.location.replace('/?auth=login_required');
+        return;
+      }
+
+      try {
+        var user = JSON.parse(rawSession);
+        var roleId = Number(user && user.role_id);
+        var requiredRole = match[1];
+        var actualRole = roleId === 1 || roleId === 2 ? 'admin' : roleId === 3 || roleId === 4 ? 'staff' : null;
+
+        if (!actualRole) {
+          localStorage.removeItem('dole_session');
+          window.location.replace('/?auth=login_required');
+          return;
+        }
+
+        if (actualRole !== requiredRole) {
+          window.location.replace(actualRole === 'admin' ? '/src/pages/user/admin/dashboard/' : '/src/pages/user/staff/dashboard/');
+        }
+      } catch (error) {
+        localStorage.removeItem('dole_session');
+        window.location.replace('/?auth=login_required');
+      }
+    })();
+  </script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
@@ -63,7 +96,9 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL STAFF</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">128</p>
+            <p id="admin-total-staff-value" data-admin-dashboard-metric="totalStaff" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-16 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading total staff...</span></span>
+            </p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -76,7 +111,7 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL TICKETS</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">450</p>
+            <p id="admin-total-tickets-value" data-admin-dashboard-metric="totalTickets" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">N/A</p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg id='Two_Tickets_24' class="w-6 h-6 text-white" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
@@ -91,7 +126,7 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OPEN TICKETS</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">12</p>
+            <p id="admin-open-tickets-value" data-admin-dashboard-metric="openTickets" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">N/A</p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -104,7 +139,7 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-rose-950 to-red-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL RESIGNED</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block">18</p>
+            <p id="admin-total-resigned-value" data-admin-dashboard-metric="totalResigned" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">N/A</p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
