@@ -2,6 +2,7 @@
 import { Modal } from 'flowbite';
 import { archiveGip, createGip, fetchAllGips, updateGip } from '@/backend/api/gips.api.js';
 import { archiveUser, createUser, fetchOffices, fetchRoles, fetchUsers, updateUser } from '@/backend/api/users.api.js';
+import { supabase } from '@/backend/api/supabase.js';
 
 export const initStaffsManage = () => {
     const table = document.getElementById('sorting-table');
@@ -28,6 +29,78 @@ export const initStaffsManage = () => {
 
     let users = [], gips = [], roles = [], offices = [], dt = null, mode = 'add-staff', recordId = null, staffId = null, positionDropdown = null, officeDropdown = null;
     const MAX_GIP = 2;
+
+    const showToast = (type, message) => {
+        let container = document.getElementById('systems-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'systems-toast-container';
+            container.className = 'fixed bottom-4 right-4 z-[80] flex w-[calc(100%-2rem)] max-w-xs flex-col gap-2 sm:right-4 sm:w-full';
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('aria-atomic', 'true');
+            document.body.appendChild(container);
+        }
+
+        const id = `toast-${Date.now()}`;
+        const toast = document.createElement('div');
+        toast.id = id;
+        toast.className = `flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow-md dark:text-gray-400 dark:bg-gray-800 transition-all duration-300 transform translate-y-2 opacity-0`;
+        
+        let iconHtml = '';
+        if (type === 'success') {
+            iconHtml = `
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-emerald-500 bg-emerald-100 rounded-lg dark:bg-emerald-800 dark:text-emerald-200">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+                    </svg>
+                    <span class="sr-only">Success icon</span>
+                </div>
+            `;
+        } else if (type === 'danger') {
+            iconHtml = `
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
+                    </svg>
+                    <span class="sr-only">Error icon</span>
+                </div>
+            `;
+        } else if (type === 'warning') {
+            iconHtml = `
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-orange-500 bg-orange-100 rounded-lg dark:bg-orange-850 dark:text-orange-200">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>
+                    </svg>
+                    <span class="sr-only">Warning icon</span>
+                </div>
+            `;
+        }
+
+        toast.innerHTML = `
+            ${iconHtml}
+            <div class="ms-3 text-sm font-semibold">${message}</div>
+            <button type="button" class="cursor-pointer ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" data-dismiss-target="#${id}" aria-label="Close">
+                <span class="sr-only">Close</span>
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                </svg>
+            </button>
+        `;
+
+        container.appendChild(toast);
+
+        window.requestAnimationFrame(() => {
+            toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+
+        const dismiss = () => {
+            toast.classList.add('opacity-0');
+            toast.addEventListener('transitionend', () => toast.remove());
+        };
+
+        toast.querySelector('[data-dismiss-target]').addEventListener('click', dismiss);
+        setTimeout(dismiss, 4000);
+    };
     const esc = (v = '') => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     const avatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`;
     const na = (v) => v ? esc(v) : '<span class="italic text-gray-400 dark:text-gray-600">N/A</span>';
@@ -45,6 +118,40 @@ export const initStaffsManage = () => {
         document.querySelector('.dataTable-wrapper')?.classList.add('overflow-y-auto', 'max-h-[600px]');
     };
 
+    // Sort helper: admins (role_id 1 or 2) always first, then by created_at ascending
+    const sortUsers = (list) => {
+        return [...list].sort((a, b) => {
+            const aIsAdmin = Number(a.role_id) <= 2;
+            const bIsAdmin = Number(b.role_id) <= 2;
+            if (aIsAdmin && !bIsAdmin) return -1;
+            if (!aIsAdmin && bIsAdmin) return 1;
+            return new Date(a.created_at) - new Date(b.created_at);
+        });
+    };
+
+    const skeletonRow = () => `
+        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div>
+                    <div class="space-y-1.5">
+                        <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div>
+                        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-40"></div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
+            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></td>
+            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
+            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+        </tr>`;
+
+    const showSkeleton = (rows = 5) => {
+        destroyTable();
+        tbody.innerHTML = Array(rows).fill(0).map(() => skeletonRow()).join('');
+    };
+
     const render = (list = users) => {
         destroyTable();
         tbody.innerHTML = '';
@@ -52,7 +159,8 @@ export const initStaffsManage = () => {
             tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">No staff records found in Supabase.</td></tr>';
             return;
         }
-        list.forEach(user => {
+        const sorted = sortUsers(list);
+        sorted.forEach(user => {
             const kids = staffGips(user.id), childClass = `impl-row-${user.id}`;
             tbody.insertAdjacentHTML('beforeend', `
                 <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-id="${user.id}">
@@ -91,8 +199,7 @@ export const initStaffsManage = () => {
         }
     };
     const load = async () => {
-        destroyTable();
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">Loading staff records...</td></tr>';
+        showSkeleton(5);
         window.DEBUG?.flow('STAFFS', 'Fetching users, roles, offices, and GIP assistants.');
         const [ur, gr, rr, or] = await Promise.all([fetchUsers(), fetchAllGips(), fetchRoles(), fetchOffices()]);
         if (ur.error) window.DEBUG?.error('STAFFS', 'Users fetch failed.', ur.error);
@@ -195,7 +302,7 @@ export const initStaffsManage = () => {
         e.preventDefault();
         if (mode === 'add-staff' || mode === 'edit-staff') {
             if (!els.role?.value) {
-                alert('Position is required.');
+                showToast('danger', 'Position is required.');
                 return;
             }
         }
@@ -212,6 +319,7 @@ export const initStaffsManage = () => {
                 if (res.error) throw new Error(res.error);
                 const gipError = await saveGipBlocks(res.data.id); if (gipError) throw new Error(gipError);
                 window.DEBUG?.success('STAFFS', 'Staff created.', res.data);
+                showToast('success', `Staff member "${res.data.full_name}" was added successfully.`);
             } else if (mode === 'edit-staff') {
                 const updates = staffPayload();
                 if (els.password.value) updates.password = els.password.value;
@@ -223,16 +331,18 @@ export const initStaffsManage = () => {
                 const res = await updateUser(recordId, updates); if (res.error) throw new Error(res.error);
                 const gipError = await saveGipBlocks(recordId); if (gipError) throw new Error(gipError);
                 window.DEBUG?.success('STAFFS', 'Staff updated.', res.data);
+                showToast('success', `Staff member "${res.data.full_name}" was updated successfully.`);
             } else if (mode === 'edit-gip') {
                 const updates = { full_name: els.gipName?.value.trim() || '', username: els.username?.value.trim() || '', email: els.email?.value.trim() || null, phone: els.phone?.value.trim() || null };
                 if (els.password.value) updates.password = els.password.value;
                 const res = await updateGip(recordId, updates); if (res.error) throw new Error(res.error);
                 window.DEBUG?.success('STAFFS', 'GIP assistant updated.', res.data);
+                showToast('success', `GIP Assistant "${res.data.full_name}" was updated successfully.`);
             }
             editModal?.hide(); await load();
         } catch (error) {
             window.DEBUG?.error('STAFFS', 'Save failed.', error.message || error);
-            alert(error.message || 'Unable to save record. Check console debugger.');
+            showToast('danger', error.message || 'Unable to save record.');
         } finally {
             els.submit.disabled = false; els.submit.classList.remove('opacity-70', 'pointer-events-none');
         }
@@ -269,8 +379,26 @@ export const initStaffsManage = () => {
             e.stopPropagation(); const action = btn.dataset.action, id = Number(btn.dataset.id); window.DEBUG?.event('STAFFS', `Action: ${action}`, { id });
             if (action === 'edit-staff') { const u = users.find(x => Number(x.id) === id); if (u) { editStaffMode(u); editModal?.show(); } }
             if (action === 'edit-gip') { const g = gips.find(x => Number(x.id) === id); if (g) { editGipMode(g); editModal?.show(); } }
-            if (action === 'archive-staff' && confirm('Archive this staff account?')) { const r = await archiveUser(id); if (r.error) window.DEBUG?.error('STAFFS', 'Archive staff failed.', r.error); await load(); }
-            if (action === 'archive-gip' && confirm('Archive this GIP assistant?')) { const r = await archiveGip(id); if (r.error) window.DEBUG?.error('STAFFS', 'Archive GIP failed.', r.error); await load(); }
+            if (action === 'archive-staff' && confirm('Archive this staff account?')) {
+                const r = await archiveUser(id);
+                if (r.error) {
+                    window.DEBUG?.error('STAFFS', 'Archive staff failed.', r.error);
+                    showToast('danger', `Unable to archive staff. ${r.error}`);
+                } else {
+                    showToast('success', 'Staff account archived successfully.');
+                }
+                await load();
+            }
+            if (action === 'archive-gip' && confirm('Archive this GIP assistant?')) {
+                const r = await archiveGip(id);
+                if (r.error) {
+                    window.DEBUG?.error('STAFFS', 'Archive GIP failed.', r.error);
+                    showToast('danger', `Unable to archive GIP assistant. ${r.error}`);
+                } else {
+                    showToast('success', 'GIP assistant archived successfully.');
+                }
+                await load();
+            }
             return;
         }
         const row = e.target.closest('.parent-row'); if (!row) return;
@@ -315,6 +443,31 @@ export const initStaffsManage = () => {
     };
     initDropdowns();
     load();
+
+    // ── Supabase Realtime ─────────────────────────────────────────────────────
+    // Subscribe to users table changes and refresh the table live.
+    const channel = supabase
+        .channel('staffs-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, async (payload) => {
+            window.DEBUG?.flow('STAFFS', `Realtime event: ${payload.eventType}`, payload);
+            // Re-fetch gips too in case role relationships changed
+            const [ur, gr] = await Promise.all([fetchUsers(), fetchAllGips()]);
+            if (!ur.error) {
+                users = ur.data || [];
+            }
+            if (!gr.error) {
+                gips = gr.data || [];
+            }
+            render(users);
+        })
+        .subscribe((status) => {
+            window.DEBUG?.flow('STAFFS', `Realtime channel status: ${status}`);
+        });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        supabase.removeChannel(channel);
+    });
 };
 
 const initSearchableDropdown = (config) => {

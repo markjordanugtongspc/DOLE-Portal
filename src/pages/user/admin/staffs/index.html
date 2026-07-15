@@ -199,7 +199,31 @@
                         </tr>
                     </thead>
                     <tbody id="staffs-table-body">
-                        <tr><td colspan="6" class="px-6 py-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">Loading staff records...</td></tr>
+                        <!-- Skeleton rows shown until JS loads data -->
+                        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-40"></div></div></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+                        </tr>
+                        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-36"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-48"></div></div></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+                        </tr>
+                        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-36"></div></div></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+                        </tr>
                     </tbody>
                 </table>
                 <!-- Table Footer showing indicator number -->
@@ -398,24 +422,23 @@
                 </button>
 
                 <!-- Profile hero section -->
-                <div class="relative px-6 pt-8 pb-6 bg-gradient-to-b from-blue-50/50 via-white to-white dark:from-blue-950/20 dark:via-gray-800 dark:to-gray-800">
+                <div class="relative px-6 pt-8 pb-6">
                     <div class="flex items-start gap-5">
                         <!-- Avatar with online indicator -->
                         <div class="relative shrink-0">
                             <img id="view-avatar" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-white dark:ring-gray-700 shadow-lg" src="https://ui-avatars.com/api/?name=Lace+Admin&background=random" alt="Avatar">
                             <div id="view-online-dot" class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-[3px] border-white dark:border-gray-800 rounded-full"></div>
                         </div>
-                        <!-- Name, email, and quick badges -->
+                        <!-- Name, email, and status inline -->
                         <div class="flex-1 min-w-0 pt-1">
-                            <h3 id="view-name" class="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">Maam Lace</h3>
-                            <p id="view-email" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">lace.admin@dole.gov.ph</p>
-                            <!-- Inline status badge -->
-                            <div class="mt-3">
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <h3 id="view-name" class="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">Maam Lace</h3>
                                 <span id="view-status" class="inline-flex items-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5">
                                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                                     Online
                                 </span>
                             </div>
+                            <p id="view-email" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 truncate">lace.admin@dole.gov.ph</p>
                         </div>
                     </div>
                 </div>
