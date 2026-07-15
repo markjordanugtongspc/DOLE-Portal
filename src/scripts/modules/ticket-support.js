@@ -432,7 +432,11 @@ class TicketSupportApp {
 
             // Populate the right side details panel inputs
             const detailsAssignee = document.getElementById('details-assignee');
-            if (detailsAssignee) detailsAssignee.value = ticket.implementor;
+            if (detailsAssignee) {
+                const imps = [...new Set(this.tickets.map(t => t.implementor))].filter(Boolean);
+                detailsAssignee.innerHTML = imps.map(imp => `<option value="${imp}">${imp}</option>`).join('');
+                detailsAssignee.value = ticket.implementor;
+            }
 
             const detailsTeam = document.getElementById('details-team');
             if (detailsTeam) detailsTeam.value = ticket.team || 'Technical Support';

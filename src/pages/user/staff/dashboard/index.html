@@ -230,7 +230,7 @@
       <div class="border-b border-gray-200 dark:border-gray-800 pb-4 mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 class="text-lg font-extrabold text-gray-900 dark:text-white">Active Sub-Systems</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Click on any system card to instantly redirect and open its interface.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Click on any system card to open its interface, or drag and drop cards to arrange them based on your preference.</p>
         </div>
         <!-- Mini Search Bar -->
         <div class="relative w-full sm:w-64">
@@ -244,7 +244,7 @@
       </div>
 
       <!-- Systems Grid Container (Desktop View) -->
-      <div id="staff-systems-grid" class="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="staff-systems-grid" class="hidden sm:flex sm:flex-wrap sm:justify-center gap-6">
         <!-- Loaded Dynamically by dashboard.js -->
       </div>
 
@@ -260,7 +260,7 @@
       </div>
 
       <!-- Load More / Show More Button -->
-      <div class="hidden sm:flex justify-center mt-6">
+      <div id="btn-show-more-container" class="hidden sm:flex justify-center mt-6">
         <button id="btn-show-more" class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 font-bold text-xs px-5 py-2.5 shadow-sm transition-all duration-300 hover:-skew-x-12 select-none border border-transparent">
           <span class="inline-block" id="btn-show-more-text">Show More</span>
         </button>

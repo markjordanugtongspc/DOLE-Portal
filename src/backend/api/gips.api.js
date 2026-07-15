@@ -35,7 +35,7 @@ export async function fetchAllGips() {
     const { data, error } = await supabase
         .from('gips')
         .select(`
-            id, full_name, username, email, phone, status, created_at,
+            id, full_name, username, email, phone, status, created_at, created_by,
             users!gips_created_by_fkey ( full_name, username )
         `)
         .is('archived_at', null)

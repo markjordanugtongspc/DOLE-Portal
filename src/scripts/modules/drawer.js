@@ -1,4 +1,5 @@
-import { fetchSystems, createSystem, updateSystem, archiveSystem, uploadSystemImage } from '@/backend/api/systems.api.js';
+import { fetchSystems, createSystem, updateSystem, archiveSystem, restoreSystem, uploadSystemImage } from '@/backend/api/systems.api.js';
+import { Modal } from 'flowbite';
 
 /* START AUTH DRAWER FUNCTIONALITY */
 const initDrawer = () => {
@@ -117,6 +118,8 @@ const initSystemsManager = () => {
     let isSaving = false;
     let suppressNextGridClick = false;
     let viewMode = 'all';
+    let confirmModal = null;
+    let pendingAction = null; // { type: 'archive' | 'restore', id: number, system: object }
 
     const escapeHtml = (value = '') => String(value)
         .replaceAll('&', '&amp;')
@@ -131,7 +134,7 @@ const initSystemsManager = () => {
 
         container = document.createElement('div');
         container.id = 'systems-toast-container';
-        container.className = 'fixed bottom-4 left-1/2 z-[80] flex w-[calc(100%-2rem)] max-w-xs -translate-x-1/2 flex-col gap-2 sm:left-4 sm:w-full sm:translate-x-0';
+        container.className = 'fixed bottom-4 right-4 z-[80] flex w-[calc(100%-2rem)] max-w-xs flex-col gap-2 sm:right-4 sm:w-full';
         container.setAttribute('aria-live', 'polite');
         container.setAttribute('aria-atomic', 'true');
         document.body.appendChild(container);
@@ -339,14 +342,14 @@ const initSystemsManager = () => {
         visibleSystems.forEach((sys) => {
             const card = document.createElement('div');
             const sysColor = sys.color || '#3b82f6';
-            card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-base overflow-hidden text-white';
+            card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-base text-white hover:z-30';
             card.style.setProperty('--sys-color', sysColor);
             card.setAttribute('data-url', sys.systemUrl);
             card.setAttribute('data-has-link', sys.systemUrl ? 'true' : 'false');
             card.setAttribute('data-system-id', sys.id);
             card.innerHTML = `
                 <div class="relative z-10 flex flex-col h-full justify-between">
-                    <div class="w-full overflow-hidden">
+                    <div class="w-full overflow-hidden rounded-t-base">
                         <img class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100" src="${escapeHtml(sys.imageUrl)}" alt="${escapeHtml(sys.title)}" />
                     </div>
                     <div class="p-6 flex-1 flex flex-col justify-between">
@@ -359,14 +362,43 @@ const initSystemsManager = () => {
                             <span class="min-w-0 flex-1 break-words normal-case font-semibold tracking-normal text-white/50 text-right">${escapeHtml(sys.systemUrl || 'No link')}</span>
                         </div>
                         <div class="relative z-20 flex items-center justify-between mt-3">
-                            <button type="button" class="btn-edit-system cursor-pointer text-white/70 hover:text-white transition-colors p-1 group/edit" data-id="${escapeHtml(sys.id)}" aria-label="Edit ${escapeHtml(sys.title)}">
-                                <svg class="w-5 h-5 hidden md:block group-hover/edit:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/></svg>
-                                <svg class="w-5 h-5 block md:hidden md:group-hover/edit:block text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/></svg>
-                            </button>
-                            <button type="button" class="btn-archive-system ${sys.archivedAt ? 'hidden' : ''} cursor-pointer text-white/70 hover:text-red-300 transition-colors p-1 group/archive" data-id="${escapeHtml(sys.id)}" aria-label="Archive ${escapeHtml(sys.title)}">
-                                <svg class="w-5 h-5 hidden md:block group-hover/archive:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11v5m0 0 2-2m-2 2-2-2M3 6v1a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1Zm2 2v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8H5Z"/></svg>
-                                <svg class="w-5 h-5 block md:hidden group-hover/archive:block text-red-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 4a2 2 0 1 0 0 4h16a2 2 0 1 0 0-4H4Zm0 6h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8Zm10.707 5.707a1 1 0 0 0-1.414-1.414l-.293.293V12a1 1 0 1 0-2 0v2.586l-.293-.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l2-2Z" clip-rule="evenodd"/></svg>
-                            </button>
+                            ${sys.archivedAt ? `
+                            <div class="relative group/restore">
+                                <button type="button" class="btn-restore-system cursor-pointer text-white/70 hover:text-emerald-400 transition-colors p-1" data-id="${escapeHtml(sys.id)}" aria-label="Restore ${escapeHtml(sys.title)}">
+                                    <svg class="w-5 h-5 fill-current" id='Restore_24' width='24' height='24' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><g transform="matrix(0.83 0 0 0.83 12 12)" ><path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform=" translate(-16, -16)" d="M 16 4 C 12.419075 4 9.2009645 5.5771818 7 8.0722656 L 7 5 L 5 5 L 5 12 L 12 12 L 12 10 L 8.0214844 10 C 9.8446785 7.5779146 12.726292 6 16 6 C 21.534534 6 26 10.465466 26 16 C 26 21.534534 21.534534 26 16 26 C 10.465466 26 6 21.534534 6 16 L 4 16 C 4 22.615466 9.3845336 28 16 28 C 22.615466 28 28 22.615466 28 16 C 28 9.3845336 22.615466 4 16 4 z M 16 13 C 15.083334 13 14.268559 13.379756 13.751953 13.960938 C 13.235347 14.542118 13 15.277778 13 16 C 13 16.722222 13.235347 17.457881 13.751953 18.039062 C 14.268559 18.620244 15.083334 19 16 19 C 16.916666 19 17.731441 18.620244 18.248047 18.039062 C 18.764653 17.457881 19 16.722222 19 16 C 19 15.277778 18.764653 14.542119 18.248047 13.960938 C 17.731441 13.379755 16.916666 13 16 13 z M 16 15 C 16.416666 15 16.601893 15.120244 16.751953 15.289062 C 16.902014 15.457882 17 15.722222 17 16 C 17 16.277778 16.90201 16.542119 16.751953 16.710938 C 16.601893 16.879756 16.416666 17 16 17 C 15.583334 17 15.398107 16.879756 15.248047 16.710938 C 15.097986 16.542119 15 16.277778 15 16 C 15 15.722222 15.097986 15.457881 15.248047 15.289062 C 15.398107 15.120245 15.583334 15 16 15 z" stroke-linecap="round" /></g></svg>
+                                </button>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/restore:block bg-gray-900 dark:bg-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                                    Restore System
+                                </div>
+                            </div>
+                            <div class="relative group/edit">
+                                <button type="button" class="btn-edit-system cursor-pointer text-white/70 hover:text-white transition-colors p-1" data-id="${escapeHtml(sys.id)}" aria-label="Edit ${escapeHtml(sys.title)}">
+                                    <svg class="w-5 h-5 hidden md:block group-hover/edit:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/></svg>
+                                    <svg class="w-5 h-5 block md:hidden md:group-hover/edit:block text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/></svg>
+                                </button>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/edit:block bg-gray-900 dark:bg-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                                    Edit System
+                                </div>
+                            </div>
+                            ` : `
+                            <div class="relative group/edit">
+                                <button type="button" class="btn-edit-system cursor-pointer text-white/70 hover:text-white transition-colors p-1" data-id="${escapeHtml(sys.id)}" aria-label="Edit ${escapeHtml(sys.title)}">
+                                    <svg class="w-5 h-5 hidden md:block group-hover/edit:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/></svg>
+                                    <svg class="w-5 h-5 block md:hidden md:group-hover/edit:block text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.32 6.176H5c-1.105 0-2 .949-2 2.118v10.588C3 20.052 3.895 21 5 21h11c1.105 0 2-.948 2-2.118v-7.75l-3.914 4.144A2.46 2.46 0 0 1 12.81 16l-2.681.568c-1.75.37-3.292-1.263-2.942-3.115l.536-2.839c.097-.512.335-.983.684-1.352l2.914-3.086Z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M19.846 4.318a2.148 2.148 0 0 0-.437-.692 2.014 2.014 0 0 0-.654-.463 1.92 1.92 0 0 0-1.544 0 2.014 2.014 0 0 0-.654.463l-.546.578 2.852 3.02.546-.579a2.14 2.14 0 0 0 .437-.692 2.244 2.244 0 0 0 0-1.635ZM17.45 8.721 14.597 5.7 9.82 10.76a.54.54 0 0 0-.137.27l-.536 2.84c-.07.37.239.696.588.622l2.682-.567a.492.492 0 0 0 .255-.145l4.778-5.06Z" clip-rule="evenodd"/></svg>
+                                </button>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/edit:block bg-gray-900 dark:bg-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                                    Edit System
+                                </div>
+                            </div>
+                            <div class="relative group/archive">
+                                <button type="button" class="btn-archive-system cursor-pointer text-white/70 hover:text-red-300 transition-colors p-1" data-id="${escapeHtml(sys.id)}" aria-label="Archive ${escapeHtml(sys.title)}">
+                                    <svg class="w-5 h-5 fill-none stroke-current" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+                                </button>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/archive:block bg-gray-900 dark:bg-gray-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md whitespace-nowrap z-50">
+                                    Archive System
+                                </div>
+                            </div>
+                            `}
                         </div>
                     </div>
                 </div>
@@ -471,18 +503,44 @@ const initSystemsManager = () => {
             const system = systems.find((sys) => sys.id === archiveBtn.dataset.id);
             if (!system) return;
 
-            archiveBtn.disabled = true;
-            const { error } = await archiveSystem(Number(system.id));
-            if (error) {
-                archiveBtn.disabled = false;
-                renderError(`Unable to archive "${system.title}". ${error}`);
-                showToast('danger', `Unable to archive "${system.title}". ${error}`);
-                return;
-            }
-            showToast('success', `"${system.title}" was archived successfully.`);
-            await loadSystems();
+            pendingAction = { type: 'archive', id: Number(system.id), system };
+            const titleEl = document.getElementById('confirm-modal-title');
+            const textEl = document.getElementById('confirm-modal-text');
+            const yesBtn = document.getElementById('btn-confirm-yes');
+            const noBtn = document.getElementById('btn-confirm-no');
+            if (titleEl) titleEl.textContent = 'Archive System';
+            if (textEl) textEl.textContent = `Are you sure you want to archive system "${system.title}" (ID #${system.id})?`;
+            
+            if (yesBtn) yesBtn.className = "cursor-pointer text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-200 border border-gray-200 font-medium rounded-lg text-xs px-4 py-2 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-gray-700 transition-colors";
+            if (noBtn) noBtn.className = "cursor-pointer text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-bold rounded-lg text-xs px-5 py-2.5 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900 transition-colors";
+            
+            confirmModal?.show();
             return;
         }
+
+        // START RESTORE SYSTEM FUNCTIONALITY
+        const restoreBtn = event.target.closest('.btn-restore-system');
+        if (restoreBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            const system = systems.find((sys) => sys.id === restoreBtn.dataset.id);
+            if (!system) return;
+
+            pendingAction = { type: 'restore', id: Number(system.id), system };
+            const titleEl = document.getElementById('confirm-modal-title');
+            const textEl = document.getElementById('confirm-modal-text');
+            const yesBtn = document.getElementById('btn-confirm-yes');
+            const noBtn = document.getElementById('btn-confirm-no');
+            if (titleEl) titleEl.textContent = 'Restore System';
+            if (textEl) textEl.textContent = `Are you sure you want to restore system "${system.title}" (ID #${system.id})?`;
+            
+            if (yesBtn) yesBtn.className = "cursor-pointer text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-300 font-bold rounded-lg text-xs px-5 py-2.5 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:focus:ring-emerald-800 transition-colors";
+            if (noBtn) noBtn.className = "cursor-pointer text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-200 border border-gray-200 font-medium rounded-lg text-xs px-4 py-2 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-gray-700 transition-colors";
+            
+            confirmModal?.show();
+            return;
+        }
+        // END RESTORE SYSTEM FUNCTIONALITY
 
         if (card) {
             const url = card.getAttribute('data-url');
@@ -592,6 +650,41 @@ const initSystemsManager = () => {
     forceCloseDrawer();
     updateSortControls();
     loadSystems();
+
+    // Initialize confirm modal
+    const confirmEl = document.getElementById('confirmActionModal');
+    if (confirmEl) {
+        confirmModal = new Modal(confirmEl);
+        confirmEl.querySelectorAll('[data-modal-hide="confirmActionModal"]').forEach(b => {
+            b.addEventListener('click', () => confirmModal?.hide());
+        });
+    }
+
+    document.getElementById('btn-confirm-yes')?.addEventListener('click', async () => {
+        if (!pendingAction) return;
+        const { type, id, system } = pendingAction;
+        confirmModal?.hide();
+
+        if (type === 'archive') {
+            const { error } = await archiveSystem(id);
+            if (error) {
+                renderError(`Unable to archive "${system.title}". ${error}`);
+                showToast('danger', `Unable to archive "${system.title}". ${error}`);
+                return;
+            }
+            showToast('success', `"${system.title}" was archived successfully.`);
+        } else if (type === 'restore') {
+            const { error } = await restoreSystem(id);
+            if (error) {
+                renderError(`Unable to restore "${system.title}". ${error}`);
+                showToast('danger', `Unable to restore "${system.title}". ${error}`);
+                return;
+            }
+            showToast('success', `"${system.title}" was restored successfully.`);
+        }
+        pendingAction = null;
+        await loadSystems();
+    });
 };
 
 if (document.readyState === 'loading') {

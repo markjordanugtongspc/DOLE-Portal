@@ -37,7 +37,7 @@ body {
 }
 
 .dark .system-card {
-  background: linear-gradient(to bottom right, #0f172a, color-mix(in srgb, var(--sys-color) 30%, transparent), color-mix(in srgb, var(--sys-color) 60%, transparent)) !important;
+  background: linear-gradient(to bottom right, #0f172a, color-mix(in srgb, var(--sys-color) 30%, #0f172a), color-mix(in srgb, var(--sys-color) 60%, #0f172a)) !important;
   --glow-color: color-mix(in srgb, var(--sys-color) 70%, transparent);
 }
 
@@ -154,4 +154,25 @@ th.text-left .datatable-sorter {
   to {
     mask-size: 200vmax;
   }
+}
+
+/* Custom scrollbar styling for the options containers */
+.options-container::-webkit-scrollbar {
+  width: 6px;
+}
+.options-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.options-container::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3); /* gray-400 with opacity */
+  border-radius: 9999px;
+}
+.options-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
+}
+.dark .options-container::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.4); /* gray-600 with opacity */
+}
+.dark .options-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.6);
 }

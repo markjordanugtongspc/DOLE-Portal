@@ -202,7 +202,7 @@ class StaffDashboardController {
             return;
         }
 
-        this.systems = data.map(system => {
+        const rawSystems = data.map(system => {
             const systemUrl = system.system_url?.trim() || '';
 
             return {
@@ -214,19 +214,57 @@ class StaffDashboardController {
                 imageUrl: system.image_url || '/src/assets/logos/dole_logo.png'
             };
         });
+
+        // Apply saved order preference
+        const userId = this.getCurrentUserId();
+        const savedOrder = this.getSavedSystemOrder(userId);
+        if (savedOrder && savedOrder.length > 0) {
+            rawSystems.sort((a, b) => {
+                const indexA = savedOrder.indexOf(a.id);
+                const indexB = savedOrder.indexOf(b.id);
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
+            });
+        }
+
+        this.systems = rawSystems;
         this.render();
     }
 
     renderLoading() {
         this.gridEl.innerHTML = Array.from({ length: 3 }).map(() => `
-            <div role="status" class="min-h-[320px] rounded-none overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 animate-pulse">
-                <div class="h-40 bg-gray-200 dark:bg-gray-700"></div>
-                <div class="p-6">
-                    <div class="h-5 w-2/3 rounded-full bg-gray-200 dark:bg-gray-700 mb-4"></div>
-                    <div class="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700 mb-2"></div>
-                    <div class="h-3 w-4/5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+            <div role="status" class="w-full p-4 border border-gray-200 dark:border-gray-800 rounded-none shadow-sm animate-pulse md:p-6 sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)]">
+                <div class="flex items-center justify-center h-40 w-full bg-gray-200 dark:bg-gray-700 rounded-none mb-4 sm:mb-6">
+                    <svg class="w-10 h-10 text-gray-300 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM9 12h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1Zm5.697 2.395v-.733l1.269-1.219v2.984l-1.268-1.032Z"/></svg>
                 </div>
-                <span class="sr-only">Loading systems...</span>
+                <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-48 mb-4"></div>
+                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-2.5"></div>
+                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-2.5"></div>
+                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                <div class="flex items-center mt-4">
+                    <svg id='link_24' class="w-8 h-8 text-gray-300 dark:text-gray-600 me-3" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='24' height='24' stroke='none' fill='#000000' opacity='0'/>
+                    <g transform="matrix(1 0 0 1 12 12)" >
+                    <g style="" >
+                    <g transform="matrix(1 0 0 1 0 0)" >
+                    <path style="stroke: none; stroke-width: 2; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;" transform=" translate(-12, -12)" d="M 0 0 L 24 0 L 24 24 L 0 24 z" stroke-linecap="round" />
+                    </g>
+                    <g transform="matrix(1 0 0 1 3.02 -2.49)" >
+                    <path style="stroke: currentColor; stroke-width: 2; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;" transform=" translate(-15.02, -9.51)" d="M 10 14 C 10.658311336286156 14.67188619407951 11.559359328288686 15.050510257216821 12.5 15.050510257216821 C 13.440640671711314 15.050510257216821 14.341688663713846 14.671886194079509 15 14 L 19 10 C 20.380711874576985 8.619288125423015 20.380711874576985 6.380711874576984 19 5 C 17.61928812542302 3.619288125423016 15.380711874576985 3.619288125423017 14 5 L 13.5 5.5" stroke-linecap="round" />
+                    </g>
+                    <g transform="matrix(1 0 0 1 -3.02 2.49)" >
+                    <path style="stroke: currentColor; stroke-width: 2; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;" transform=" translate(-8.98, -14.49)" d="M 14 10 C 13.341688663713844 9.32811380592049 12.440640671711314 8.949489742783179 11.5 8.949489742783179 C 10.559359328288686 8.949489742783179 9.658311336286154 9.328113805920491 9 10 L 5 14 C 3.6192881254230165 15.380711874576985 3.619288125423016 17.619288125423015 5 19 C 6.380711874576984 20.38071187457698 8.619288125423017 20.380711874576985 10 19 L 10.5 18.5" stroke-linecap="round" />
+                    </g>
+                    </g>
+                    </g>
+                    </svg>
+                    <div>
+                        <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-32 mb-2"></div>
+                        <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                    </div>
+                </div>
+                <span class="sr-only">Loading...</span>
             </div>
         `).join('');
     }
@@ -299,7 +337,7 @@ class StaffDashboardController {
     createSystemCardHtml(sys) {
         const card = document.createElement('div');
         const sysColor = sys.color || '#3b82f6';
-        card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white';
+        card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)]';
         card.style.setProperty('--sys-color', sysColor);
         card.setAttribute('data-url', sys.systemUrl);
         card.setAttribute('data-has-link', sys.systemUrl ? 'true' : 'false');
@@ -316,7 +354,7 @@ class StaffDashboardController {
                     <div>
                         <div class="flex items-start justify-between gap-3 mb-2">
                             <h3 class="text-lg font-bold text-white transition-colors">${this.escapeHtml(sys.title)}</h3>
-                            <span class="shrink-0 whitespace-nowrap text-[10px] bg-white/20 px-2 py-0.5 font-extrabold uppercase">ID #${this.escapeHtml(sys.id)}</span>
+                            <span class="shrink-0 whitespace-nowrap text-[10px] bg-white/20 px-2 py-0.5 font-extrabold uppercase" id="click-counter-${sys.id}">CLICKS ${parseInt(localStorage.getItem(`system_clicks_${sys.id}`) || '0', 10)}</span>
                         </div>
                         <p class="text-xs font-semibold text-white/70">${this.escapeHtml(sys.description)}</p>
                         <p class="mt-4 break-words text-[10px] font-semibold text-white/50">${this.escapeHtml(sys.systemUrl || 'No link')}</p>
@@ -327,16 +365,102 @@ class StaffDashboardController {
         return card;
     }
 
-    bindCardClick(card) {
+    bindCardClick(card, sysId) {
         card.addEventListener('click', () => {
             const url = card.getAttribute('data-url');
             
-            // Redirect
+            // Increment click counter
+            if (sysId) {
+                let clicks = parseInt(localStorage.getItem(`system_clicks_${sysId}`) || '0', 10);
+                clicks++;
+                localStorage.setItem(`system_clicks_${sysId}`, clicks);
+                const counterEl = document.getElementById(`click-counter-${sysId}`);
+                if (counterEl) {
+                    counterEl.textContent = `CLICKS ${clicks}`;
+                }
+            }
 
+            // Redirect
             if (url && url.trim() !== '') {
                 window.open(url, '_blank', 'noopener,noreferrer');
             }
         });
+    }
+
+    bindDragAndDrop(card, sysId) {
+        if (this.searchFilter.length > 0) {
+            card.setAttribute('draggable', 'false');
+            return;
+        }
+        card.setAttribute('draggable', 'true');
+
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', sysId);
+            card.classList.add('opacity-40');
+            this.draggedId = sysId;
+        });
+
+        card.addEventListener('dragend', () => {
+            card.classList.remove('opacity-40');
+            this.draggedId = null;
+            this.gridEl.querySelectorAll('.system-card').forEach(c => {
+                c.classList.remove('border-blue-500', 'scale-[0.98]');
+            });
+        });
+
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (this.draggedId && this.draggedId !== sysId) {
+                card.classList.add('border-blue-500', 'scale-[0.98]');
+            }
+        });
+
+        card.addEventListener('dragleave', () => {
+            card.classList.remove('border-blue-500', 'scale-[0.98]');
+        });
+
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const sourceId = e.dataTransfer.getData('text/plain');
+            const targetId = sysId;
+
+            if (sourceId && targetId && sourceId !== targetId) {
+                const sourceIndex = this.systems.findIndex(s => s.id === sourceId);
+                const targetIndex = this.systems.findIndex(s => s.id === targetId);
+
+                if (sourceIndex !== -1 && targetIndex !== -1) {
+                    const [draggedSystem] = this.systems.splice(sourceIndex, 1);
+                    this.systems.splice(targetIndex, 0, draggedSystem);
+
+                    this.saveCurrentSystemOrder();
+                    this.render();
+                }
+            }
+        });
+    }
+
+    getCurrentUserId() {
+        try {
+            const session = JSON.parse(localStorage.getItem('dole_session') || '{}');
+            return session.id || 'default';
+        } catch {
+            return 'default';
+        }
+    }
+
+    getSavedSystemOrder(userId) {
+        try {
+            const raw = localStorage.getItem(`system_order_${userId}`);
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    }
+
+    saveCurrentSystemOrder() {
+        const userId = this.getCurrentUserId();
+        const cardIds = this.systems.map(sys => sys.id);
+        localStorage.setItem(`system_order_${userId}`, JSON.stringify(cardIds));
     }
 
     render() {
@@ -356,7 +480,9 @@ class StaffDashboardController {
 
         // Add Click listener to desktop cards
         this.gridEl.querySelectorAll('.system-card').forEach(card => {
-            this.bindCardClick(card);
+            const sysId = card.getAttribute('data-system-id');
+            this.bindCardClick(card, sysId);
+            this.bindDragAndDrop(card, sysId);
         });
 
         // 2. Render Mobile Carousel
@@ -388,7 +514,7 @@ class StaffDashboardController {
                     mobileWrapper.appendChild(slideItem);
 
                     // Add click handler
-                    this.bindCardClick(card);
+                    this.bindCardClick(card, sys.id);
 
                     // Create indicator dot
                     const indicator = document.createElement('button');
@@ -406,15 +532,15 @@ class StaffDashboardController {
         }
 
         // Update Show More Button State (Desktop only)
-        const btnShowMore = document.getElementById('btn-show-more');
+        const btnShowMoreContainer = document.getElementById('btn-show-more-container');
         const btnShowMoreText = document.getElementById('btn-show-more-text');
         
-        if (btnShowMore && btnShowMoreText) {
+        if (btnShowMoreContainer && btnShowMoreText) {
             const totalFiltered = filteredSystems.length;
             if (totalFiltered <= 3 || this.searchFilter.length > 0) {
-                btnShowMore.classList.add('hidden');
+                btnShowMoreContainer.style.display = 'none';
             } else {
-                btnShowMore.classList.remove('hidden');
+                btnShowMoreContainer.style.display = ''; // Let Tailwind sm:flex apply
                 if (this.limit >= totalFiltered) {
                     btnShowMoreText.textContent = 'Show Less';
                 } else {
@@ -547,7 +673,8 @@ class StaffDashboardController {
         };
 
         // Initialize Flowbite Carousel programmatically using DashboardCarousel
-        this.statsCarousel = new DashboardCarousel(carouselEl, items, options);
+        const instanceOptions = { id: carouselEl.id, override: true };
+        this.statsCarousel = new DashboardCarousel(carouselEl, items, options, instanceOptions);
 
         // Bind touch swipe support manually
         let touchStartX = 0;
@@ -601,7 +728,8 @@ class StaffDashboardController {
         }
 
         // Initialize Flowbite Carousel programmatically using DashboardCarousel
-        this.systemsCarousel = new DashboardCarousel(carouselEl, items, options);
+        const instanceOptions = { id: carouselEl.id, override: true };
+        this.systemsCarousel = new DashboardCarousel(carouselEl, items, options, instanceOptions);
 
         // Bind touch swipe support manually (ensure only bound once)
         if (!this.systemsSwipeBound) {
@@ -659,7 +787,8 @@ class StaffDashboardController {
             }
         };
 
-        this.chartsCarousel = new DashboardCarousel(carouselEl, items, options);
+        const instanceOptions = { id: carouselEl.id, override: true };
+        this.chartsCarousel = new DashboardCarousel(carouselEl, items, options, instanceOptions);
 
         // Bind touch swipe support manually
         let touchStartX = 0;

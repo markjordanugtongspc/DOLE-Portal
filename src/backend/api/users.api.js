@@ -18,6 +18,7 @@ export async function fetchUsers(roleId = null) {
         .select(`
             id,
             full_name,
+            birthday,
             username,
             email,
             phone,
@@ -89,7 +90,7 @@ export async function fetchUserById(userId) {
     const { data, error } = await supabase
         .from('users')
         .select(`
-            id, full_name, username, email, phone, status, last_seen,
+            id, full_name, birthday, username, email, phone, status, last_seen,
             role_id, office_id, gip_id, created_at, archived_at,
             roles ( name ),
             offices ( name )
@@ -181,12 +182,4 @@ export async function fetchRoles() {
     return { data: data || [], error: null };
 }
 
-/**
- * Fetch all offices for dropdown population.
- * @returns {{ data: Array, error: string|null }}
- */
-export async function fetchOffices() {
-    const { data, error } = await supabase.from('offices').select('*').order('name');
-    if (error) return { data: [], error: error.message };
-    return { data: data || [], error: null };
-}
+export { fetchOffices } from './offices.api.js';

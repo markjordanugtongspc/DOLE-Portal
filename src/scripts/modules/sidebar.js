@@ -1,6 +1,7 @@
 import sidebarTemplate from '@/components/sidebar.html?raw';
 import pkg from '../../../package.json';
 import { logout } from '@/backend/api/auth.api.js';
+import { Drawer } from 'flowbite';
 
 
 /* START SIDEBAR LOGOUT SYSTEM */
@@ -40,6 +41,25 @@ const setupDynamicSidebar = () => {
 
     // Inject base template
     sidebarEl.innerHTML = sidebarTemplate;
+
+    // Initialize Flowbite Drawer programmatically since it is dynamically injected
+    const sidebarNode = document.getElementById('default-sidebar');
+    const toggleBtn = document.querySelector('[data-drawer-toggle="default-sidebar"]');
+    if (sidebarNode && toggleBtn) {
+        const drawer = new Drawer(sidebarNode, {
+            placement: 'left',
+            backdrop: true,
+            bodyScrolling: false,
+            edge: false,
+            edgeOffset: '',
+        });
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            drawer.toggle();
+        });
+    }
 
     // Update Role Badge
     const badgeEl = document.getElementById('sidebar-role-badge');
@@ -94,6 +114,23 @@ const setupDynamicSidebar = () => {
 <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v13H7a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h12M9 3v14m7 0v4"/></svg>
 <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M6 2a2 2 0 0 0-2 2v15a3 3 0 0 0 3 3h12a1 1 0 1 0 0-2h-2v-2h2a1 1 0 0 0 1-1V4a2 2 0 0 0-2-2h-8v16h5v2H7a1 1 0 1 1 0-2h1V2H6Z" clip-rule="evenodd"/></svg>`;
 
+    const SVG_TOOLS = `
+<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13v-2a1 1 0 0 0-1-1h-.757l-.707-1.707.535-.536a1 1 0 0 0 0-1.414l-1.414-1.414a1 1 0 0 0-1.414 0l-.536.535L14 4.757V4a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v.757l-1.707.707-.536-.535a1 1 0 0 0-1.414 0L4.929 6.343a1 1 0 0 0 0 1.414l.536.536L4.757 10H4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h.757l.707 1.707-.535.536a1 1 0 0 0 0 1.414l1.414 1.414a1 1 0 0 0 1.414 0l.536-.535 1.707.707V20a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-.757l1.707-.708.536.536a1 1 0 0 0 1.414 0l1.414-1.414a1 1 0 0 0 0-1.414l-.535-.536.707-1.707H20a1 1 0 0 0 1-1Z"/>
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+</svg>
+<svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path fill-rule="evenodd" d="M9.586 2.586A2 2 0 0 1 11 2h2a2 2 0 0 1 2 2v.089l.473.196.063-.063a2.002 2.002 0 0 1 2.828 0l1.414 1.414a2 2 0 0 1 0 2.827l-.063.064.196.473H20a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-.089l-.196.473.063.063a2.002 2.002 0 0 1 0 2.828l-1.414 1.414a2 2 0 0 1-2.828 0l-.063-.063-.473.196V20a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-.089l-.473-.196-.063.063a2.002 2.002 0 0 1-2.828 0l-1.414-1.414a2 2 0 0 1 0-2.827l.063-.064L4.089 15H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2h.09l.195-.473-.063-.063a2 2 0 0 1 0-2.828l1.414-1.414a2 2 0 0 1 2.827 0l.064.063L9 4.089V4a2 2 0 0 1 .586-1.414ZM8 12a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" clip-rule="evenodd"/>
+</svg>`;
+
+    const SVG_SPRC_CONVERTER = `
+<svg class="w-4 h-4 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1v6M5 19v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1M10 3v4a1 1 0 0 1-1 1H5m2.665 9H6.647A1.647 1.647 0 0 1 5 15.353v-1.706A1.647 1.647 0 0 1 6.647 12h1.018M16 12l1.443 4.773L19 12m-6.057-.152-.943-.02a1.34 1.34 0 0 0-1.359 1.22 1.32 1.32 0 0 0 1.172 1.421l.536.059a1.273 1.273 0 0 1 1.226 1.718c-.2.571-.636.754-1.337.754h-1.13"/>
+</svg>
+<svg class="w-4 h-4 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path fill-rule="evenodd" d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2 2h12a2 2 0 0 0 2-2 2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2V4a2 2 0 0 0-2-2h-7Zm1.018 8.828a2.34 2.34 0 0 0-2.373 2.13v.008a2.32 2.32 0 0 0 2.06 2.497l.535.059a.993.993 0 0 0 .136.006.272.272 0 0 1 .263.367l-.008.02a.377.377 0 0 1-.018.044.49.49 0 0 1-.078.02 1.689 1.689 0 0 1-.297.021h-1.13a1 1 0 1 0 0 2h1.13c.417 0 .892-.05 1.324-.279.47-.248.78-.648.953-1.134a2.272 2.272 0 0 0-2.115-3.06l-.478-.052a.32.32 0 0 1-.285-.341.34.34 0 0 1 .344-.306l.94.02a1 1 0 1 0 .043-2l-.943-.02h-.003Zm7.933 1.482a1 1 0 1 0-1.902-.62l-.57 1.747-.522-1.726a1 1 0 0 0-1.914.578l1.443 4.773a1 1 0 0 0 1.908.021l1.557-4.773Zm-13.762.88a.647.647 0 0 1 .458-.19h1.018a1 1 0 1 0 0-2H6.647A2.647 2.647 0 0 0 4 13.647v1.706A2.647 2.647 0 0 0 6.647 18h1.018a1 1 0 1 0 0-2H6.647A.647.647 0 0 1 6 15.353v-1.706c0-.172.068-.336.19-.457Z" clip-rule="evenodd"/>
+</svg>`;
+
     const navConfigurations = {
         admin: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
@@ -109,12 +146,12 @@ const setupDynamicSidebar = () => {
                     { id: 'articles', label: 'Manage Articles', url: '/src/pages/user/admin/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
             },
-            { id: 'exports', label: 'Exports', url: '#', svg: SVG_EXPORTS_ADMIN }
+            { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
         ],
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
             { id: 'assistants', label: 'Manage Assistants', url: '/src/pages/user/staff/assistants/', svg: SVG_ASSISTANTS },
-            { id: 'exports', label: 'Data Exports', url: '#', svg: SVG_EXPORTS }
+            { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
         ]
     };
 
@@ -143,10 +180,10 @@ const setupDynamicSidebar = () => {
                 listHTML += `
                 <li>
                     <div class="w-full relative">
-                        <a href="${item.url}" class="${linkClass} flex items-center w-full">
+                        <a href="${item.url}" class="${linkClass} flex items-center w-full" onclick="event.preventDefault(); document.getElementById('dropdown-${item.id}').classList.toggle('hidden');">
                             ${svgContent}
                             <span class="ms-3 mr-1">${item.label}</span>
-                            <span class="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 z-10" data-collapse-toggle="dropdown-${item.id}" aria-controls="dropdown-${item.id}" onclick="event.preventDefault();">
+                            <span class="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 z-10" aria-controls="dropdown-${item.id}">
                                 <svg class="w-4 h-4 transition duration-200" aria-hidden="true" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
                             </span>
                             <div class="flex-1"></div>

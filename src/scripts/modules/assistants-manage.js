@@ -1,4 +1,5 @@
 import { Modal } from 'flowbite';
+import { fetchGipsByStaff, createGip, updateGip, archiveGip } from '@/backend/api/gips.api.js';
 
 /* START STAFF ASSISTANTS MANAGEMENT CONTROLLER */
 export const initAssistantsManage = () => {
@@ -7,36 +8,10 @@ export const initAssistantsManage = () => {
     if (!tableEl || !tableBody) return;
 
     if (window.DEBUG) {
-        window.DEBUG.log('ASSISTANTS', 'Initializing GIP assistants management system...');
+        window.DEBUG.log('ASSISTANTS', 'Initializing GIP assistants Supabase management system...');
     }
 
-    const defaultAssistants = [
-        {
-            id: 'asst-1',
-            name: 'Juan Dela Cruz',
-            username: 'juan_delacruz',
-            email: 'juan.delacruz@gip.dole.gov.ph',
-            phone: '+63 912 345 6789',
-            status: 'Active',
-            avatar: 'https://ui-avatars.com/api/?name=Juan+Dela+Cruz&background=random'
-        },
-        {
-            id: 'asst-2',
-            name: 'Maria Clara',
-            username: 'maria_clara',
-            email: 'maria.clara@gip.dole.gov.ph',
-            phone: '+63 998 765 4321',
-            status: 'Active',
-            avatar: 'https://ui-avatars.com/api/?name=Maria+Clara&background=random'
-        }
-    ];
-
-    // Load from localStorage or load defaults
-    let assistants = JSON.parse(localStorage.getItem('dole_assistants_v2'));
-    if (!assistants || assistants.length === 0) {
-        assistants = defaultAssistants;
-        localStorage.setItem('dole_assistants_v2', JSON.stringify(assistants));
-    }
+    let assistants = [];
 
     // Modal References
     const editModalEl = document.getElementById('editAssistantModal');
@@ -62,6 +37,93 @@ export const initAssistantsManage = () => {
     const confPwdRequiredStar = document.getElementById('conf-pwd-required-star');
 
     let currentDataTable = null;
+
+    const escapeHtml = (str) => {
+        return String(str || '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    };
+
+    const getToastContainer = () => {
+        let container = document.getElementById('assistants-toast-container');
+        if (container) return container;
+
+        container = document.createElement('div');
+        container.id = 'assistants-toast-container';
+        container.className = 'fixed bottom-4 right-4 z-[9999] flex w-[calc(100%-2rem)] max-w-xs flex-col gap-2 pointer-events-none';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(container);
+        return container;
+    };
+
+    const showToast = (type, message, onCloseCallback = null) => {
+        const toastTypes = {
+            success: {
+                label: 'Success',
+                iconClass: 'text-green-700 bg-green-100 dark:bg-green-900/40 dark:text-green-300',
+                borderClass: 'border-green-200 dark:border-green-900/70',
+                icon: '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11.917 9.724 16.5 19 7.5"/>'
+            },
+            danger: {
+                label: 'Error',
+                iconClass: 'text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-300',
+                borderClass: 'border-red-200 dark:border-red-900/70',
+                icon: '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>'
+            },
+            warning: {
+                label: 'Warning',
+                iconClass: 'text-yellow-700 bg-yellow-100 dark:bg-yellow-900/40 dark:text-yellow-300',
+                borderClass: 'border-yellow-200 dark:border-yellow-900/70',
+                icon: '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>'
+            }
+        };
+        const config = toastTypes[type] || toastTypes.success;
+
+        const toast = document.createElement('div');
+        toast.className = `flex items-start w-full p-3 text-gray-700 bg-white border ${config.borderClass} rounded-lg shadow-lg dark:bg-gray-900 dark:text-gray-200 transition-all duration-300 ease-out pointer-events-auto cursor-pointer`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="inline-flex items-center justify-center shrink-0 w-7 h-7 rounded ${config.iconClass}">
+                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">${config.icon}</svg>
+                <span class="sr-only">${config.label} icon</span>
+            </div>
+            <div class="ms-3 min-w-0 flex-1">
+                <p class="text-[11px] font-extrabold uppercase tracking-wider text-gray-900 dark:text-white">${config.label}</p>
+                <p class="mt-0.5 break-words text-xs font-medium text-gray-600 dark:text-gray-300">${escapeHtml(message)}</p>
+            </div>
+            <button type="button" class="cursor-pointer ms-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-900 focus:outline-none dark:hover:bg-gray-800 dark:hover:text-white" aria-label="Close">
+                <span class="sr-only">Close</span>
+                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+            </button>
+        `;
+
+        let timerId = null;
+        let isClosed = false;
+
+        const removeToast = (isManual = false) => {
+            if (isClosed) return;
+            isClosed = true;
+            if (timerId) clearTimeout(timerId);
+            toast.classList.add('opacity-0', 'translate-y-3');
+            window.setTimeout(() => {
+                toast.remove();
+                if (onCloseCallback) onCloseCallback(isManual);
+            }, 300);
+        };
+
+        toast.querySelector('button')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeToast(true);
+        });
+
+        getToastContainer().appendChild(toast);
+        timerId = window.setTimeout(() => removeToast(false), 5000);
+        return removeToast;
+    };
 
     const renderTable = () => {
         // Destroy existing Datatable to restore the original table DOM structure
@@ -282,12 +344,71 @@ export const initAssistantsManage = () => {
     if (btnAdd) {
         btnAdd.addEventListener('click', () => {
             configureAddMode();
+            if (editModal) editModal.show();
         });
     }
 
+    const getUserId = () => {
+        try {
+            const session = JSON.parse(localStorage.getItem('dole_session') || '{}');
+            return session.id;
+        } catch {
+            return null;
+        }
+    };
+
+    const load = async () => {
+        const staffId = getUserId();
+        if (!staffId) return;
+
+        const { data, error } = await fetchGipsByStaff(staffId);
+        if (error) {
+            window.DEBUG?.error('ASSISTANTS', 'Fetch failed', error);
+            return;
+        }
+        
+        assistants = data.map(g => ({
+            id: String(g.id),
+            name: g.full_name,
+            username: g.username,
+            email: g.email || '',
+            phone: g.phone || '',
+            status: g.status === 'online' ? 'Active' : 'Offline',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(g.full_name)}&background=random`
+        }));
+
+        renderTable();
+    };
+
+    const populateViewModal = (asst) => {
+        const viewAvatar = document.getElementById('view-avatar');
+        const viewOnlineDot = document.getElementById('view-online-dot');
+        const viewName = document.getElementById('view-name');
+        const viewEmail = document.getElementById('view-email');
+        const viewUsername = document.getElementById('view-username');
+        const viewPhone = document.getElementById('view-phone');
+        const viewStatus = document.getElementById('view-status');
+
+        if (viewAvatar) viewAvatar.src = asst.avatar;
+        if (viewName) viewName.textContent = asst.name;
+        if (viewEmail) viewEmail.textContent = asst.email;
+        if (viewUsername) viewUsername.textContent = asst.username;
+        if (viewPhone) viewPhone.textContent = asst.phone || 'None';
+        
+        if (viewOnlineDot) {
+            viewOnlineDot.className = `absolute -bottom-1 -right-1 w-5 h-5 ${asst.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} border-[3px] border-white dark:border-gray-800 rounded-full`;
+        }
+        if (viewStatus) {
+            const badgeColor = asst.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800/40';
+            const dotColor = asst.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500';
+            viewStatus.className = `inline-flex items-center ${badgeColor} border font-semibold px-2 py-0.5 rounded text-xs mt-1 select-none`;
+            viewStatus.innerHTML = `<span class="w-1.5 h-1.5 ${dotColor} rounded-full mr-1"></span>${asst.status}`;
+        }
+    };
+
     // Submit handler
     if (submitBtn && form) {
-        submitBtn.addEventListener('click', (e) => {
+        submitBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             
             // Check form validity natively
@@ -310,38 +431,56 @@ export const initAssistantsManage = () => {
                 return;
             }
 
-            if (!id) {
-                // ADD
-                const newAsst = {
-                    id: 'asst-' + Date.now(),
-                    name,
-                    username,
-                    email,
-                    phone,
-                    status: 'Active',
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                };
-                assistants.push(newAsst);
-            } else {
-                // EDIT
-                const idx = assistants.findIndex(a => a.id === id);
-                if (idx !== -1) {
-                    assistants[idx].name = name;
-                    assistants[idx].username = username;
-                    assistants[idx].email = email;
-                    assistants[idx].phone = phone;
-                }
-            }
+            const staffId = getUserId();
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70', 'pointer-events-none');
 
-            // Save and re-render
-            localStorage.setItem('dole_assistants_v2', JSON.stringify(assistants));
-            renderTable();
-            
-            // Fix aria-hidden issue by blurring the active element before hiding the modal
-            if (document.activeElement) {
-                document.activeElement.blur();
+            try {
+                if (!id) {
+                    // ADD
+                    const payload = {
+                        full_name: name,
+                        username,
+                        email: email || null,
+                        phone: phone || null,
+                        password,
+                        created_by: staffId,
+                        status: 'offline'
+                    };
+                    const res = await createGip(payload);
+                    if (res.error) throw new Error(res.error);
+                } else {
+                    // EDIT
+                    const updates = {
+                        full_name: name,
+                        username,
+                        email: email || null,
+                        phone: phone || null
+                    };
+                    if (password) {
+                        updates.password = password;
+                    }
+                    const res = await updateGip(id, updates);
+                    if (res.error) throw new Error(res.error);
+                }
+
+                await load();
+                if (editModal) editModal.hide();
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+                showToast('success', `Assistant "${name}" saved successfully.`);
+            } catch (err) {
+                if (editModal) editModal.hide();
+                showToast('danger', err.message || 'Failed to save assistant.', (isManual) => {
+                    if (!isManual) {
+                        if (editModal) editModal.show();
+                    }
+                });
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70', 'pointer-events-none');
             }
-            if (editModal) editModal.hide();
         });
     }
 
@@ -351,13 +490,15 @@ export const initAssistantsManage = () => {
     const archiveAssistantName = document.getElementById('archive-assistant-name');
 
     if (btnConfirmArchive) {
-        btnConfirmArchive.addEventListener('click', () => {
+        btnConfirmArchive.addEventListener('click', async () => {
             if (assistantToArchiveId) {
-                const asst = assistants.find(a => a.id === assistantToArchiveId);
-                if (asst) {
-                    asst.status = 'Archived';
-                    localStorage.setItem('dole_assistants_v2', JSON.stringify(assistants));
-                    renderTable();
+                btnConfirmArchive.disabled = true;
+                const res = await archiveGip(assistantToArchiveId);
+                btnConfirmArchive.disabled = false;
+                if (res.error) {
+                    alert('Error archiving assistant: ' + res.error);
+                } else {
+                    await load();
                 }
                 if (archiveModal) archiveModal.hide();
                 assistantToArchiveId = null;
@@ -366,7 +507,10 @@ export const initAssistantsManage = () => {
     }
 
     // Process Table Actions Delegation (View, Edit, Delete)
-    tableEl.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
+        const table = e.target.closest('#sorting-table');
+        if (!table) return;
+
         // Handle checkbox cell click separately to toggle checkbox
         const checkboxCell = e.target.closest('td:first-child');
         if (checkboxCell) {
@@ -402,45 +546,21 @@ export const initAssistantsManage = () => {
             if (archiveModal) archiveModal.show();
         } else {
             // View Details Modal
-            const viewAvatar = document.getElementById('view-avatar');
-            const viewOnlineDot = document.getElementById('view-online-dot');
-            const viewName = document.getElementById('view-name');
-            const viewEmail = document.getElementById('view-email');
-            const viewUsername = document.getElementById('view-username');
-            const viewPhone = document.getElementById('view-phone');
-            const viewStatus = document.getElementById('view-status');
-
-            if (viewAvatar) viewAvatar.src = asst.avatar;
-            if (viewName) viewName.textContent = asst.name;
-            if (viewEmail) viewEmail.textContent = asst.email;
-            if (viewUsername) viewUsername.textContent = asst.username;
-            if (viewPhone) viewPhone.textContent = asst.phone || 'None';
-            
-            if (viewOnlineDot) {
-                viewOnlineDot.className = `absolute -bottom-1 -right-1 w-5 h-5 ${asst.status === 'Active' ? 'bg-emerald-500' : asst.status === 'Archived' ? 'bg-gray-400' : 'bg-rose-500'} border-[3px] border-white dark:border-gray-800 rounded-full`;
-            }
-            if (viewStatus) {
-                const badgeColor = asst.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : asst.status === 'Archived' ? 'bg-gray-50 dark:bg-gray-900/40 text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-800/40' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800/40';
-                const dotColor = asst.status === 'Active' ? 'bg-emerald-500 animate-pulse' : asst.status === 'Archived' ? 'bg-gray-400' : 'bg-rose-500';
-                viewStatus.className = `inline-flex items-center ${badgeColor} border font-semibold px-2 py-0.5 rounded text-xs mt-1 select-none`;
-                viewStatus.innerHTML = `<span class="w-1.5 h-1.5 ${dotColor} rounded-full mr-1"></span>${asst.status}`;
-            }
-
+            populateViewModal(asst);
             const triggerBtn = document.getElementById('trigger-view-modal-dummy');
             if (triggerBtn) triggerBtn.click();
         }
     });
 
     // Checkbox All toggle
-    const checkboxAll = document.getElementById('table-checkbox-all');
-    if (checkboxAll) {
-        checkboxAll.addEventListener('change', () => {
-            const checked = checkboxAll.checked;
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.id === 'table-checkbox-all') {
+            const checked = e.target.checked;
             document.querySelectorAll('.row-checkbox').forEach(cb => {
                 cb.checked = checked;
             });
-        });
-    }
+        }
+    });
 
     // Live search input
     const searchInput = document.getElementById('input-group-1');
@@ -478,42 +598,41 @@ export const initAssistantsManage = () => {
     };
 
     if (bulkActivate) {
-        bulkActivate.addEventListener('click', (e) => {
+        bulkActivate.addEventListener('click', async (e) => {
             e.preventDefault();
             const checkedIds = getCheckedIds();
             if (checkedIds.length === 0) return;
-            assistants.forEach(asst => {
-                if (checkedIds.includes(asst.id)) asst.status = 'Active';
-            });
-            localStorage.setItem('dole_assistants_v2', JSON.stringify(assistants));
-            renderTable();
+            for (const id of checkedIds) {
+                await updateGip(id, { status: 'online' });
+            }
+            await load();
             if (checkboxAll) checkboxAll.checked = false;
         });
     }
 
     if (bulkDeactivate) {
-        bulkDeactivate.addEventListener('click', (e) => {
+        bulkDeactivate.addEventListener('click', async (e) => {
             e.preventDefault();
             const checkedIds = getCheckedIds();
             if (checkedIds.length === 0) return;
-            assistants.forEach(asst => {
-                if (checkedIds.includes(asst.id)) asst.status = 'Offline';
-            });
-            localStorage.setItem('dole_assistants_v2', JSON.stringify(assistants));
-            renderTable();
+            for (const id of checkedIds) {
+                await updateGip(id, { status: 'offline' });
+            }
+            await load();
             if (checkboxAll) checkboxAll.checked = false;
         });
     }
 
     if (bulkDelete) {
-        bulkDelete.addEventListener('click', (e) => {
+        bulkDelete.addEventListener('click', async (e) => {
             e.preventDefault();
             const checkedIds = getCheckedIds();
             if (checkedIds.length === 0) return;
-            if (confirm(`Are you sure you want to delete the ${checkedIds.length} selected assistants?`)) {
-                assistants = assistants.filter(asst => !checkedIds.includes(asst.id));
-                localStorage.setItem('dole_assistants_v2', JSON.stringify(assistants));
-                renderTable();
+            if (confirm(`Are you sure you want to archive the ${checkedIds.length} selected assistants?`)) {
+                for (const id of checkedIds) {
+                    await archiveGip(id);
+                }
+                await load();
                 if (checkboxAll) checkboxAll.checked = false;
             }
         });
@@ -590,7 +709,7 @@ export const initAssistantsManage = () => {
     }
 
     // Initial render
-    renderTable();
+    load();
 };
 
 if (document.readyState === 'loading') {

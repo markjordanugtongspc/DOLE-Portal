@@ -115,6 +115,21 @@ export async function archiveSystem(systemId) {
 }
 
 /**
+ * Restore an archived (soft-deleted) system.
+ * @param {number} systemId
+ * @returns {{ error: string|null }}
+ */
+export async function restoreSystem(systemId) {
+    const { error } = await supabase
+        .from('systems')
+        .update({ archived_at: null, is_active: true })
+        .eq('id', systemId);
+
+    if (error) return { error: error.message };
+    return { error: null };
+}
+
+/**
  * Upload a system image to Supabase Storage and return the public URL.
  * Only called when admin uploads a NEW image — existing local paths are preserved.
  *
