@@ -4,19 +4,67 @@ import pkg from '../../../package.json';
 import { logout } from '@/backend/api/auth.api.js';
 import { Drawer } from 'flowbite';
 
+let sidebarDrawerInstance = null;
+
 
 /* START SIDEBAR LOGOUT SYSTEM */
 const setupSidebarLogout = () => {
-    const logoutBtn = document.getElementById('sidebar-logout-btn');
-    if (!logoutBtn || logoutBtn.dataset.logoutBound) return;
-
+    const logoutBtn = document.getElementById('sidebar-profile-logout-btn');
+    const modalEl = document.getElementById('sidebar-logout-confirmation');
+    const confirmBtn = document.getElementById('sidebar-logout-confirm-btn');
+    const cancelBtn = document.getElementById('sidebar-logout-cancel-btn');
+    const closeTriggers = document.querySelectorAll('[data-logout-close="true"]');
+    const sidebarEl = document.getElementById('default-sidebar');
+    if (!logoutBtn || !modalEl || !confirmBtn || !cancelBtn || logoutBtn.dataset.logoutBound) return;
+    let lastFocusedElement = null;
+    let isLoggingOut = false;
+    const setModalState = (isOpen) => {
+        modalEl.classList.toggle('hidden', !isOpen);
+        modalEl.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        document.documentElement.classList.toggle('overflow-hidden', isOpen);
+        document.body.classList.toggle('overflow-hidden', isOpen);
+        if (sidebarEl) {
+            sidebarEl.inert = isOpen;
+        }
+    };
+    const closeSidebarBeforeModal = () => {
+        const isMobileViewport = window.matchMedia('(max-width: 639px)').matches;
+        if (!isMobileViewport || !sidebarEl) return;
+        const isSidebarOpen = !sidebarEl.classList.contains('-translate-x-full');
+        if (isSidebarOpen && sidebarDrawerInstance) {
+            sidebarDrawerInstance.hide();
+        }
+    };
+    const openModal = () => {
+        lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        lastFocusedElement?.blur();
+        closeSidebarBeforeModal();
+        setModalState(true);
+        window.setTimeout(() => confirmBtn.focus(), 0);
+    };
+    const closeModal = () => {
+        if (isLoggingOut) return;
+        setModalState(false);
+        lastFocusedElement?.focus?.();
+    };
     logoutBtn.dataset.logoutBound = 'true';
-    logoutBtn.addEventListener('click', async () => {
-        logoutBtn.disabled = true;
-        logoutBtn.classList.add('opacity-70', 'pointer-events-none');
-        const label = logoutBtn.querySelector('span');
-        if (label) label.textContent = 'Logging out...';
-
+    logoutBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        openModal();
+    });
+    closeTriggers.forEach((trigger) => {
+        if (trigger.dataset.logoutCloseBound) return;
+        trigger.dataset.logoutCloseBound = 'true';
+        trigger.addEventListener('click', closeModal);
+    });
+    confirmBtn.addEventListener('click', async () => {
+        if (isLoggingOut) return;
+        isLoggingOut = true;
+        confirmBtn.disabled = true;
+        cancelBtn.disabled = true;
+        confirmBtn.classList.add('opacity-70', 'pointer-events-none');
+        cancelBtn.classList.add('opacity-70', 'pointer-events-none');
+        confirmBtn.textContent = 'Logging out...';
         try {
             await logout();
         } catch (error) {
@@ -26,6 +74,14 @@ const setupSidebarLogout = () => {
             window.location.replace('/');
         }
     });
+    if (!modalEl.dataset.logoutEscapeBound) {
+        modalEl.dataset.logoutEscapeBound = 'true';
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && modalEl.getAttribute('aria-hidden') === 'false') {
+                closeModal();
+            }
+        });
+    }
 };
 /* END SIDEBAR LOGOUT SYSTEM */
 
@@ -48,7 +104,7 @@ const setupDynamicSidebar = () => {
     const sidebarNode = document.getElementById('default-sidebar');
     const toggleBtn = document.querySelector('[data-drawer-toggle="default-sidebar"]');
     if (sidebarNode && toggleBtn) {
-        const drawer = new Drawer(sidebarNode, {
+        sidebarDrawerInstance = new Drawer(sidebarNode, {
             placement: 'left',
             backdrop: true,
             bodyScrolling: false,
@@ -59,7 +115,7 @@ const setupDynamicSidebar = () => {
         toggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            drawer.toggle();
+            sidebarDrawerInstance.toggle();
         });
     }
 
