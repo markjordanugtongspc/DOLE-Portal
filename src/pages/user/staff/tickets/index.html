@@ -324,9 +324,9 @@
                             <!-- Ticket ID badge -->
                             <span id="staff-chat-header-id" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50"></span>
                             <!-- Ticket Subject Title with Underline Gradient Highlight -->
-                            <div class="relative min-w-0 pb-1.5">
+                            <div class="relative min-w-0 pb-1.5 inline-block">
                                 <h2 id="staff-chat-header-subject" class="text-base font-extrabold text-gray-900 dark:text-white truncate"></h2>
-                                <div class="absolute bottom-0 left-0 h-1 w-32 bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full"></div>
+                                <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full"></div>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
@@ -336,7 +336,7 @@
                             <div id="staff-chat-header-priority"></div>
                         </div>
                     </div>
-                    <div id="chat-messages-viewport" class="flex-1 p-5 md:p-6 overflow-y-auto bg-gray-50/30 dark:bg-gray-900/20 custom-scrollbar">
+                    <div id="chat-messages-viewport" class="flex-1 p-5 md:p-6 overflow-y-auto space-y-4 bg-gray-50/30 dark:bg-gray-900/20 custom-scrollbar">
                         <div class="flex h-full min-h-[360px] items-center justify-center px-6">
                             <div class="max-w-lg text-center">
                                 <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
@@ -359,6 +359,7 @@
 
                     <div id="chat-composer-shell" class="hidden border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 p-4 transition-all duration-200">
                                                 <form id="chat-input-form">
+                                                    <input type="file" id="chat-image-upload" accept="image/*" class="hidden" />
                             <div class="w-full border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-xs overflow-hidden">
                                 <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
                                     <div class="flex flex-wrap items-center divide-gray-200 dark:divide-gray-600 sm:divide-x sm:rtl:divide-x-reverse">
@@ -377,13 +378,14 @@
                                             </button>
                                         </div>
                                         <div class="flex flex-wrap items-center space-x-1 rtl:space-x-reverse sm:ps-4">
-                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+                                            <button id="btn-upload-image" type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" title="Upload image">
                                                 <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M16 18H8l2.5-6 2 4 1.5-2 2 4Zm-1-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 18h8l-2-4-1.5 2-2-4L8 18Zm7-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></svg>
                                                 <span class="sr-only">Upload image</span>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
+                                <div id="attachment-preview-container" class="hidden flex-wrap gap-2 px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-150 dark:border-gray-800"></div>
                                 <div class="px-4 py-2 bg-white dark:bg-gray-900">
                                     <label for="chat-editor" class="sr-only">Message</label>
                                     <textarea id="chat-editor" rows="2" class="block w-full px-0 text-sm text-gray-900 bg-white border-0 dark:bg-gray-900 focus:ring-0 dark:text-white dark:placeholder-gray-500 resize-y min-h-[38px] max-h-[200px] outline-none" placeholder="Type your reply here..." required></textarea>

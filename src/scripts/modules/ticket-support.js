@@ -493,6 +493,9 @@ class TicketSupportApp {
         document.getElementById('btn-back-to-table')?.addEventListener('click', () => this.closeTicket());
         document.getElementById('btn-close-chat')?.addEventListener('click', () => this.handleCloseTicketStatus());
         document.getElementById('btn-create-ticket')?.addEventListener('click', () => this.handleCreateTicket());
+        document.getElementById('btn-upload-image')?.addEventListener('click', () => {
+            document.getElementById('chat-image-upload')?.click();
+        });
 
         document.getElementById('chat-search-tickets')?.addEventListener('input', (e) => {
             this.chatSearchQuery = e.target.value.toLowerCase().trim();
@@ -521,6 +524,38 @@ class TicketSupportApp {
                 this.renderChatSidebar();
             });
         }
+
+        const fileInput = document.getElementById('chat-image-upload');
+        const previewContainer = document.getElementById('attachment-preview-container');
+
+        fileInput?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (previewContainer) {
+                    previewContainer.innerHTML = `
+                        <div class="relative inline-block w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden group shadow-xs">
+                            <img src="${event.target.result}" class="w-full h-full object-cover">
+                            <button id="btn-remove-attachment" type="button" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md cursor-pointer transition-colors z-10">
+                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    `;
+                    previewContainer.classList.remove('hidden');
+                    previewContainer.classList.add('flex');
+
+                    document.getElementById('btn-remove-attachment')?.addEventListener('click', () => {
+                        fileInput.value = '';
+                        previewContainer.innerHTML = '';
+                        previewContainer.classList.add('hidden');
+                        previewContainer.classList.remove('flex');
+                    });
+                }
+            };
+            reader.readAsDataURL(file);
+        });
 
         document.getElementById('chat-input-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1665,22 +1700,50 @@ class TicketSupportApp {
                 `;
             }
 
-            html += `
-                <div class="flex items-start gap-2.5 ${bubbleAlign}">
-                    <div class="flex ${flexRowClass} items-start gap-2.5 max-w-[80%]">
-                        <img class="w-8 h-8 rounded-full object-cover flex-shrink-0" src="${msg.avatar}" alt="${esc(msg.sender)}">
-                        <div class="flex flex-col gap-1.5">
-                            <div class="flex items-center space-x-2 ${isMine ? 'justify-end' : 'justify-start'} rtl:space-x-reverse">
+            if (isMine) {
+                html += `
+                    <div class="flex items-start gap-2.5 justify-end">
+                        <div class="flex flex-col gap-1.5 items-end max-w-[80%]">
+                            <!-- Name header -->
+                            <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold text-gray-900 dark:text-white">${esc(msg.sender)}</span>
-                                <span class="text-[9px] text-gray-400 dark:text-gray-500">${esc(msg.time)}</span>
                             </div>
-                            <div class="leading-relaxed p-4 shadow-sm ${textBg}">
-                                ${bubbleContent}
+                            <!-- Bubble and Avatar row -->
+                            <div class="flex flex-row-reverse items-end gap-2.5 w-full">
+                                <img class="w-8 h-8 rounded-full object-cover flex-shrink-0" src="${msg.avatar}" alt="${esc(msg.sender)}">
+                                <div class="relative group leading-normal px-3 py-2 shadow-sm rounded-2xl w-fit max-w-full text-sm ${textBg}">
+                                    ${bubbleContent}
+                                    <!-- Hover Tooltip -->
+                                    <div class="absolute top-1/2 -translate-y-1/2 right-full mr-2 hidden group-hover:flex items-center bg-gray-900/90 text-white dark:bg-gray-800/95 text-[10px] font-bold py-1 px-2 rounded shadow-md pointer-events-none select-none z-30 whitespace-nowrap">
+                                        ${esc(msg.time)}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                html += `
+                    <div class="flex items-start gap-2.5 justify-start">
+                        <div class="flex items-end gap-2.5 max-w-[80%]">
+                            <img class="w-8 h-8 rounded-full object-cover flex-shrink-0" src="${msg.avatar}" alt="${esc(msg.sender)}">
+                            <div class="flex flex-col gap-1.5 items-start">
+                                <!-- Name header -->
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-gray-900 dark:text-white">${esc(msg.sender)}</span>
+                                </div>
+                                <div class="relative group leading-normal px-3 py-2 shadow-sm rounded-2xl w-fit max-w-full text-sm ${textBg}">
+                                    ${bubbleContent}
+                                    <!-- Hover Tooltip -->
+                                    <div class="absolute top-1/2 -translate-y-1/2 left-full ml-2 hidden group-hover:flex items-center bg-gray-900/90 text-white dark:bg-gray-800/95 text-[10px] font-bold py-1 px-2 rounded shadow-md pointer-events-none select-none z-30 whitespace-nowrap">
+                                        ${esc(msg.time)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         });
 
         viewport.innerHTML = html;
@@ -1738,6 +1801,15 @@ class TicketSupportApp {
                 if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Send message failed', result.error);
             } else {
                 editor.value = '';
+                // Clear file upload & preview
+                const fileInput = document.getElementById('chat-image-upload');
+                const previewContainer = document.getElementById('attachment-preview-container');
+                if (fileInput) fileInput.value = '';
+                if (previewContainer) {
+                    previewContainer.innerHTML = '';
+                    previewContainer.classList.add('hidden');
+                    previewContainer.classList.remove('flex');
+                }
                 // Realtime subscription will auto-render new message
                 // But we also do an immediate re-fetch in case realtime is delayed
                 await this._loadAndRenderConversation(this.selectedTicketDbId);

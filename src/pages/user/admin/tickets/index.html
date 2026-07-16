@@ -367,6 +367,7 @@
                     <!-- Bottom Rich Editor / Input Chat Box -->
                     <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
                         <form id="chat-input-form" class="space-y-3">
+                            <input type="file" id="chat-image-upload" accept="image/*" class="hidden" />
                             <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 shadow-xs overflow-hidden">
                                 <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                     <div class="flex flex-wrap items-center sm:divide-x sm:divide-gray-200 dark:sm:divide-gray-700">
@@ -386,12 +387,13 @@
                                         </div>
                                         <div class="flex items-center space-x-1 sm:ps-4">
                                             <!-- Upload image -->
-                                            <button type="button" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Upload image">
+                                            <button id="btn-upload-image" type="button" class="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Upload image">
                                                 <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M16 18H8l2.5-6 2 4 1.5-2 2 4Zm-1-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 18h8l-2-4-1.5 2-2-4L8 18Zm7-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></svg>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
+                                <div id="attachment-preview-container" class="hidden flex-wrap gap-2 px-4 py-2 bg-transparent border-b border-gray-100 dark:border-gray-800"></div>
                                 <div class="px-4 py-2 bg-transparent">
                                     <textarea id="chat-editor" rows="2" class="block w-full px-0 text-sm text-gray-900 dark:text-white bg-transparent border-0 focus:ring-0 placeholder-gray-400 dark:placeholder-gray-500 resize-y min-h-[38px] max-h-[200px] outline-none" placeholder="Type your reply here..." required></textarea>
                                 </div>
