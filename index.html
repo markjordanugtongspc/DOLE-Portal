@@ -54,6 +54,10 @@
         <p class="text-sm lg:text-xl font-bold text-yellow-400 drop-shadow-lg uppercase tracking-widest">
           Implementors Login Dashboard
         </p>
+        <button id="hero-register-btn" type="button"
+          class="pointer-events-auto cursor-pointer mt-4 inline-flex min-w-[9rem] items-center justify-center rounded-lg border border-white/40 bg-blue-700 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md transition-colors hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-white/30 dark:bg-blue-600 dark:hover:bg-blue-700">
+          Register
+        </button>
       </div>
 
       <!-- Mobile Drawer Top Text (Active only when Drawer is opened, floats on top of dark overlay) -->
@@ -97,7 +101,7 @@
       class="hidden lg:flex lg:w-[40%] flex-col p-6 sm:p-8 lg:p-10 bg-white dark:bg-gray-900 shadow-2xl z-50 h-full overflow-y-hidden relative justify-center">
 
       <!-- Login Section Container (Wider layout, max-w-[32rem] width, perfectly centered and proportioned) -->
-      <div class="w-full max-w-[32rem] mx-auto flex flex-col justify-center">
+      <div id="desktop-auth-content" class="w-full max-w-[32rem] mx-auto flex flex-col justify-center">
 
         <!-- Right Grid Header (Aligned to form, logo on top-left) -->
         <div class="flex items-center justify-between w-full mb-5">
@@ -239,7 +243,7 @@
     </div>
 
     <!-- Drawer Content: RESTORED ORIGINAL LOGIN DESIGN (Centered title, removed description) -->
-    <div class="w-full max-w-sm mx-auto">
+    <div id="mobile-auth-content" class="w-full max-w-sm mx-auto">
 
       <!-- Centered Welcome Back title, with no long description context -->
       <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-6 text-center">Welcome Back</h2>
@@ -336,3 +340,7 @@
 </body>
 
 </html>
+
+
+
+
