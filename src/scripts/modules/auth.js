@@ -1,7 +1,6 @@
 import { Modal } from 'flowbite';
 import {
     getCurrentUser,
-    hashCredential,
     isHashedCredential,
     loginWithEmail,
     loginWithPhone,
@@ -12,7 +11,7 @@ import {
     clearRememberedLogin,
     getRememberedLogin,
     setRememberedLogin
-} from '@/scripts/modules/cookies.js';
+} from '@/scripts/modules/storage.js';
 
 const ROLE_ROUTES = {
     admin: '/src/pages/user/admin/dashboard/',
@@ -44,7 +43,7 @@ const getCurrentMode = (prefix) => getFormByPrefix(prefix)?.dataset.authMode || 
 const getCredentialInput = (prefix, mode = getCurrentMode(prefix)) => document.getElementById(`${prefix}-${mode === 'phone' ? 'pin' : 'password'}`);
 /* END GET CREDENTIAL INPUT */
 
-/* START APPLY REMEMBERED LOGIN - Restores saved username and hashed credential into login fields */
+/* START APPLY REMEMBERED LOGIN - Restores saved username and credential into login fields */
 const applyRememberedLogin = () => {
     const rememberedLogin = getRememberedLogin();
     if (!rememberedLogin) return;
@@ -62,7 +61,7 @@ const applyRememberedLogin = () => {
 
         if (identityInput) identityInput.value = rememberedLogin.identifier;
         if (credentialInput) {
-            credentialInput.value = rememberedLogin.credentialHash;
+            credentialInput.value = rememberedLogin.credential;
             if (credentialInput.id.endsWith('-password')) credentialInput.type = 'password';
         }
         if (rememberInput) rememberInput.checked = true;
@@ -425,7 +424,7 @@ const setupLoginForms = () => {
                     setRememberedLogin({
                         mode,
                         identifier: identityValue,
-                        credentialHash: isHashedCredential(credentialValue) ? credentialValue : await hashCredential(credentialValue)
+                        credential: credentialValue
                     });
                 } else {
                     clearRememberedLogin();

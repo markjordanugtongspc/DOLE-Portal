@@ -1,4 +1,5 @@
 import sidebarTemplate from '@/components/sidebar.html?raw';
+import { supabase } from '@/backend/api/supabase.js';
 import pkg from '../../../package.json';
 import { logout } from '@/backend/api/auth.api.js';
 import { Drawer } from 'flowbite';
@@ -27,6 +28,7 @@ const setupSidebarLogout = () => {
     });
 };
 /* END SIDEBAR LOGOUT SYSTEM */
+
 /* START DYNAMIC ROLE-BASED SIDEBAR SYSTEM */
 const setupDynamicSidebar = () => {
     const sidebarEl = document.getElementById('sidebar');
@@ -76,7 +78,7 @@ const setupDynamicSidebar = () => {
 </svg>
 `;
     const SVG_STAFFS_ADMIN = `
-<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"/></svg>
+<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"/></svg>
 <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm-1.5 8a4 4 0 0 0-4 4 2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-3Zm6.82-3.096a5.51 5.51 0 0 0-2.797-6.293 3.5 3.5 0 1 1 2.796 6.292ZM19.5 18h.5a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-1.1a5.503 5.503 0 0 1-.471.762A5.998 5.998 0 0 1 19.5 18ZM4 7.5a3.5 3.5 0 0 1 5.477-2.889 5.5 5.5 0 0 0-2.796 6.293A3.501 3.501 0 0 1 4 7.5ZM7.1 12H6a4 4 0 0 0-4 4 2 2 0 0 0 2 2h.5a5.998 5.998 0 0 1 3.071-5.238A5.505 5.505 0 0 1 7.1 12Z" clip-rule="evenodd"/></svg>`;
 
     const SVG_REPORTS = `<svg class="w-5 h-5 transition duration-75 group-hover:text-blue-600 dark:group-hover:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v14M9 5v14M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/></svg>`;
@@ -91,7 +93,7 @@ const setupDynamicSidebar = () => {
     
     const SVG_ASSISTANTS = `
 <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-  <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
 </svg>
 <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
   <path fill-rule="evenodd" d="M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4H6Zm7.25-2.095c.478-.86.75-1.85.75-2.905a5.973 5.973 0 0 0-.75-2.906 4 4 0 1 1 0 5.811ZM15.466 20c.34-.588.535-1.271.535-2v-1a5.978 5.978 0 0 0-1.528-4H18a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2h-4.535Z" clip-rule="evenodd"/>
@@ -141,7 +143,7 @@ const setupDynamicSidebar = () => {
                 label: 'Manage Tickets', 
                 url: '/src/pages/user/admin/tickets/', 
                 svg: SVG_TICKETS_ADMIN, 
-                badge: '8',
+                badge: null,
                 dropdown: [
                     { id: 'articles', label: 'Manage Articles', url: '/src/pages/user/admin/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
@@ -151,6 +153,7 @@ const setupDynamicSidebar = () => {
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
             { id: 'assistants', label: 'Manage Assistants', url: '/src/pages/user/staff/assistants/', svg: SVG_ASSISTANTS },
+            { id: 'tickets', label: 'My Tickets', url: '/src/pages/user/staff/tickets/', svg: SVG_TICKETS_ADMIN },
             { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
         ]
     };
@@ -177,20 +180,24 @@ const setupDynamicSidebar = () => {
             }
 
             if (item.dropdown) {
+                const dynamicBadge = item.id === 'tickets'
+                    ? `<span id="sidebar-badge-tickets" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm mr-1"></span>`
+                    : '';
+
                 listHTML += `
                 <li>
                     <div class="w-full relative">
-                        <a href="${item.url}" class="${linkClass} flex items-center w-full" onclick="event.preventDefault(); document.getElementById('dropdown-${item.id}').classList.toggle('hidden');">
+                        <a href="${item.url}" class="${linkClass} flex items-center w-full" onclick="document.getElementById('dropdown-${item.id}')?.classList.toggle('hidden');">
                             ${svgContent}
                             <span class="ms-3 mr-1">${item.label}</span>
                             <span class="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 z-10" aria-controls="dropdown-${item.id}">
                                 <svg class="w-4 h-4 transition duration-200" aria-hidden="true" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
                             </span>
                             <div class="flex-1"></div>
-                            ${item.badge ? `<span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black text-white bg-red-600 dark:bg-red-500 rounded-full animate-pulse ml-2">${item.badge}</span>` : ''}
+                            ${dynamicBadge}
                         </a>
                     </div>
-                    <ul id="dropdown-${item.id}" class="${isChildActive ? '' : 'hidden'} py-1 space-y-1 mt-1 ml-7">
+                    <ul id="dropdown-${item.id}" class="${(isChildActive || isActive) ? '' : 'hidden'} py-1 space-y-1 mt-1 ml-7">
                 `;
                 item.dropdown.forEach(child => {
                     const isSubActive = child.id === activeItem;
@@ -220,12 +227,16 @@ const setupDynamicSidebar = () => {
                 </li>
                 `;
             } else {
+                const dynamicBadge = item.id === 'tickets'
+                    ? `<span id="sidebar-badge-tickets" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm"></span>`
+                    : '';
+
                 listHTML += `
                 <li>
                     <a href="${item.url}" class="${linkClass}">
                         ${svgContent}
                         <span class="flex-1 ms-3">${item.label}</span>
-                        ${item.badge ? `<span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black text-white bg-red-600 dark:bg-red-500 rounded-full animate-pulse">${item.badge}</span>` : ''}
+                        ${dynamicBadge}
                     </a>
                 </li>
                 `;
@@ -245,6 +256,94 @@ const setupDynamicSidebar = () => {
     if (versionEl) {
         versionEl.textContent = `v${pkg.version}`;
     }
+
+    // Populate user profile info dynamically from session
+    const rawSession = localStorage.getItem('dole_session');
+    const user = rawSession ? JSON.parse(rawSession) : null;
+    if (user) {
+        const userNameEl = document.getElementById('sidebar-user-name');
+        const userSubtitleEl = document.getElementById('sidebar-user-subtitle');
+        const userRoleEl = document.getElementById('sidebar-user-role-pill');
+        const userAvatarEl = document.getElementById('sidebar-user-avatar');
+
+        if (userNameEl) userNameEl.textContent = user.full_name || user.username || 'System User';
+        if (userSubtitleEl) userSubtitleEl.textContent = user.email || 'portal@dole.local';
+        if (userRoleEl) userRoleEl.textContent = role === 'admin' ? 'Admin' : 'Staff';
+        if (userAvatarEl) {
+            const initials = (user.full_name || user.username || 'SU')
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase();
+            userAvatarEl.textContent = initials;
+        }
+
+        // Dynamic global unread badge with realtime notifications
+        updateSidebarTicketsBadge(role, user.id);
+        setupSidebarRealtime(role, user.id);
+    }
+};
+
+let sidebarRealtimeChannel = null;
+
+const updateSidebarTicketsBadge = async (role, userId) => {
+    const badgeEl = document.getElementById('sidebar-badge-tickets');
+    if (!badgeEl) return;
+
+    try {
+        let count = 0;
+        if (role === 'admin') {
+            const { data, error } = await supabase
+                .from('ticket_messages')
+                .select('id')
+                .eq('is_read', false)
+                .neq('sender_type', 'admin');
+            
+            if (!error && data) {
+                count = data.length;
+            }
+        } else {
+            const { data, error } = await supabase
+                .from('ticket_messages')
+                .select('ticket_id, tickets!inner(created_by)')
+                .eq('is_read', false)
+                .eq('sender_type', 'admin')
+                .eq('tickets.created_by', userId);
+            
+            if (!error && data) {
+                count = data.length;
+            }
+        }
+
+        if (count > 0) {
+            badgeEl.textContent = count;
+            badgeEl.classList.remove('hidden');
+            badgeEl.classList.add('inline-flex');
+        } else {
+            badgeEl.classList.add('hidden');
+            badgeEl.classList.remove('inline-flex');
+            badgeEl.textContent = '';
+        }
+    } catch (err) {
+        console.error('Failed to update sidebar badge:', err);
+    }
+};
+
+const setupSidebarRealtime = (role, userId) => {
+    if (sidebarRealtimeChannel) {
+        supabase.removeChannel(sidebarRealtimeChannel);
+    }
+
+    sidebarRealtimeChannel = supabase
+        .channel('sidebar-realtime-notifications')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
+            updateSidebarTicketsBadge(role, userId);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_messages' }, () => {
+            updateSidebarTicketsBadge(role, userId);
+        })
+        .subscribe();
 };
 
 if (document.readyState === 'loading') {

@@ -215,3 +215,54 @@ export async function fetchTicketCategories() {
     if (error) return { data: [], error: error.message };
     return { data: data || [], error: null };
 }
+
+/**
+ * Fetch tickets belonging to a specific user (staff/HR role-based view).
+ * Staff and HR users can only see tickets they created themselves.
+ * @param {number} userId  — The ID of the logged-in staff/HR user
+ * @param {object} filters — { category_id, priority, status }
+ * @returns {{ data: Array, error: string|null }}
+ */
+export async function fetchTicketsByUser(userId, filters = {}) {
+    let query = supabase
+        .from('tickets')
+        .select(`
+            id,
+            ticket_number,
+            subject,
+            priority,
+            status,
+            team,
+            tags,
+            unread_count,
+            last_activity,
+            created_at,
+            updated_at,
+            created_by,
+            category_id,
+            ticket_categories ( name, icon ),
+            users!tickets_created_by_fkey ( full_name, username, email )
+        `)
+        .is('archived_at', null)
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false });
+
+    if (filters.category_id) {
+        query = query.eq('category_id', filters.category_id);
+    }
+    if (filters.priority && filters.priority !== 'All') {
+        query = query.eq('priority', filters.priority);
+    }
+    if (filters.status && filters.status !== 'All') {
+        query = query.eq('status', filters.status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        if (window.DEBUG) window.DEBUG.error('TICKETS-API', `Failed to fetch tickets for user ${userId}`, error.message);
+        return { data: [], error: error.message };
+    }
+    return { data: data || [], error: null };
+}
+

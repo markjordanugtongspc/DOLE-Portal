@@ -133,26 +133,41 @@ th.text-left .datatable-sorter {
   transition: transform 0.1s ease-in-out !important;
 }
 
-/* polygon-gradient */
+/* Theme toggle view-transition reveal */
+:root {
+  --theme-transition-x: calc(100% - 2rem);
+  --theme-transition-y: 2rem;
+  --theme-transition-radius: 150vmax;
+}
+
 ::view-transition-group(root) {
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* using expo-out fallback if var not defined */
+  animation-duration: 750ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-::view-transition-new(root) {
-  mask: url('./assets/custom-svg.svg') top left / 0 no-repeat;
-  mask-origin: top left;
-  animation: scale 1.5s;
-  animation-fill-mode: both;
-}
+
 ::view-transition-old(root),
-.dark::view-transition-old(root) {
-  animation: scale 1.5s;
-  animation-fill-mode: both;
-  z-index: -1;
-  transform-origin: top left;
+::view-transition-new(root) {
+  animation-duration: 750ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-@keyframes scale {
+
+::view-transition-old(root) {
+  z-index: 0;
+}
+
+::view-transition-new(root) {
+  z-index: 1;
+  clip-path: circle(0 at var(--theme-transition-x) var(--theme-transition-y));
+  animation-name: theme-reveal;
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-transition-x) var(--theme-transition-y));
+  }
+
   to {
-    mask-size: 200vmax;
+    clip-path: circle(var(--theme-transition-radius) at var(--theme-transition-x) var(--theme-transition-y));
   }
 }
 
@@ -175,4 +190,52 @@ th.text-left .datatable-sorter {
 }
 .dark .options-container::-webkit-scrollbar-thumb:hover {
   background-color: rgba(75, 85, 99, 0.6);
+}
+
+/* Shared custom scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.15);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.35);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.15) transparent;
+}
+
+#sidebar-logout-confirmation {
+  animation: sidebar-logout-fade-in 180ms ease-out;
+}
+
+#sidebar-logout-confirmation > div:last-child {
+  animation: sidebar-logout-sheet-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sidebar-logout-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sidebar-logout-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

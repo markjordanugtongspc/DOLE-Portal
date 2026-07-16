@@ -1,4 +1,5 @@
 import { fetchSystems, createSystem, updateSystem, archiveSystem, restoreSystem, uploadSystemImage } from '@/backend/api/systems.api.js';
+import { supabase } from '@/backend/api/supabase.js';
 import { Modal } from 'flowbite';
 
 /* START AUTH DRAWER FUNCTIONALITY */
@@ -418,6 +419,27 @@ const initSystemsManager = () => {
         updateSortControls();
         renderSystems();
     };
+
+    // ── Supabase Realtime: Systems ─────────────────────────────────────────────
+    // Subscribe to systems table changes and refresh the grid live.
+    const _systemsChannel = supabase
+        .channel('drawer-systems-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'systems' }, async (payload) => {
+            if (window.DEBUG) window.DEBUG.flow('DRAWER', `Systems realtime: ${payload.eventType}`);
+            const { data, error } = await fetchSystems({ activeOnly: false, includeArchived: true });
+            if (!error) {
+                systems = data.map(normalizeSystem);
+                updateSortControls();
+                renderSystems();
+            }
+        })
+        .subscribe((status) => {
+            if (window.DEBUG) window.DEBUG.flow('DRAWER', `Systems realtime channel: ${status}`);
+        });
+
+    window.addEventListener('beforeunload', () => {
+        supabase.removeChannel(_systemsChannel);
+    });
 
     const setSavingState = (saving) => {
         isSaving = saving;

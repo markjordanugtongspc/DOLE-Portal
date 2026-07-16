@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link class="cursor-pointer" rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Tickets - DOLE Portal</title>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var match = path.match(/\/src\/pages\/user\/(admin|staff)\//);
+      if (!match) return;
+
+      var rawSession = localStorage.getItem('dole_session');
+      if (!rawSession) {
+        window.location.replace('/?auth=login_required');
+        return;
+      }
+
+      try {
+        var user = JSON.parse(rawSession);
+        var roleId = Number(user && user.role_id);
+        var requiredRole = match[1];
+        var actualRole = roleId === 1 || roleId === 2 ? 'admin' : roleId === 3 || roleId === 4 ? 'staff' : null;
+
+        if (!actualRole) {
+          localStorage.removeItem('dole_session');
+          window.location.replace('/?auth=login_required');
+          return;
+        }
+
+        if (actualRole !== requiredRole) {
+          window.location.replace(actualRole === 'admin' ? '/src/pages/user/admin/dashboard/' : '/src/pages/user/staff/dashboard/');
+        }
+      } catch (error) {
+        localStorage.removeItem('dole_session');
+        window.location.replace('/?auth=login_required');
+      }
+    })();
+  </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+    <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+    <div id="sidebar" data-role="staff" data-active="tickets"></div>
+
+    <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+    <div class="sm:ml-64 min-h-screen flex flex-col">
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 p-6 md:p-8 space-y-6 transition-all duration-300">
+            
+            <!-- Header Section containing breadcrumbs and full horizontal separator line -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-300 dark:border-gray-700 pb-4">
+                
+                <!-- Table breadcrumbs -->
+                <nav id="table-breadcrumbs" class="hidden" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                        <li class="inline-flex items-center">
+                            <a href="/"
+                                class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4 me-1.5" viewBox="0 0 24 24" aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g transform="matrix(0.77 0 0 0.77 12 12)">
+                                        <path style="stroke: none; fill: currentColor;" transform="translate(-16, -16)"
+                                            d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z" />
+                                    </g>
+                                </svg>
+                                LOGIN
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m9 5 7 7-7 7" />
+                                </svg>
+                                <a href="#"
+                                    class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Manage Tickets</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="m9 5 7 7-7 7" />
+                                </svg>
+                                <span
+                                    class="inline-flex items-center text-sm font-semibold text-gray-400 dark:text-gray-500 select-none">User</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+                <div id="chat-breadcrumbs" class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between w-full">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h1 id="chat-header-ticket-id" class="text-2xl font-black text-gray-900 dark:text-white leading-tight">Tickets</h1>
+                            <span id="chat-header-separator" class="text-gray-400 dark:text-gray-600 select-none font-bold text-xl hidden">•</span>
+                            <div class="relative inline-block pb-1">
+                                <span id="chat-header-ticket-subject" class="text-sm font-medium text-gray-500 dark:text-gray-400">View and manage your tickets here.</span>
+                                <div id="chat-header-subject-underline" class="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full transition-all duration-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end">
+                        <button id="btn-create-ticket" class="hidden cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm">
+                            <span>Create Ticket</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 1: Table List View Container -->
+            <div id="table-view-container" class="hidden flex-col lg:flex-row gap-6 relative items-start">
+                
+                <!-- Persistent Collapsible Category Drawer -->
+                <aside id="category-drawer" class="w-72 flex-shrink-0 transition-all duration-300 overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-xs">
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
+                        <h2 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider select-none">Category</h2>
+                        <!-- Collapse Trigger Button -->
+                        <button class="toggle-category-drawer text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer" title="Hide Category Drawer">
+                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Categories Nav Menu -->
+                    <nav class="space-y-1.5">
+                        <button data-category="Support Requests" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>Support Requests</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
+                        </button>
+                        <button data-category="Bug Report" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>Bug Report</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
+                        </button>
+                        <button data-category="Feature Request" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>Feature Request</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
+                        </button>
+                        <button data-category="All" class="category-btn flex items-center justify-between w-full p-2.5 rounded-lg text-left text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 cursor-pointer font-medium text-sm">
+                            <span>All</span>
+                            <span class="category-badge text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">0</span>
+                        </button>
+                    </nav>
+                </aside>
+
+                <!-- Literal Content (Table Container) -->
+                <div class="flex-1 w-full space-y-4">
+                    
+                    <!-- Content Title Header with Hamburger Drawer Toggle -->
+                    <div class="flex items-center gap-3">
+                        <button class="toggle-category-drawer text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer" title="Show Category Drawer">
+                            <svg class="w-5.5 h-5.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2.5" d="M5 7h14M5 12h14M5 17h14"/>
+                            </svg>
+                        </button>
+                        <!-- dynamic category title -->
+                        <h1 id="selected-category-title" class="text-2xl font-black text-gray-950 dark:text-white">All</h1>
+                    </div>
+
+                    <!-- Tickets Table wrapper with shadows, borders & overflow -->
+                    <div class="bg-white dark:bg-gray-900 shadow-md rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                        
+                        <!-- Toolbar for Search and Sorting Dropdown -->
+                        <div class="flex flex-col xl:flex-row xl:items-center gap-3 p-4 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-800/50">
+                            
+                            <!-- Search Field -->
+                            <div class="relative w-full xl:max-w-sm xl:flex-1">
+                                <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="search-tickets"
+                                    class="block w-full py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200"
+                                    placeholder="Search tickets...">
+                            </div>
+
+                            <!-- Filter Controls next to Search Field -->
+                            <div class="flex w-full flex-col gap-3 sm:grid sm:grid-cols-2 xl:flex xl:w-auto xl:grid-cols-none xl:flex-row xl:items-center xl:justify-end xl:gap-3 xl:ml-auto">
+                                <select id="filter-type" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2 pr-10 w-full sm:min-w-0 xl:w-44 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-colors cursor-pointer">
+                                    <option value="All">All Types</option>
+                                </select>
+
+                                <select id="filter-date" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2 pr-10 w-full sm:min-w-0 xl:w-44 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-colors cursor-pointer">
+                                    <option value="All">All Dates</option>
+                                </select>
+
+                                <select id="filter-priority" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg p-2 pr-10 w-full sm:min-w-0 xl:w-44 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-colors cursor-pointer">
+                                    <option value="All">All Priorities</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Data Table with Sorting Chevrons -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                <thead class="text-[11px] text-white uppercase bg-blue-800 dark:bg-blue-950 border-b border-gray-200 dark:border-gray-800">
+                                    <tr>
+                                        <!-- Columns set to sortable with sorting chevrons in sort-icon-container -->
+                                        <th scope="col" class="px-4 py-2.5 font-semibold text-left whitespace-nowrap" data-sort="id">
+                                            <div class="flex items-center gap-1 whitespace-nowrap">
+                                                <span>Ticket ID</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-4 py-2.5 font-semibold text-left whitespace-nowrap" data-sort="subject">
+                                            <div class="flex items-center gap-1 whitespace-nowrap">
+                                                <span>Subject</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-4 py-2.5 font-semibold text-left whitespace-nowrap" data-sort="priority">
+                                            <div class="flex items-center gap-1 whitespace-nowrap">
+                                                <span>Priority</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-4 py-2.5 font-semibold text-left whitespace-nowrap" data-sort="implementor">
+                                            <div class="flex items-center gap-1 whitespace-nowrap">
+                                                <span>Implementor</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-4 py-2.5 font-semibold text-left whitespace-nowrap" data-sort="date">
+                                            <div class="flex items-center gap-1 whitespace-nowrap">
+                                                <span>Date Submitted</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                        <th scope="col" class="px-4 py-2.5 font-semibold text-left whitespace-nowrap" data-sort="lastActivity">
+                                            <div class="flex items-center gap-1 whitespace-nowrap">
+                                                <span>Last Activity</span>
+                                                <span class="sort-icon-container">
+                                                    <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tickets-table-body">
+                                    <!-- Populated Dynamically via ticket-support.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>            <!-- VIEW 2: Dynamic Chat Messenger View Container -->
+            <div id="chat-view-container" class="flex flex-col xl:flex-row gap-5 relative items-stretch min-h-[calc(100vh-170px)]">
+                <aside id="chat-tickets-drawer" class="w-full xl:w-80 xl:flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col overflow-hidden h-[580px]">
+                    <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 class="text-sm font-bold text-gray-900 dark:text-white">My Tickets</h2>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400"><span id="chat-tickets-count">0</span> total tickets</p>
+                            </div>
+                            <select id="chat-sort-dropdown" class="bg-transparent border-0 text-xs font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 focus:ring-0 py-1 pl-2 pr-8 cursor-pointer">
+                                <option value="newest" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Newest</option>
+                                <option value="oldest" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Oldest</option>
+                                <option value="closed" class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Closed Tickets</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="relative mb-4">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="chat-search-tickets" class="block w-full py-2 ps-9 pr-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200" placeholder="Search your tickets...">
+                    </div>
+
+                    <div id="chat-tickets-list" class="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar min-h-44">
+                        <!-- Loaded Dynamically by ticket-support.js -->
+                    </div>
+                </aside>
+
+                <section class="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm h-[580px] flex flex-col overflow-hidden relative">
+                    <!-- Improved Staff Chat Header inside section -->
+                    <div id="staff-chat-header" class="hidden items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50/40 dark:bg-gray-900/40 backdrop-blur-sm z-10">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <!-- Ticket ID badge -->
+                            <span id="staff-chat-header-id" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50"></span>
+                            <!-- Ticket Subject Title with Underline Gradient Highlight -->
+                            <div class="relative min-w-0 pb-1.5">
+                                <h2 id="staff-chat-header-subject" class="text-base font-extrabold text-gray-900 dark:text-white truncate"></h2>
+                                <div class="absolute bottom-0 left-0 h-1 w-32 bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- Category Badge -->
+                            <span id="staff-chat-header-category" class="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-md"></span>
+                            <!-- Priority Badge -->
+                            <div id="staff-chat-header-priority"></div>
+                        </div>
+                    </div>
+                    <div id="chat-messages-viewport" class="flex-1 p-5 md:p-6 overflow-y-auto bg-gray-50/30 dark:bg-gray-900/20 custom-scrollbar">
+                        <div class="flex h-full min-h-[360px] items-center justify-center px-6">
+                            <div class="max-w-lg text-center">
+                                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                                    <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                </div>
+                                <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">No tickets yet</p>
+                                <h2 class="mt-3 text-xl font-bold text-gray-900 dark:text-white">Create a new ticket first.</h2>
+                                <p class="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">You have not created any tickets yet. Create a new ticket first and the conversation will appear here.</p>
+                                <button id="staff-empty-create-ticket" type="button" class="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-emerald-700">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+                                    </svg>
+                                    Create Ticket
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="chat-composer-shell" class="hidden border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 p-4 transition-all duration-200">
+                                                <form id="chat-input-form">
+                            <div class="w-full border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-xs overflow-hidden">
+                                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <div class="flex flex-wrap items-center divide-gray-200 dark:divide-gray-600 sm:divide-x sm:rtl:divide-x-reverse">
+                                        <div class="flex items-center space-x-1 rtl:space-x-reverse sm:pe-4">
+                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8"/></svg>
+                                                <span class="sr-only">Attach file</span>
+                                            </button>
+                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h.01M8.99 9H9m12 3a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM6.6 13a5.5 5.5 0 0 0 10.81 0H6.6Z"/></svg>
+                                                <span class="sr-only">Add emoji</span>
+                                            </button>
+                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+                                                <span class="sr-only">Voice note</span>
+                                            </button>
+                                        </div>
+                                        <div class="flex flex-wrap items-center space-x-1 rtl:space-x-reverse sm:ps-4">
+                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M16 18H8l2.5-6 2 4 1.5-2 2 4Zm-1-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 18h8l-2-4-1.5 2-2-4L8 18Zm7-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></svg>
+                                                <span class="sr-only">Upload image</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-2 bg-white dark:bg-gray-900">
+                                    <label for="chat-editor" class="sr-only">Message</label>
+                                    <textarea id="chat-editor" rows="2" class="block w-full px-0 text-sm text-gray-900 bg-white border-0 dark:bg-gray-900 focus:ring-0 dark:text-white dark:placeholder-gray-500 resize-y min-h-[38px] max-h-[200px] outline-none" placeholder="Type your reply here..." required></textarea>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-3">
+                                <button id="chat-send-button" type="submit" class="cursor-pointer text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-blue-600 dark:hover:bg-blue-700 font-bold text-sm px-6 py-2.5 rounded-lg shadow-sm transition-colors select-none">Send Reply</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Ticket Drawer -->
+    <div id="drawer-create-ticket" class="fixed top-0 right-0 z-50 h-screen p-6 overflow-y-auto transition-transform translate-x-full bg-white w-96 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800" tabindex="-1" aria-labelledby="drawer-create-ticket-label">
+        <h5 id="drawer-create-ticket-label" class="inline-flex items-center mb-6 text-sm font-bold text-gray-900 uppercase dark:text-gray-200 tracking-wider">
+            <svg class="w-5 h-5 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m-7-7h14"/>
+            </svg>
+            Create New Ticket
+        </h5>
+        <button type="button" data-drawer-hide="drawer-create-ticket" aria-controls="drawer-create-ticket" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 absolute top-4 right-4 inline-flex items-center justify-center dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer transition-colors">
+            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+            </svg>
+            <span class="sr-only">Close menu</span>
+        </button>
+        <form id="form-create-ticket" class="space-y-5">
+            <!-- Ticket Name (Subject) -->
+            <div>
+                <label for="create-ticket-subject" class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Ticket Name</label>
+                <input type="text" id="create-ticket-subject" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-colors outline-none" placeholder="Enter a descriptive title" required>
+            </div>
+
+            <!-- Priority -->
+            <div>
+                <label class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Priority</label>
+                <div class="flex items-center gap-2">
+                    <button type="button" data-priority-btn="Low" class="create-priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Low
+                    </button>
+                    <button type="button" data-priority-btn="Medium" class="create-priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1 active">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> Medium
+                    </button>
+                    <button type="button" data-priority-btn="High" class="create-priority-pill flex-1 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors flex items-center justify-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> High
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status (Disabled) -->
+            <div>
+                <label for="create-ticket-status" class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Status</label>
+                <select id="create-ticket-status" class="bg-gray-200 border border-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-400 cursor-not-allowed opacity-75 select-none" disabled>
+                    <option value="Pending" selected>Pending</option>
+                    <option value="Open">Open</option>
+                    <option value="Closed">Closed</option>
+                </select>
+                <p class="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 font-semibold">New tickets always start as Pending.</p>
+            </div>
+
+            <!-- Team -->
+            <div>
+                <label for="create-ticket-team" class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Team</label>
+                <select id="create-ticket-team" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer transition-colors outline-none">
+                    <option value="Technical Support">Technical Support</option>
+                    <option value="Customer Service">Customer Service</option>
+                    <option value="Billing & Accounts">Billing & Accounts</option>
+                </select>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label for="create-ticket-category" class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Ticket Type</label>
+                <select id="create-ticket-category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-pointer transition-colors outline-none">
+                    <option value="Support Requests">Support Requests</option>
+                    <option value="Bug Report">Bug Report</option>
+                    <option value="Feature Request">Feature Request</option>
+                </select>
+            </div>
+
+            <!-- Tags -->
+            <div>
+                <label for="create-ticket-tags-input" class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Tags</label>
+                <div id="create-ticket-tags-container" class="flex flex-wrap gap-1.5 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg min-h-[44px] items-center cursor-text transition-colors">
+                    <input type="text" id="create-ticket-tags-input" class="flex-1 min-w-[60px] bg-transparent border-0 p-0 text-sm text-gray-900 dark:text-white focus:ring-0 placeholder-gray-400 outline-none" placeholder="Add tag...">
+                </div>
+                <p class="mt-1.5 text-[10px] text-gray-500 dark:text-gray-400 font-semibold">Press Enter or comma to add.</p>
+            </div>
+
+            <!-- Initial Message -->
+            <div>
+                <label for="create-ticket-message" class="block mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none">Initial Message</label>
+                <textarea id="create-ticket-message" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 resize-none transition-colors outline-none" placeholder="Describe the issue in detail..." required></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <button type="button" data-drawer-hide="drawer-create-ticket" class="cursor-pointer text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-bold rounded-lg text-sm px-5 py-2.5 text-center transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="btn-submit-create-ticket" class="cursor-pointer text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-300 dark:focus:ring-emerald-800 font-bold rounded-lg text-sm px-5 py-2.5 text-center transition-colors inline-flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"></path>
+                    </svg>
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Close Ticket Confirmation Modal (Flowbite) -->
+    <div id="close-ticket-modal" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-md max-h-full">
+            <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <button type="button" class="cursor-pointer absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="close-ticket-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+                <div class="p-4 md:p-5 text-center">
+                    <svg class="mx-auto mb-4 text-gray-400 w-12 h-12 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    <h3 class="mb-5 text-base font-bold text-gray-500 dark:text-gray-400">Are you sure you want to close this ticket?</h3>
+                    <button id="confirm-close-ticket-btn" type="button" class="cursor-pointer text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-300 dark:focus:ring-emerald-800 font-bold rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
+                        Yes, I'm sure
+                    </button>
+                    <button data-modal-hide="close-ticket-modal" type="button" class="cursor-pointer py-2.5 px-5 ms-3 text-sm font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800">No, cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
+
+
+
+
+

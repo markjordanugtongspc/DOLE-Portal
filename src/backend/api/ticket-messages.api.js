@@ -56,7 +56,7 @@ export async function sendTextMessage(ticketId, senderId, senderName, senderType
         message_type: 'text',
         content,
         metadata:     null,
-        is_read:      senderType === 'admin', // Admin messages are pre-read
+        is_read:      false,
     });
 }
 
@@ -79,7 +79,7 @@ export async function sendLinkMessage(ticketId, senderId, senderName, senderType
         message_type: 'link',
         content,
         metadata:     linkMeta,
-        is_read:      senderType === 'admin',
+        is_read:      false,
     });
 }
 
@@ -101,7 +101,7 @@ export async function sendFileMessage(ticketId, senderId, senderName, senderType
         message_type: 'file',
         content:      null,
         metadata:     fileMeta,
-        is_read:      senderType === 'admin',
+        is_read:      false,
     });
 }
 
@@ -123,7 +123,7 @@ export async function sendImageMessage(ticketId, senderId, senderName, senderTyp
         message_type: 'image',
         content:      null,
         metadata:     { image_url: imageUrl },
-        is_read:      senderType === 'admin',
+        is_read:      false,
     });
 }
 
@@ -138,6 +138,25 @@ export async function markMessagesRead(ticketId) {
         .from('ticket_messages')
         .update({ is_read: true })
         .eq('ticket_id', ticketId)
+        .neq('sender_type', 'admin')
+        .eq('is_read', false);
+
+    if (error) return { error: error.message };
+    return { error: null };
+}
+
+/**
+ * Mark all unread admin messages in a ticket as read.
+ * Called when staff opens a ticket.
+ * @param {number} ticketId
+ * @returns {{ error: string|null }}
+ */
+export async function markAdminMessagesRead(ticketId) {
+    const { error } = await supabase
+        .from('ticket_messages')
+        .update({ is_read: true })
+        .eq('ticket_id', ticketId)
+        .eq('sender_type', 'admin')
         .eq('is_read', false);
 
     if (error) return { error: error.message };

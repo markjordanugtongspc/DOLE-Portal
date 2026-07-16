@@ -1,45 +1,72 @@
-// Select all theme toggle buttons and icons
-const themeToggleBtns = document.querySelectorAll('.theme-toggle-btn');
-const themeToggleDarkIcons = document.querySelectorAll('.theme-toggle-dark-icon');
-const themeToggleLightIcons = document.querySelectorAll('.theme-toggle-light-icon');
+const getThemeButtons = () => Array.from(document.querySelectorAll('.theme-toggle-btn[data-theme-target]'));
 
-// Detect if dark mode is active
-const isDark = document.documentElement.classList.contains('dark') || 
-  localStorage.getItem('color-theme') === 'dark' || 
-  (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+const getPreferredTheme = () => {
+  if (localStorage.getItem('color-theme')) {
+    return localStorage.getItem('color-theme');
+  }
 
-// Synchronize all theme toggle icons
-const syncIcons = (isCurrentlyDark) => {
-  if (isCurrentlyDark) {
-    themeToggleLightIcons.forEach(icon => icon.classList.remove('hidden'));
-    themeToggleDarkIcons.forEach(icon => icon.classList.add('hidden'));
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const syncThemeButtons = (isCurrentlyDark = getPreferredTheme() === 'dark') => {
+  getThemeButtons().forEach((btn) => {
+    const isActive = btn.dataset.themeTarget === (isCurrentlyDark ? 'dark' : 'light');
+
+    btn.classList.toggle('bg-white', isActive);
+    btn.classList.toggle('dark:bg-gray-900', isActive);
+    btn.classList.toggle('text-gray-900', isActive);
+    btn.classList.toggle('dark:text-white', isActive);
+    btn.classList.toggle('shadow-sm', isActive);
+    btn.classList.toggle('text-gray-500', !isActive);
+    btn.classList.toggle('dark:text-gray-400', !isActive);
+  });
+};
+
+const applyTheme = (theme) => {
+  const isDark = theme === 'dark';
+  document.documentElement.classList.toggle('dark', isDark);
+  localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+  syncThemeButtons(isDark);
+};
+
+const getThemeTarget = (node) => node?.closest('[data-theme-target]')?.dataset.themeTarget || null;
+
+const setThemeTransitionOrigin = (toggleBtn) => {
+  if (!toggleBtn) return;
+
+  const rect = toggleBtn.getBoundingClientRect();
+  const originX = rect.right;
+  const originY = rect.top;
+  const maxX = Math.max(originX, window.innerWidth - originX);
+  const maxY = Math.max(originY, window.innerHeight - originY);
+  const radius = Math.hypot(maxX, maxY);
+
+  document.documentElement.style.setProperty('--theme-transition-x', `${originX}px`);
+  document.documentElement.style.setProperty('--theme-transition-y', `${originY}px`);
+  document.documentElement.style.setProperty('--theme-transition-radius', `${radius}px`);
+};
+
+const handleThemeToggleClick = (event) => {
+  const toggleBtn = event.target.closest('.theme-toggle-btn');
+  if (!toggleBtn) return;
+
+  const targetTheme = getThemeTarget(event.target) || toggleBtn.dataset.themeTarget;
+  const nextTheme = targetTheme || (document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+  const commitThemeChange = () => applyTheme(nextTheme);
+
+  setThemeTransitionOrigin(toggleBtn);
+
+  if (document.startViewTransition) {
+    document.startViewTransition(commitThemeChange);
   } else {
-    themeToggleDarkIcons.forEach(icon => icon.classList.remove('hidden'));
-    themeToggleLightIcons.forEach(icon => icon.classList.add('hidden'));
+    commitThemeChange();
   }
 };
 
-// Initial sync
-syncIcons(isDark);
+syncThemeButtons();
 
-// Bind event listeners to all theme toggle buttons
-themeToggleBtns.forEach(btn => {
-  btn.addEventListener('click', function(e) {
-    const toggleTheme = () => {
-      // Toggle dark mode class on html
-      const isNewDark = document.documentElement.classList.toggle('dark');
-      
-      // Save preference to localStorage
-      localStorage.setItem('color-theme', isNewDark ? 'dark' : 'light');
-      
-      // Update all icons
-      syncIcons(isNewDark);
-    };
-
-    if (document.startViewTransition) {
-      document.startViewTransition(toggleTheme);
-    } else {
-      toggleTheme();
-    }
-  });
-});
+if (!document.documentElement.dataset.themeToggleBound) {
+  document.documentElement.dataset.themeToggleBound = 'true';
+  document.addEventListener('click', handleThemeToggleClick);
+  window.addEventListener('theme-toggle:sync', () => syncThemeButtons());
+}
