@@ -95,6 +95,10 @@ const importModule = async (label, loader) => {
 const bootAppModules = async () => {
     await importModule('Supabase API module', () => import('@/backend/api/supabase.js'));
     await importModule('Auth module', () => import('@/scripts/modules/auth.js'));
+    if (window.__AUTH_ROUTE_BLOCKED) {
+        window.DEBUG?.warn('IMPORT', 'Protected page boot halted by auth route guard.');
+        return;
+    }
     await importModule('Theme toggler module', () => import('@/scripts/modules/theme-toggler.js'));
     await importModule('Slider module', () => import('@/scripts/modules/slider.js'));
     await importModule('Drawer/systems module', () => import('@/scripts/modules/drawer.js'));
@@ -104,6 +108,7 @@ const bootAppModules = async () => {
     await importModule('Staffs management module', () => import('@/scripts/modules/staffs-manage.js'));
     await importModule('Ticket support module', () => import('@/scripts/modules/ticket-support.js'));
     await importModule('Assistants management module', () => import('@/scripts/modules/assistants-manage.js'));
+    await importModule('Articles browse/view module', () => import('@/scripts/modules/articles-manage.js'));
 };
 
 bootAppModules();

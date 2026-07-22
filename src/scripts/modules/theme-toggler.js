@@ -27,6 +27,7 @@ const applyTheme = (theme) => {
   document.documentElement.classList.toggle('dark', isDark);
   localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
   syncThemeButtons(isDark);
+  window.dispatchEvent(new CustomEvent('theme:changed', { detail: { theme: isDark ? 'dark' : 'light' } }));
 };
 
 const getThemeTarget = (node) => node?.closest('[data-theme-target]')?.dataset.themeTarget || null;

@@ -14,9 +14,14 @@ import {
 import {
     fetchMessages,
     sendTextMessage,
+    sendFileMessage,
+    sendImageMessage,
+    uploadChatAttachment,
     markMessagesRead,
     markAdminMessagesRead,
 } from '@/backend/api/ticket-messages.api.js';
+import { showImagePreviewModal, downloadImageFile } from '@/scripts/modules/modals.js';
+import { ticketCacheStorage } from '@/scripts/modules/storage.js';
 import { Modal } from 'flowbite';
 
 // Knowledge Base Articles (static content — not from DB)
@@ -53,6 +58,19 @@ const MOCK_KB_ARTICLES = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_CHAT_IMAGE_EDGE = 1200; // 1200px max edge
+const CHAT_IMAGE_MIME = 'image/webp';
+const CHAT_IMAGE_QUALITY = 0.82;
+
+const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
 const esc = (v = '') => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
 const avatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`;
@@ -85,6 +103,32 @@ const timeAgo = (iso) => {
     } catch { return iso; }
 };
 
+const renderConversationSkeleton = () => `
+    <div class="space-y-4 p-4 animate-pulse">
+        <div class="flex items-start gap-3 justify-start">
+            <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0"></div>
+            <div class="flex flex-col gap-1.5 w-3/5">
+                <div class="h-3 w-20 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-14 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+            </div>
+        </div>
+        <div class="flex items-start gap-3 justify-end">
+            <div class="flex flex-col gap-1.5 items-end w-3/5">
+                <div class="h-3 w-16 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-10 w-full bg-blue-100 dark:bg-blue-950/40 rounded-2xl"></div>
+            </div>
+            <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0"></div>
+        </div>
+        <div class="flex items-start gap-3 justify-start">
+            <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0"></div>
+            <div class="flex flex-col gap-1.5 w-1/2">
+                <div class="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-32 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+            </div>
+        </div>
+    </div>
+`;
+
 // Normalize a DB ticket row to the shape this app uses internally
 const normalizeTicket = (row) => ({
     id: row.ticket_number || String(row.id),
@@ -112,6 +156,7 @@ const normalizeMessage = (row) => {
     let type = row.message_type || 'text';
 
     return {
+        id: row.id,
         sender: row.sender_name || (isAdmin ? 'Admin' : 'Staff'),
         avatar: isAdmin
             ? `https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff`
@@ -169,6 +214,7 @@ class TicketSupportApp {
         this.activeView = 'table';
         this.selectedTicketId = null;
         this.selectedTicketDbId = null;
+        this.currentMessages = [];
         this.chatSearchQuery = '';
         this.chatSortDirection = 'newest';
         this.activeDetailsTab = 'details';
@@ -233,16 +279,14 @@ class TicketSupportApp {
 
         if (window.DEBUG) window.DEBUG.success('TICKET-SUPPORT', 'TicketSupportApp fully initialized (Supabase realtime active).');
 
-        // Handle window focus to mark active ticket messages as read
-        window.addEventListener('focus', async () => {
+        // Handle window focus safely without causing network churn
+        window.addEventListener('focus', () => {
             if (this.selectedTicketDbId) {
                 if (this.isAdmin) {
-                    await markMessagesRead(this.selectedTicketDbId).catch(() => {});
-                    await supabase.from('tickets').update({ unread_count: 0 }).eq('id', this.selectedTicketDbId).catch(() => {});
+                    markMessagesRead(this.selectedTicketDbId);
                 } else {
-                    await markAdminMessagesRead(this.selectedTicketDbId).catch(() => {});
+                    markAdminMessagesRead(this.selectedTicketDbId);
                 }
-                await this.loadTickets();
             }
         });
 
@@ -314,22 +358,19 @@ class TicketSupportApp {
 
     /* START _subscribeTickets */
     _subscribeTickets() {
-        // Unsubscribe any existing channel first
         if (this._ticketsChannel) {
             supabase.removeChannel(this._ticketsChannel);
         }
 
-        const filter = this.isAdmin
-            ? { event: '*', schema: 'public', table: 'tickets' }
-            : { event: '*', schema: 'public', table: 'tickets', filter: `created_by=eq.${this.sessionUserId}` };
-
         this._ticketsChannel = supabase
             .channel('ticket-support-tickets')
-            .on('postgres_changes', filter, async (payload) => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, async (payload) => {
+                if (!this.isAdmin && payload.new && payload.new.created_by !== this.sessionUserId) {
+                    return;
+                }
                 if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Tickets realtime: ${payload.eventType}`);
                 await this.loadTickets();
 
-                // If the currently open ticket was updated, refresh sidebar + badge
                 if (this.selectedTicketId) {
                     const updated = this.tickets.find(t => t.id === this.selectedTicketId);
                     if (updated) {
@@ -340,16 +381,6 @@ class TicketSupportApp {
             .subscribe((status) => {
                 if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Tickets channel: ${status}`);
             });
-
-        this._globalMessagesChannel = supabase
-            .channel('ticket-support-global-messages')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_messages' }, async (payload) => {
-                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Global message realtime: ${payload.eventType}`);
-                await this.loadTickets();
-            })
-            .subscribe((status) => {
-                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Global messages channel: ${status}`);
-            });
     }
     /* END _subscribeTickets */
 
@@ -357,12 +388,10 @@ class TicketSupportApp {
     _subscribeMessages(ticketDbId) {
         if (!ticketDbId) return;
 
-        // Prevent disconnecting and reconnecting if already subscribed to this ticket
         if (this._messagesChannel && this._currentMessagesTicketId === ticketDbId) {
             return;
         }
 
-        // Unsubscribe previous message channel if switching tickets
         if (this._messagesChannel) {
             supabase.removeChannel(this._messagesChannel);
             this._messagesChannel = null;
@@ -376,11 +405,11 @@ class TicketSupportApp {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'ticket_messages',
-                filter: `ticket_id=eq.${ticketDbId}`,
-            }, async (payload) => {
-                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', 'New message realtime', payload.new);
-                // Re-render conversation with fresh data
-                await this._loadAndRenderConversation(ticketDbId);
+            }, (payload) => {
+                if (payload.new && Number(payload.new.ticket_id) === Number(ticketDbId)) {
+                    if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', 'New message realtime', payload.new);
+                    this._appendRealtimeMessage(ticketDbId, payload.new);
+                }
             })
             .subscribe((status) => {
                 if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Messages channel [${ticketDbId}]: ${status}`);
@@ -388,11 +417,37 @@ class TicketSupportApp {
     }
     /* END _subscribeMessages */
 
+    /* START _appendRealtimeMessage */
+    _appendRealtimeMessage(ticketDbId, rawMsg) {
+        if (!rawMsg || Number(this.selectedTicketDbId) !== Number(ticketDbId)) return;
+        const norm = normalizeMessage(rawMsg);
+
+        if (!Array.isArray(this.currentMessages)) {
+            this.currentMessages = [];
+        }
+
+        // Prevent duplicate bubble insertion
+        const exists = this.currentMessages.some(m => String(m.id) === String(norm.id));
+        if (exists) return;
+
+        this.currentMessages.push(norm);
+        this.renderConversation(this.currentMessages);
+        ticketCacheStorage.saveMessages(ticketDbId, this.currentMessages);
+    }
+    /* END _appendRealtimeMessage */
+
+    /* START _removeOptimisticMessage */
+    _removeOptimisticMessage(tempId) {
+        if (!tempId || !Array.isArray(this.currentMessages)) return;
+        this.currentMessages = this.currentMessages.filter(m => String(m.id) !== String(tempId));
+        this.renderConversation(this.currentMessages);
+    }
+    /* END _removeOptimisticMessage */
+
     /* START _cleanup */
     _cleanup() {
         if (this._ticketsChannel) supabase.removeChannel(this._ticketsChannel);
         if (this._messagesChannel) supabase.removeChannel(this._messagesChannel);
-        if (this._globalMessagesChannel) supabase.removeChannel(this._globalMessagesChannel);
     }
     /* END _cleanup */
 
@@ -534,6 +589,11 @@ class TicketSupportApp {
 
             const reader = new FileReader();
             reader.onload = (event) => {
+                this.pendingAttachment = {
+                    file,
+                    dataUrl: event.target.result
+                };
+
                 if (previewContainer) {
                     previewContainer.innerHTML = `
                         <div class="relative inline-block w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden group shadow-xs">
@@ -547,6 +607,7 @@ class TicketSupportApp {
                     previewContainer.classList.add('flex');
 
                     document.getElementById('btn-remove-attachment')?.addEventListener('click', () => {
+                        this.pendingAttachment = null;
                         fileInput.value = '';
                         previewContainer.innerHTML = '';
                         previewContainer.classList.add('hidden');
@@ -646,6 +707,10 @@ class TicketSupportApp {
         this.showChatView();
 
         const ticket = this.tickets.find(t => t.id === ticketId);
+        const viewport = document.getElementById('chat-messages-viewport');
+        if (viewport) {
+            viewport.innerHTML = renderConversationSkeleton();
+        }
         if (ticket) {
             this.selectedTicketDbId = ticket.dbId;
 
@@ -696,12 +761,16 @@ class TicketSupportApp {
             this.renderTags(ticket);
 
             // Mark ticket as Open in Supabase (admin action)
-            if (document.hasFocus()) {
-                if (this.isAdmin && ticket.dbId) {
-                    openTicketApi(ticket.dbId).catch(() => {});
-                    markMessagesRead(ticket.dbId).catch(() => {});
-                } else if (!this.isAdmin && ticket.dbId) {
-                    markAdminMessagesRead(ticket.dbId).catch(() => {});
+            if (document.hasFocus() && ticket.dbId) {
+                try {
+                    if (this.isAdmin) {
+                        openTicketApi(ticket.dbId);
+                        markMessagesRead(ticket.dbId);
+                    } else {
+                        markAdminMessagesRead(ticket.dbId);
+                    }
+                } catch (err) {
+                    if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to mark ticket read on open', err);
                 }
             }
         }
@@ -1330,6 +1399,11 @@ class TicketSupportApp {
         const viewport = document.getElementById('chat-messages-viewport');
         if (!viewport || !ticketDbId) return;
 
+        // Guard 1: Abort if user switched to another ticket before loading started
+        if (Number(this.selectedTicketDbId) !== Number(ticketDbId)) {
+            return;
+        }
+
         // Role-based guard: staff can only view their own ticket messages
         const ticket = this.tickets.find(t => t.dbId === ticketDbId);
         if (!this.isAdmin && ticket && ticket.implementorId !== this.sessionUserId) {
@@ -1337,23 +1411,42 @@ class TicketSupportApp {
             return;
         }
 
+        // Optimistic UX: Render from cache instantly while fetching latest
+        const cached = ticketCacheStorage.getMessages(ticketDbId);
+        if (cached && Array.isArray(cached) && cached.length > 0) {
+            this.currentMessages = cached;
+            this.renderConversation(cached);
+        }
+
         const { data, error } = await fetchMessages(ticketDbId);
+
+        // Guard 2: Abort if user switched tickets while fetchMessages was in flight!
+        if (Number(this.selectedTicketDbId) !== Number(ticketDbId)) {
+            return;
+        }
         if (error) {
             if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', `Failed to load messages for ticket ${ticketDbId}`, error);
-            viewport.innerHTML = `<div class="flex items-center justify-center h-full py-12 text-red-500"><p class="text-sm font-semibold">Failed to load conversation. Please try again.</p></div>`;
+            // Only show error if we had no cached messages
+            if (!cached || cached.length === 0) {
+                viewport.innerHTML = `<div class="flex items-center justify-center h-full py-12 text-red-500"><p class="text-sm font-semibold">Failed to load conversation. Please try again.</p></div>`;
+            }
             return;
         }
 
         const messages = (data || []).map(normalizeMessage);
+        this.currentMessages = messages;
         this.renderConversation(messages);
+        ticketCacheStorage.saveMessages(ticketDbId, messages);
         
         // Mark messages as read since they are now viewed
         if (document.hasFocus()) {
             if (this.isAdmin) {
-                markMessagesRead(ticketDbId).catch(() => {});
-                supabase.from('tickets').update({ unread_count: 0 }).eq('id', ticketDbId).then(({ error }) => { if (error) console.error(error); });
+                markMessagesRead(ticketDbId);
+                supabase.from('tickets').update({ unread_count: 0 }).eq('id', ticketDbId).then(({ error }) => {
+                    if (error && window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Unread count reset failed', error);
+                });
             } else {
-                markAdminMessagesRead(ticketDbId).catch(() => {});
+                markAdminMessagesRead(ticketDbId);
             }
         }
     }
@@ -1665,34 +1758,40 @@ class TicketSupportApp {
                 `;
             } else if (msg.type === 'image') {
                 bubbleContent = `
-                    <p class="text-sm mb-2 font-normal">${esc(msg.content)}</p>
-                    <div class="group relative max-w-[240px]">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center z-10">
-                            <button type="button" class="cursor-pointer inline-flex items-center justify-center rounded-full h-8 w-8 bg-white/30 hover:bg-white/50 transition-colors">
-                                <svg class="w-4 h-4 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"/></svg>
+                    ${msg.content ? `<p class="text-sm mb-2 font-normal">${esc(msg.content)}</p>` : ''}
+                    <div data-preview-img-url="${esc(msg.imageUrl || '')}" class="group relative max-w-[240px] cursor-pointer rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center gap-2 z-10">
+                            <button type="button" data-preview-img-url="${esc(msg.imageUrl || '')}" class="cursor-pointer inline-flex items-center justify-center rounded-full h-8 w-8 bg-white/30 hover:bg-white/50 text-white transition-colors" title="Preview image">
+                                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/></svg>
+                            </button>
+                            <button type="button" data-download-img-url="${esc(msg.imageUrl || '')}" class="cursor-pointer inline-flex items-center justify-center rounded-full h-8 w-8 bg-white/30 hover:bg-white/50 text-white transition-colors" title="Download image">
+                                <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V4M7 14H5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-2m-1-5-4 5-4-5m9 8h.01"/></svg>
                             </button>
                         </div>
-                        <img src="${esc(msg.imageUrl || '')}" class="rounded-lg object-cover w-full h-auto border border-gray-200 dark:border-gray-800" alt="Shared Image">
+                        <img src="${esc(msg.imageUrl || '')}" class="rounded-lg object-cover w-full h-auto" alt="Shared Image">
                     </div>
                 `;
             } else if (msg.type === 'gallery') {
                 const imgs = Array.isArray(msg.images) ? msg.images : [];
                 const imagesHTML = imgs.map(imgSrc => `
-                    <div class="group relative">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center z-10">
-                            <button type="button" class="cursor-pointer inline-flex items-center justify-center rounded-full h-7 w-7 bg-white/30 hover:bg-white/50 transition-colors">
-                                <svg class="w-3.5 h-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"/></svg>
+                    <div data-preview-img-url="${esc(imgSrc)}" class="group relative cursor-pointer rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center gap-1.5 z-10">
+                            <button type="button" data-preview-img-url="${esc(imgSrc)}" class="cursor-pointer inline-flex items-center justify-center rounded-full h-7 w-7 bg-white/30 hover:bg-white/50 text-white transition-colors" title="Preview image">
+                                <svg class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6Z"/></svg>
+                            </button>
+                            <button type="button" data-download-img-url="${esc(imgSrc)}" class="cursor-pointer inline-flex items-center justify-center rounded-full h-7 w-7 bg-white/30 hover:bg-white/50 text-white transition-colors" title="Download image">
+                                <svg class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V4M7 14H5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-2m-1-5-4 5-4-5m9 8h.01"/></svg>
                             </button>
                         </div>
-                        <img src="${esc(imgSrc)}" class="rounded-lg object-cover w-full h-24 border border-gray-200 dark:border-gray-800" alt="Gallery image">
+                        <img src="${esc(imgSrc)}" class="rounded-lg object-cover w-full h-24" alt="Gallery image">
                     </div>
                 `).join('');
-                bubbleContent = `<p class="text-sm mb-2 font-normal">${esc(msg.content)}</p><div class="grid grid-cols-3 gap-2 max-w-[280px]">${imagesHTML}</div>`;
+                bubbleContent = `${msg.content ? `<p class="text-sm mb-2 font-normal">${esc(msg.content)}</p>` : ''}<div class="grid grid-cols-3 gap-2 max-w-[280px]">${imagesHTML}</div>`;
             } else if (msg.type === 'link') {
                 bubbleContent = `
                     <p class="text-sm mb-2 font-normal">${esc(msg.content)}</p>
-                    <p class="text-sm pb-2"><a href="${esc(msg.url || '')}" target="_blank" class="underline hover:no-underline break-all font-semibold text-blue-600 dark:text-blue-400">${esc(msg.url || '')}</a></p>
-                    <a href="${esc(msg.url || '')}" target="_blank" class="block bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-200">
+                    <p class="text-sm pb-2"><a href="${esc(msg.url || '')}" target="_blank" class="underline hover:no-underline break-all font-semibold text-blue-600 dark:text-blue-400 cursor-pointer">${esc(msg.url || '')}</a></p>
+                    <a href="${esc(msg.url || '')}" target="_blank" class="block bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-200 cursor-pointer">
                         ${msg.previewImage ? `<img src="${esc(msg.previewImage)}" class="rounded-md w-full h-28 object-cover mb-2" alt="Preview Image" />` : ''}
                         <span class="text-xs font-bold text-gray-900 dark:text-white leading-tight block line-clamp-2">${esc(msg.previewTitle || '')}</span>
                         <p class="text-[10px] text-gray-400 dark:text-gray-500 font-medium mt-1 uppercase tracking-wider">${esc(msg.previewDomain || '')}</p>
@@ -1748,26 +1847,167 @@ class TicketSupportApp {
 
         viewport.innerHTML = html;
         viewport.scrollTop = viewport.scrollHeight;
+        this.bindImagePreviewEvents(viewport);
     }
     /* END renderConversation */
+
+    /* START bindImagePreviewEvents */
+    bindImagePreviewEvents(viewport) {
+        if (!viewport) return;
+        viewport.querySelectorAll('[data-preview-img-url]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = el.getAttribute('data-preview-img-url');
+                if (url) {
+                    showImagePreviewModal(url);
+                }
+            });
+        });
+
+        viewport.querySelectorAll('[data-download-img-url]').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = el.getAttribute('data-download-img-url');
+                if (url) {
+                    downloadImageFile(url);
+                }
+            });
+        });
+    }
+    /* END bindImagePreviewEvents */
+
+    /* START setSendButtonLoading */
+    setSendButtonLoading(isLoading) {
+        const submitBtn = document.getElementById('chat-send-button') || document.querySelector('#chat-input-form button[type="submit"]');
+        if (!submitBtn) return;
+
+        if (!submitBtn.dataset.defaultHtml) {
+            submitBtn.dataset.defaultHtml = submitBtn.innerHTML;
+        }
+
+        submitBtn.disabled = isLoading;
+        submitBtn.classList.toggle('opacity-70', isLoading);
+        submitBtn.classList.toggle('pointer-events-none', isLoading);
+        submitBtn.classList.toggle('cursor-not-allowed', isLoading);
+
+        submitBtn.innerHTML = isLoading
+            ? `<span class="inline-flex items-center justify-center gap-2">
+                    <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span>Sending...</span>
+                </span>`
+            : submitBtn.dataset.defaultHtml;
+    }
+    /* END setSendButtonLoading */
+
+    /* START prepareAttachmentForSend */
+    async prepareAttachmentForSend(attachment) {
+        const file = attachment?.file;
+        if (!file) return null;
+
+        if (!file.type.startsWith('image/') && file.size > MAX_CHAT_FILE_BYTES) {
+            this.showToast('danger', `Attachment is too large. Please choose a file under ${formatFileSize(MAX_CHAT_FILE_BYTES)}.`);
+            return null;
+        }
+
+        // 1. Try uploading to Supabase Storage first for fast, lightweight payload delivery
+        const storageResult = await uploadChatAttachment(file);
+        if (storageResult.url) {
+            return {
+                file,
+                url: storageResult.url,
+            };
+        }
+
+        // 2. Fallback: Compress dataUrl for images or use raw dataUrl for small non-image files if storage is unavailable
+        if (file.type.startsWith('image/')) {
+            const compressedDataUrl = await this.compressImageDataUrl(attachment.dataUrl);
+            return { file, url: compressedDataUrl };
+        }
+
+        return { file, url: attachment.dataUrl };
+    }
+    /* END prepareAttachmentForSend */
+
+    /* START compressImageDataUrl */
+    compressImageDataUrl(dataUrl) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, MAX_CHAT_IMAGE_EDGE / Math.max(img.width, img.height));
+                const width = Math.max(1, Math.round(img.width * scale));
+                const height = Math.max(1, Math.round(img.height * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+
+                if (!ctx) {
+                    resolve(dataUrl);
+                    return;
+                }
+
+                ctx.drawImage(img, 0, 0, width, height);
+                const webpDataUrl = canvas.toDataURL(CHAT_IMAGE_MIME, CHAT_IMAGE_QUALITY);
+                resolve(webpDataUrl.startsWith('data:image/webp') ? webpDataUrl : canvas.toDataURL('image/jpeg', CHAT_IMAGE_QUALITY));
+            };
+            img.onerror = () => resolve(dataUrl);
+            img.src = dataUrl;
+        });
+    }
+    /* END compressImageDataUrl */
 
     /* START handleSendMessage */
     async handleSendMessage() {
         const editor = document.getElementById('chat-editor');
         if (!editor || !this.selectedTicketId || !this.selectedTicketDbId) return;
+        if (this.isSendingMessage) return;
 
         const val = editor.value.trim();
-        if (!val) return;
+        const attachment = this.pendingAttachment;
+        if (!val && !attachment) return;
 
-        const submitBtn = document.querySelector('#chat-input-form button[type="submit"]');
-        if (submitBtn) { submitBtn.disabled = true; }
+        this.isSendingMessage = true;
+        this.setSendButtonLoading(true);
+
+        const senderType = this.isAdmin ? 'admin' : 'staff';
+        const senderId = this.sessionUserId;
+        const senderName = this.sessionUserName;
+        const embedUrl = editor.getAttribute('data-embed-url');
+
+        // Clear editor and input controls INSTANTLY for 0ms user feedback
+        editor.value = '';
+        this.pendingAttachment = null;
+        const fileInput = document.getElementById('chat-image-upload');
+        const previewContainer = document.getElementById('attachment-preview-container');
+        if (fileInput) fileInput.value = '';
+        if (previewContainer) {
+            previewContainer.innerHTML = '';
+            previewContainer.classList.add('hidden');
+            previewContainer.classList.remove('flex');
+        }
+
+        // Render optimistic message locally (0ms instant bubble for sender)
+        const tempId = `temp-${Date.now()}`;
+        const tempMsg = {
+            id: tempId,
+            ticket_id: this.selectedTicketDbId,
+            sender_id: senderId,
+            sender_name: senderName,
+            sender_type: senderType,
+            message_type: attachment ? (attachment.file?.type?.startsWith('image/') ? 'image' : 'file') : (embedUrl ? 'link' : 'text'),
+            content: val || null,
+            metadata: attachment ? { image_url: attachment.dataUrl, file_url: attachment.dataUrl, file_name: attachment.file?.name, file_size: formatFileSize(attachment.file?.size) } : null,
+            created_at: new Date().toISOString(),
+            is_read: false
+        };
+        this._appendRealtimeMessage(this.selectedTicketDbId, tempMsg);
 
         try {
-            const senderType = this.isAdmin ? 'admin' : 'staff';
-            const senderId = this.sessionUserId;
-            const senderName = this.sessionUserName;
-
-            const embedUrl = editor.getAttribute('data-embed-url');
             let result;
 
             if (embedUrl) {
@@ -1787,6 +2027,40 @@ class TicketSupportApp {
                 editor.removeAttribute('data-embed-url');
                 editor.removeAttribute('data-embed-title');
                 editor.removeAttribute('data-embed-domain');
+            } else if (attachment) {
+                const preparedAttachment = await this.prepareAttachmentForSend(attachment);
+                if (!preparedAttachment) {
+                    this._removeOptimisticMessage(tempId);
+                    return;
+                }
+
+                const file = preparedAttachment.file;
+                const fileUrl = preparedAttachment.url;
+
+                if (file.type.startsWith('image/')) {
+                    result = await sendImageMessage(
+                        this.selectedTicketDbId,
+                        senderId,
+                        senderName,
+                        senderType,
+                        fileUrl,
+                        val || null
+                    );
+                } else {
+                    result = await sendFileMessage(
+                        this.selectedTicketDbId,
+                        senderId,
+                        senderName,
+                        senderType,
+                        {
+                            file_name: file.name,
+                            file_size: formatFileSize(file.size),
+                            file_type: file.type || 'application/octet-stream',
+                            file_url: fileUrl,
+                        },
+                        val || null
+                    );
+                }
             } else {
                 result = await sendTextMessage(
                     this.selectedTicketDbId,
@@ -1799,26 +2073,28 @@ class TicketSupportApp {
 
             if (result.error) {
                 if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Send message failed', result.error);
-            } else {
-                editor.value = '';
-                // Clear file upload & preview
-                const fileInput = document.getElementById('chat-image-upload');
-                const previewContainer = document.getElementById('attachment-preview-container');
-                if (fileInput) fileInput.value = '';
-                if (previewContainer) {
-                    previewContainer.innerHTML = '';
-                    previewContainer.classList.add('hidden');
-                    previewContainer.classList.remove('flex');
+                this.showToast('danger', `Failed to send reply: ${result.error}`);
+                this._removeOptimisticMessage(tempId);
+            } else if (result.data) {
+                // Reconcile optimistic temp message with database record
+                const norm = normalizeMessage(result.data);
+                const idx = this.currentMessages.findIndex(m => String(m.id) === String(tempId));
+                if (idx !== -1) {
+                    this.currentMessages[idx] = norm;
+                    this.renderConversation(this.currentMessages);
+                    ticketCacheStorage.saveMessages(this.selectedTicketDbId, this.currentMessages);
+                } else {
+                    this._appendRealtimeMessage(this.selectedTicketDbId, result.data);
                 }
-                // Realtime subscription will auto-render new message
-                // But we also do an immediate re-fetch in case realtime is delayed
-                await this._loadAndRenderConversation(this.selectedTicketDbId);
                 this.renderChatSidebar();
             }
         } catch (err) {
             if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'handleSendMessage exception', err);
+            this.showToast('danger', 'Failed to send reply. Please try again.');
+            this._removeOptimisticMessage(tempId);
         } finally {
-            if (submitBtn) { submitBtn.disabled = false; }
+            this.isSendingMessage = false;
+            this.setSendButtonLoading(false);
         }
     }
     /* END handleSendMessage */

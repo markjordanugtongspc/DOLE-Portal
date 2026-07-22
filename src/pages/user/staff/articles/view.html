@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Read DOLE Knowledge Base Article" />
+  <title>Article — DOLE Portal</title>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var match = path.match(/\/src\/pages\/user\/(admin|staff)\//);
+      if (!match) return;
+
+      var rawSession = localStorage.getItem('dole_session');
+      if (!rawSession) {
+        window.location.replace('/?auth=login_required');
+        return;
+      }
+
+      try {
+        var user = JSON.parse(rawSession);
+        var roleId = Number(user && user.role_id);
+        var requiredRole = match[1];
+        var actualRole = roleId === 1 ? 'admin' : roleId === 2 || roleId === 3 ? 'staff' : null;
+
+        if (!actualRole) {
+          localStorage.removeItem('dole_session');
+          window.location.replace('/?auth=login_required');
+          return;
+        }
+
+        if (actualRole !== requiredRole) {
+          window.location.replace(actualRole === 'admin' ? '/src/pages/user/admin/dashboard/' : '/src/pages/user/staff/dashboard/');
+        }
+      } catch (error) {
+        localStorage.removeItem('dole_session');
+        window.location.replace('/?auth=login_required');
+      }
+    })();
+  </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+  <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+  <div id="sidebar" data-role="staff" data-active="articles"></div>
+
+  <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+  <div class="sm:ml-64 min-h-screen flex flex-col">
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 transition-all duration-300">
+      
+      <section class="bg-white dark:bg-gray-900 h-full min-h-screen border-l border-gray-200 dark:border-gray-800">
+
+        <!-- Breadcrumbs + Back Button Header -->
+        <div class="p-6 md:px-8 pt-8 border-b border-gray-200 dark:border-gray-800">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Breadcrumbs -->
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex flex-wrap items-center gap-y-2 space-x-1 md:space-x-2 rtl:space-x-reverse">
+                        <li class="inline-flex items-center">
+                            <a href="/src/pages/user/staff/dashboard/" id="btn-back-articles" class="group inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                                <span class="relative me-1.5 inline-flex h-4 w-4 shrink-0 items-center justify-center">
+                                    <svg class="absolute h-4 w-4 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"/></svg>
+                                    <svg class="absolute hidden h-4 w-4 text-blue-600 transition duration-75 group-hover:block dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 2c-.178 0-.356.013-.492.022l-.074.005a1 1 0 0 0-.934.998V11a1 1 0 0 0 1 1h7.975a1 1 0 0 0 .998-.934l.005-.074A7.04 7.04 0 0 0 22 10.5 8.5 8.5 0 0 0 13.5 2Z"/><path d="M11 6.025a1 1 0 0 0-1.065-.998 8.5 8.5 0 1 0 9.038 9.039A1 1 0 0 0 17.975 13H11V6.025Z"/></svg>
+                                </span>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                                <a href="/src/pages/user/staff/tickets/" class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                                    <svg class="w-4 h-4 me-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 12A2.5 2.5 0 0 1 21 9.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v2.5a2.5 2.5 0 0 1 0 5V17a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
+                                    My Tickets
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                                <a href="/src/pages/user/staff/articles/" class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Browse Articles</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                                <span id="breadcrumb-article-title" class="inline-flex items-center text-sm font-semibold text-gray-400 dark:text-gray-500 select-none truncate max-w-[200px] lg:max-w-sm">Loading...</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Article Content -->
+        <div class="py-8 px-4 mx-auto max-w-screen-2xl lg:py-14 lg:px-10 2xl:px-12">
+
+            <!-- Loading Skeleton -->
+            <div id="article-view-skeleton" class="animate-pulse max-w-5xl mx-auto">
+                <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-24 mb-6"></div>
+                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-1/2 mb-10"></div>
+                <div class="h-56 bg-gray-200 dark:bg-gray-700 rounded-xl mb-8"></div>
+                <div class="space-y-3">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-full"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-4/6"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-full"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4"></div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="article-view-error" class="hidden max-w-5xl mx-auto py-12 px-6 border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 text-center rounded-lg">
+                <svg class="mx-auto mb-4 text-red-500 w-12 h-12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <p id="article-view-error-msg" class="text-sm font-bold text-red-700 dark:text-red-300">Unable to load article.</p>
+                <a href="/src/pages/user/staff/articles/" class="cursor-pointer mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7"/></svg>
+                    Return to Articles
+                </a>
+            </div>
+
+            <!-- Article Body -->
+            <article id="article-view-body" class="hidden max-w-5xl mx-auto">
+
+                <!-- Article Header -->
+                <header class="mb-8">
+                    <!-- Badge + Read time row -->
+                    <div class="flex items-center justify-between mb-4">
+                        <span id="view-badge-container"></span>
+                        <span id="view-read-time" class="text-sm text-gray-500 dark:text-gray-400 font-medium"></span>
+                    </div>
+
+                    <!-- Cover Image -->
+                    <div id="view-cover-container" class="hidden rounded-xl overflow-hidden mb-6 border border-gray-100 dark:border-gray-700/50">
+                        <img id="view-cover-img" src="" alt="Article cover" class="w-full h-64 lg:h-80 xl:h-96 object-cover" />
+                    </div>
+
+                    <!-- Title -->
+                    <h1 id="view-title" class="mb-4 text-3xl font-extrabold leading-tight text-gray-900 lg:mb-5 lg:text-5xl dark:text-white"></h1>
+
+                    <!-- Author / Meta -->
+                    <address class="flex items-center not-italic mb-4">
+                        <div class="inline-flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                            <img id="view-author-avatar" src="" alt="Author avatar" class="w-10 h-10 rounded-full border border-gray-200 dark:border-gray-700 object-cover" />
+                            <div>
+                                <span id="view-author-name" class="block font-semibold text-gray-900 dark:text-white text-sm"></span>
+                                <time id="view-date" class="text-xs text-gray-400 dark:text-gray-500"></time>
+                            </div>
+                        </div>
+                    </address>
+
+                    <hr class="border-gray-200 dark:border-gray-700 mb-8" />
+                </header>
+
+                <!-- Article Content Body -->
+                <div id="view-content"
+                     class="
+                        prose prose-gray dark:prose-invert max-w-none lg:prose-lg xl:prose-xl
+                        prose-headings:font-extrabold
+                        prose-h2:text-2xl prose-h3:text-xl prose-h4:text-lg
+                        prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+                        prose-img:rounded-xl prose-img:shadow-md prose-img:border prose-img:border-gray-200 dark:prose-img:border-gray-700
+                        prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-950/20 prose-blockquote:rounded-r-lg prose-blockquote:px-4 prose-blockquote:py-2
+                        prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                        text-gray-700 dark:text-gray-300 leading-relaxed lg:leading-8
+                     ">
+                </div>
+
+                <!-- Suggest Text / Resolution Template (if any) -->
+                <div id="view-suggest-container" class="hidden mt-8 p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
+                        </svg>
+                        <span class="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Ticket Assistant Response Template</span>
+                    </div>
+                    <p id="view-suggest-text" class="text-sm text-blue-900 dark:text-blue-200 font-mono bg-white/60 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-100 dark:border-blue-800/40 whitespace-pre-wrap"></p>
+                </div>
+
+                <!-- Back CTA footer -->
+                <div class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <a href="/src/pages/user/staff/articles/" class="cursor-pointer inline-flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m15 19-7-7 7-7"/></svg>
+                        Back to All Articles
+                    </a>
+                </div>
+
+            </article>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

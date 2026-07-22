@@ -22,8 +22,8 @@ const ROLE_ROUTES = {
 };
 
 const ROLE_GROUPS = {
-    admin: [1, 2],
-    staff: [3, 4]
+    admin: [1],
+    staff: [2, 3]
 };
 
 const ERROR_TEXT_CLASS = 'mt-1.5 text-xs font-semibold text-red-600 dark:text-red-400';
@@ -152,6 +152,18 @@ const redirectToIndexWithNotice = () => {
 };
 /* END REDIRECT TO INDEX WITH NOTICE */
 
+/* START BLOCK PROTECTED PAGE RENDER - Prevents denied pages from booting widgets behind auth notices */
+const blockProtectedPageRender = () => {
+    window.__AUTH_ROUTE_BLOCKED = true;
+    document.documentElement.classList.add('overflow-hidden');
+    Array.from(document.body?.children || []).forEach((child) => {
+        if (child.id === 'auth-notice-modal') return;
+        child.classList.add('hidden');
+        child.setAttribute('data-auth-hidden', 'true');
+    });
+};
+/* END BLOCK PROTECTED PAGE RENDER */
+
 /* START SETUP ROUTE GUARD - Blocks anonymous users and wrong roles from protected pages */
 const setupRouteGuard = () => {
     if (!isProtectedPage()) {
@@ -173,6 +185,7 @@ const setupRouteGuard = () => {
 
     const user = getCurrentUser();
     if (!user) {
+        window.__AUTH_ROUTE_BLOCKED = true;
         document.documentElement.classList.add('overflow-hidden');
         document.body?.classList.add('hidden');
         redirectToIndexWithNotice();
@@ -183,10 +196,11 @@ const setupRouteGuard = () => {
     const userRole = getRoleGroup(user.role_id);
     if (requiredRole && userRole !== requiredRole) {
         const redirectRoute = getDashboardRoute(user);
+        blockProtectedPageRender();
         showAuthNotice({
             title: 'Access denied',
             message: 'Your account does not have permission to open that page. Redirecting you to your dashboard.',
-            autoCloseMs: 3000,
+            autoCloseMs: 1200,
             onAction: () => {
                 window.location.replace(redirectRoute);
             }
@@ -779,9 +793,3 @@ if (document.readyState === 'loading') {
 } else {
     initializeAuth();
 }
-
-
-
-
-
-

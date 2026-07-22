@@ -209,7 +209,16 @@ const setupDynamicSidebar = () => {
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
             { id: 'assistants', label: 'Manage Assistants', url: '/src/pages/user/staff/assistants/', svg: SVG_ASSISTANTS },
-            { id: 'tickets', label: 'My Tickets', url: '/src/pages/user/staff/tickets/', svg: SVG_TICKETS_ADMIN },
+            {
+                id: 'tickets',
+                label: 'My Tickets',
+                url: '/src/pages/user/staff/tickets/',
+                svg: SVG_TICKETS_ADMIN,
+                badge: null,
+                dropdown: [
+                    { id: 'articles', label: 'Browse Articles', url: '/src/pages/user/staff/articles/', svg: SVG_ARTICLES_ADMIN }
+                ]
+            },
             { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
         ]
     };

@@ -29,7 +29,7 @@
         var user = JSON.parse(rawSession);
         var roleId = Number(user && user.role_id);
         var requiredRole = match[1];
-        var actualRole = roleId === 1 || roleId === 2 ? 'admin' : roleId === 3 || roleId === 4 ? 'staff' : null;
+        var actualRole = roleId === 1 ? 'admin' : roleId === 2 || roleId === 3 ? 'staff' : null;
 
         if (!actualRole) {
           localStorage.removeItem('dole_session');
@@ -111,7 +111,9 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL TICKETS</h3>
-            <p id="admin-total-tickets-value" data-admin-dashboard-metric="totalTickets" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">N/A</p>
+            <p id="admin-total-tickets-value" data-admin-dashboard-metric="totalTickets" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-16 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading total tickets...</span></span>
+            </p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg id='Two_Tickets_24' class="w-6 h-6 text-white" viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'><rect width='24' height='24' stroke='none' fill='none' opacity='0'/>
@@ -126,7 +128,9 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OPEN TICKETS</h3>
-            <p id="admin-open-tickets-value" data-admin-dashboard-metric="openTickets" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">N/A</p>
+            <p id="admin-open-tickets-value" data-admin-dashboard-metric="openTickets" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-16 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading open tickets...</span></span>
+            </p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -139,7 +143,9 @@
         <div class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-gradient-to-br from-slate-900 via-rose-950 to-red-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">TOTAL RESIGNED</h3>
-            <p id="admin-total-resigned-value" data-admin-dashboard-metric="totalResigned" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">N/A</p>
+            <p id="admin-total-resigned-value" data-admin-dashboard-metric="totalResigned" class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-16 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading total resigned...</span></span>
+            </p>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -258,25 +264,25 @@
               </div>
               <div>
                 <h3 class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">Reasons for tickets</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Top reasons for tickets this week</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Category share of active tickets from Supabase</p>
               </div>
             </div>
 
             <div class="flex justify-between items-center mb-4">
               <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Tickets received: <span class="font-extrabold text-gray-900 dark:text-white">3,232</span>
+                Tickets received: <span id="admin-dashboard-tickets-received" role="status" class="inline-flex h-4 w-12 animate-pulse align-middle rounded-full bg-gray-200 text-transparent dark:bg-gray-700">Loading</span>
               </div>
               <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Response rate: <span class="font-extrabold text-gray-900 dark:text-white">93%</span>
+                Resolved rate: <span id="admin-dashboard-resolved-rate" role="status" class="inline-flex h-4 w-10 animate-pulse align-middle rounded-full bg-gray-200 text-transparent dark:bg-gray-700">Loading</span>
               </div>
             </div>
 
             <!-- Bar Chart container -->
-            <div id="bar-chart" class="w-full"></div>
+            <div id="bar-chart" class="min-h-[280px] w-full"></div>
               
             <div class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
               <div class="flex justify-between items-center">
-                <a href="#" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
+                <a href="/src/pages/user/admin/tickets/" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
                   View All Tickets
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
@@ -293,81 +299,40 @@
             </div>
 
             <!-- Staff list -->
-            <div id="staff-list-container" class="space-y-4 text-left">
-              <!-- Item 1 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-1.jpg" alt="Neil Sims">
-                  <div>
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Neil Sims</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">neil.sims@flowbite.com</p>
+            <div id="staff-list-container" class="space-y-4 text-left" role="status" aria-live="polite">
+              <div class="animate-pulse space-y-4">
+                <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <div class="h-10 w-10 shrink-0 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div class="min-w-0 space-y-2">
+                      <div class="h-3 w-28 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                      <div class="h-2.5 w-36 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
                   </div>
+                  <div class="h-3 w-16 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </div>
-                <div class="flex items-center">
-                  <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div>
-                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Active</span>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <div class="h-10 w-10 shrink-0 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div class="min-w-0 space-y-2">
+                      <div class="h-3 w-24 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                      <div class="h-2.5 w-32 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                  <div class="h-3 w-14 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <div class="h-10 w-10 shrink-0 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    <div class="min-w-0 space-y-2">
+                      <div class="h-3 w-32 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                      <div class="h-2.5 w-40 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                  <div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </div>
               </div>
-
-              <!-- Item 2 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-3.jpg" alt="Bonnie Green">
-                  <div>
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Bonnie Green</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">bonnie@flowbite.com</p>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div>
-                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Active</span>
-                </div>
-              </div>
-
-              <!-- Item 3 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-2.jpg" alt="Jese Leos">
-                  <div>
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Jese Leos</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">jese@flowbite.com</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                  <div class="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0"></div>
-                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 text-wrap md:text-nowrap md:w-auto leading-tight text-left w-16">Offline 23 hrs ago</span>
-                </div>
-              </div>
-
-              <!-- Item 4 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Thomas Lean">
-                  <div>
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Thomas Lean</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">thomas@flowbite.com</p>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <div class="h-2.5 w-2.5 rounded-full bg-green-500 me-2"></div>
-                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Active</span>
-                </div>
-              </div>
-
-              <!-- Item 5 -->
-              <div class="flex items-center justify-between py-2">
-                <div class="flex items-center gap-3">
-                  <img class="w-10 h-10 rounded-full object-cover" src="https://flowbite.com/docs/images/people/profile-picture-4.jpg" alt="Leslie Livingston">
-                  <div>
-                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-tight">Leslie Livingston</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">leslie@flowbite.com</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                  <div class="h-2.5 w-2.5 rounded-full bg-red-500 shrink-0"></div>
-                  <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 text-wrap md:text-nowrap md:w-auto leading-tight text-left w-16">Offline 3 days ago</span>
-                </div>
-              </div>
+              <span class="sr-only">Loading staff list...</span>
             </div>
           </div>
 
@@ -375,7 +340,7 @@
             <div class="flex justify-between items-center relative">
               <!-- Dropdown Trigger -->
               <button id="dropdownLastDays3Button" class="cursor-pointer text-xs font-bold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 flex items-center gap-1.5 transition-colors" type="button">
-                Last 7 days
+                <span id="staff-list-period-label">Last 7 days</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
               </button>
               
@@ -429,7 +394,7 @@
               </div>
 
               <!-- Right Link -->
-              <a href="#" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
+              <a href="/src/pages/user/admin/staffs/" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1 transition-colors uppercase tracking-wider">
                 Staff Lists
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
               </a>
@@ -437,7 +402,6 @@
           </div>
         </div>
       </div>
-
       <!-- Area Chart (Tickets Support) -->
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm w-full transition-colors mt-6">
         <div class="flex justify-between">

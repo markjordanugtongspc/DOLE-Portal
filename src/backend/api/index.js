@@ -73,5 +73,13 @@ export {
     uploadSystemImage,
 } from './systems.api.js';
 
+// ─── Articles ──────────────────────────────────────────────────────────────────
+export {
+    fetchArticles,
+    createArticle,
+    uploadArticleImage,
+} from './articles.api.js';
+
 // ─── Supabase Client (raw access when needed) ──────────────────────────────────
 export { supabase } from './supabase.js';
+

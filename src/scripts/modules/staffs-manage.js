@@ -162,11 +162,11 @@ export const initStaffsManage = () => {
         document.querySelector('.dataTable-wrapper')?.classList.add('overflow-y-auto', 'max-h-[600px]');
     };
 
-    // Sort helper: admins (role_id 1 or 2) always first, then by created_at ascending
+    // Sort helper: admins (role_id 1) always first, then by created_at ascending
     const sortUsers = (list) => {
         return [...list].sort((a, b) => {
-            const aIsAdmin = Number(a.role_id) <= 2;
-            const bIsAdmin = Number(b.role_id) <= 2;
+            const aIsAdmin = Number(a.role_id) === 1;
+            const bIsAdmin = Number(b.role_id) === 1;
             if (aIsAdmin && !bIsAdmin) return -1;
             if (!aIsAdmin && bIsAdmin) return 1;
             return new Date(a.created_at) - new Date(b.created_at);
@@ -690,5 +690,3 @@ const initSearchableDropdown = (config) => {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initStaffsManage);
 else initStaffsManage();
-
-

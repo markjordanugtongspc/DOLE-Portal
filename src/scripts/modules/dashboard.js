@@ -2,7 +2,7 @@ import { getPreference, setPreference } from './storage.js';
 import ApexCharts from 'apexcharts';
 import { Modal } from 'flowbite';
 import { DashboardCarousel } from './slider.js';
-import { fetchUserDashboardCounts } from '@/backend/api/users.api.js';
+import { fetchUserDashboardCounts, fetchUsers } from '@/backend/api/users.api.js';
 import { fetchSystems } from '@/backend/api/systems.api.js';
 import { fetchTickets } from '@/backend/api/tickets.api.js';
 
@@ -98,17 +98,23 @@ const initQuickActionsSwitcher = () => {
 /* START ADMIN-EXCLUSIVE DASHBOARD CONTROLLER */
 class AdminDashboardController {
     constructor() {
+        this.staffListEl = document.getElementById('staff-list-container');
+        this.staffListLimit = 5;
+
         this.metricEls = {
             totalStaff: document.getElementById('admin-total-staff-value'),
             totalTickets: document.getElementById('admin-total-tickets-value'),
             openTickets: document.getElementById('admin-open-tickets-value'),
             totalResigned: document.getElementById('admin-total-resigned-value'),
+            ticketsReceived: document.getElementById('admin-dashboard-tickets-received'),
+            resolvedRate: document.getElementById('admin-dashboard-resolved-rate'),
         };
 
         if (!Object.values(this.metricEls).some(Boolean)) return;
 
         this.renderUserMetrics();
         this.renderTicketMetrics();
+        this.renderStaffList();
     }
 
     setMetric(metricName, value) {
@@ -131,22 +137,215 @@ class AdminDashboardController {
         this.setMetric('totalStaff', data.totalStaff);
         this.setMetric('totalResigned', data.totalResigned);
     }
+    /* START ADMIN STAFF LIST RENDERER */
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    getStaffAvatarUrl(user) {
+        const directAvatar = user?.avatar_url || user?.profile_image_url || user?.photo_url || user?.image_url || user?.avatar;
+        if (directAvatar) return directAvatar;
+
+        const name = user?.full_name || user?.username || user?.email || 'Staff';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1A56DB&color=fff&bold=true`;
+    }
+
+    isStaffUser(user) {
+        const roleName = String(user?.roles?.name || '').trim().toLowerCase();
+        return ['hr', 'staff'].includes(roleName);
+    }
+
+    getApprovalState(user) {
+        return String(user?.approval_status || 'APPROVED').toUpperCase();
+    }
+
+    isPendingStaff(user) {
+        return this.getApprovalState(user) === 'PENDING';
+    }
+
+    isActiveStaff(user) {
+        if (this.isPendingStaff(user)) return false;
+
+        const status = String(user?.status || '').toLowerCase();
+        if (['active', 'online'].includes(status)) return true;
+
+        const lastSeenTime = new Date(user?.last_seen || '').getTime();
+        if (!Number.isFinite(lastSeenTime)) return false;
+
+        return Date.now() - lastSeenTime <= 5 * 60 * 1000;
+    }
+
+    getRelativeTime(value) {
+        const timestamp = new Date(value || '').getTime();
+        if (!Number.isFinite(timestamp)) return '';
+
+        const diffMinutes = Math.max(1, Math.floor((Date.now() - timestamp) / 60000));
+        if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? '' : 's'} ago`;
+
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) return `${diffHours} hr${diffHours === 1 ? '' : 's'} ago`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    }
+
+    getStaffStatusMeta(user) {
+        if (this.isPendingStaff(user)) {
+            return { dotClass: 'bg-amber-500', label: 'Pending' };
+        }
+
+        if (this.isActiveStaff(user)) {
+            return { dotClass: 'bg-green-500', label: 'Active' };
+        }
+
+        const offlineSince = this.getRelativeTime(user?.last_seen);
+        return { dotClass: 'bg-red-500', label: offlineSince ? `Offline ${offlineSince}` : 'Offline' };
+    }
+
+    getSortedStaff(users) {
+        return users
+            .filter(user => this.isStaffUser(user))
+            .sort((a, b) => {
+                const pendingDiff = Number(this.isPendingStaff(a)) - Number(this.isPendingStaff(b));
+                if (pendingDiff !== 0) return pendingDiff;
+
+                return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+            })
+            .slice(0, this.staffListLimit);
+    }
+
+    renderStaffListLoading() {
+        if (!this.staffListEl) return;
+
+        this.staffListEl.setAttribute('role', 'status');
+        this.staffListEl.innerHTML = `
+            <div class="animate-pulse space-y-4">
+                ${Array.from({ length: 3 }).map((_, index) => `
+                    <div class="flex items-center justify-between py-2 ${index < 2 ? 'border-b border-gray-100 dark:border-gray-800' : ''}">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="h-10 w-10 shrink-0 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                            <div class="min-w-0 space-y-2">
+                                <div class="h-3 ${index === 1 ? 'w-24' : 'w-28'} rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                                <div class="h-2.5 ${index === 2 ? 'w-40' : 'w-36'} rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                            </div>
+                        </div>
+                        <div class="h-3 w-16 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                `).join('')}
+            </div>
+            <span class="sr-only">Loading staff list...</span>
+        `;
+    }
+
+    renderStaffRow(user, index, total) {
+        const name = user?.full_name || user?.username || 'Unnamed staff';
+        const email = user?.email || 'No email provided';
+        const avatarUrl = this.getStaffAvatarUrl(user);
+        const fallbackAvatarUrl = this.getStaffAvatarUrl({ full_name: name });
+        const statusMeta = this.getStaffStatusMeta(user);
+        const borderClass = index < total - 1 ? 'border-b border-gray-100 dark:border-gray-800' : '';
+        const pendingClass = this.isPendingStaff(user) ? ' opacity-55 hover:opacity-75' : '';
+        const pendingTitle = this.isPendingStaff(user) ? ' title="This user is pending for approval"' : '';
+
+        return `
+            <div class="flex items-center justify-between gap-3 py-2 transition-opacity ${borderClass}${pendingClass}"${pendingTitle}>
+                <div class="flex min-w-0 items-center gap-3">
+                    <img class="h-10 w-10 shrink-0 rounded-full object-cover" src="${this.escapeHtml(avatarUrl)}" alt="${this.escapeHtml(name)}" onerror="this.onerror=null;this.src='${this.escapeHtml(fallbackAvatarUrl)}';">
+                    <div class="min-w-0">
+                        <h4 class="truncate text-sm font-bold leading-tight text-gray-900 dark:text-white">${this.escapeHtml(name)}</h4>
+                        <p class="truncate text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(email)}</p>
+                    </div>
+                </div>
+                <div class="flex shrink-0 items-center gap-1.5 text-right">
+                    <div class="h-2.5 w-2.5 shrink-0 rounded-full ${statusMeta.dotClass}"></div>
+                    <span class="max-w-20 text-wrap text-left text-xs font-semibold leading-tight text-gray-600 dark:text-gray-400 sm:max-w-none sm:text-nowrap">${this.escapeHtml(statusMeta.label)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    renderStaffListEmpty() {
+        if (!this.staffListEl) return;
+
+        this.staffListEl.removeAttribute('role');
+        this.staffListEl.innerHTML = '<div class="py-8 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">No staff registered yet.</div>';
+    }
+
+    renderStaffListError() {
+        if (!this.staffListEl) return;
+
+        this.staffListEl.removeAttribute('role');
+        this.staffListEl.innerHTML = '<div class="py-8 text-center text-sm font-semibold text-red-600 dark:text-red-400">Unable to load staff list.</div>';
+    }
+
+    async renderStaffList() {
+        if (!this.staffListEl) return;
+
+        this.renderStaffListLoading();
+        const { data: users, error } = await fetchUsers();
+        if (error) {
+            this.renderStaffListError();
+            return;
+        }
+
+        const staff = this.getSortedStaff(users || []);
+        if (!staff.length) {
+            this.renderStaffListEmpty();
+            return;
+        }
+
+        this.staffListEl.removeAttribute('role');
+        this.staffListEl.innerHTML = staff.map((user, index) => this.renderStaffRow(user, index, staff.length)).join('');
+    }
+    /* END ADMIN STAFF LIST RENDERER */
+
+
+    /* START ADMIN TICKET INSIGHT METRICS */
+    setTextMetric(metricName, value, fallback = 'N/A') {
+        const el = this.metricEls[metricName];
+        if (!el) return;
+
+        el.textContent = value || fallback;
+        el.removeAttribute('role');
+        el.classList.remove('inline-flex', 'h-4', 'w-10', 'w-12', 'animate-pulse', 'align-middle', 'rounded-full', 'bg-gray-200', 'text-transparent', 'dark:bg-gray-700');
+        el.classList.add('font-extrabold', 'text-gray-900', 'dark:text-white');
+    }
+
+    getResolvedRate(tickets) {
+        const totalTickets = tickets.length;
+        if (!totalTickets) return null;
+
+        const closedStatuses = new Set(['closed', 'resolved']);
+        const resolvedTickets = tickets.filter(ticket => closedStatuses.has(String(ticket.status || '').toLowerCase())).length;
+        return Math.round((resolvedTickets / totalTickets) * 100);
+    }
 
     async renderTicketMetrics() {
         const { data: tickets, error } = await fetchTickets();
         if (error) {
             this.setMetric('totalTickets', null);
             this.setMetric('openTickets', null);
+            this.setTextMetric('ticketsReceived', null);
+            this.setTextMetric('resolvedRate', null);
             return;
         }
 
         const openStatuses = new Set(['open', 'pending']);
         const totalTickets = tickets.length;
         const openTickets = tickets.filter(ticket => openStatuses.has(String(ticket.status || '').toLowerCase())).length;
+        const resolvedRate = this.getResolvedRate(tickets);
 
         this.setMetric('totalTickets', totalTickets);
         this.setMetric('openTickets', openTickets);
+        this.setTextMetric('ticketsReceived', totalTickets.toLocaleString());
+        this.setTextMetric('resolvedRate', resolvedRate === null ? 'N/A' : `${resolvedRate}%`);
     }
+    /* END ADMIN TICKET INSIGHT METRICS */
 }
 /* END ADMIN-EXCLUSIVE DASHBOARD CONTROLLER */
 /* START STAFF-EXCLUSIVE DASHBOARD CONTROLLER */
@@ -811,4 +1010,3 @@ if (document.readyState === 'loading') {
     new AdminDashboardController();
     new StaffDashboardController();
 }
-

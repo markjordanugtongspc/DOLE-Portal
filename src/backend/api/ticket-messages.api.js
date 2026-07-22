@@ -14,7 +14,7 @@ import { supabase } from './supabase.js';
  * @returns {{ data: Array, error: string|null }}
  */
 export async function fetchMessages(ticketId) {
-    const { data, error } = await supabase
+    const runQuery = () => supabase
         .from('ticket_messages')
         .select(`
             id,
@@ -30,6 +30,13 @@ export async function fetchMessages(ticketId) {
         `)
         .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
+
+    let { data, error } = await runQuery();
+
+    if (error && /failed to fetch/i.test(error.message || '')) {
+        await new Promise(resolve => setTimeout(resolve, 450));
+        ({ data, error } = await runQuery());
+    }
 
     if (error) {
         if (window.DEBUG) window.DEBUG.error('MESSAGES-API', `Fetch messages for ticket ${ticketId} failed`, error.message);
@@ -83,6 +90,45 @@ export async function sendLinkMessage(ticketId, senderId, senderName, senderType
     });
 }
 
+const STORAGE_BUCKET = import.meta.env?.VITE_SUPABASE_STORAGE_BUCKET || 'system-images';
+
+/**
+ * Upload an attachment file for a ticket message to Supabase Storage.
+ * @param {File} file - Attachment file to upload
+ * @returns {Promise<{ url: string|null, error: string|null }>}
+ */
+export async function uploadChatAttachment(file) {
+    if (!file) return { url: null, error: 'No file provided' };
+
+    try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const filePath = `chat-attachments/chat-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true,
+                contentType: file.type || 'application/octet-stream',
+            });
+
+        if (uploadError) {
+            if (window.DEBUG) window.DEBUG.warn('MESSAGES-API', 'Attachment storage upload failed, falling back to data URL', uploadError.message);
+            return { url: null, error: uploadError.message };
+        }
+
+        const { data } = supabase.storage
+            .from(STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+
+        if (window.DEBUG) window.DEBUG.success('MESSAGES-API', `Attachment uploaded to storage: ${data.publicUrl}`);
+        return { url: data.publicUrl, error: null };
+    } catch (err) {
+        if (window.DEBUG) window.DEBUG.error('MESSAGES-API', 'Attachment storage upload exception', err.message);
+        return { url: null, error: err.message };
+    }
+}
+
 /**
  * Send a file attachment message.
  * @param {number} ticketId
@@ -90,16 +136,17 @@ export async function sendLinkMessage(ticketId, senderId, senderName, senderType
  * @param {string} senderName
  * @param {'staff'|'gip'|'admin'|'system'} senderType
  * @param {object} fileMeta     — { file_name, file_size, file_pages?, file_url? }
+ * @param {string|null} content — Optional text content accompanying attachment
  * @returns {{ data: object|null, error: string|null }}
  */
-export async function sendFileMessage(ticketId, senderId, senderName, senderType, fileMeta) {
+export async function sendFileMessage(ticketId, senderId, senderName, senderType, fileMeta, content = null) {
     return _insertMessage({
         ticket_id:    ticketId,
         sender_id:    senderId,
         sender_name:  senderName,
         sender_type:  senderType,
         message_type: 'file',
-        content:      null,
+        content:      content || null,
         metadata:     fileMeta,
         is_read:      false,
     });
@@ -112,16 +159,17 @@ export async function sendFileMessage(ticketId, senderId, senderName, senderType
  * @param {string} senderName
  * @param {'staff'|'gip'|'admin'|'system'} senderType
  * @param {string} imageUrl
+ * @param {string|null} content — Optional text content accompanying image
  * @returns {{ data: object|null, error: string|null }}
  */
-export async function sendImageMessage(ticketId, senderId, senderName, senderType, imageUrl) {
+export async function sendImageMessage(ticketId, senderId, senderName, senderType, imageUrl, content = null) {
     return _insertMessage({
         ticket_id:    ticketId,
         sender_id:    senderId,
         sender_name:  senderName,
         sender_type:  senderType,
         message_type: 'image',
-        content:      null,
+        content:      content || null,
         metadata:     { image_url: imageUrl },
         is_read:      false,
     });
@@ -194,22 +242,34 @@ async function _insertMessage(payload) {
         return { data: null, error: error.message };
     }
 
-    // Update parent ticket last_activity and increment unread for non-admin messages
+    updateParentTicketAfterMessage(payload).catch((err) => {
+        if (window.DEBUG) window.DEBUG.error('MESSAGES-API', 'Parent ticket activity update failed', err?.message || err);
+    });
+
+    return { data, error: null };
+}
+
+async function updateParentTicketAfterMessage(payload) {
     const ticketUpdate = { last_activity: new Date().toISOString(), updated_at: new Date().toISOString() };
+
     if (payload.sender_type !== 'admin') {
-        // Increment unread_count using RPC or client-side read-modify-write
-        const { data: ticket } = await supabase
+        const { data: ticket, error: fetchError } = await supabase
             .from('tickets')
             .select('unread_count')
             .eq('id', payload.ticket_id)
             .single();
 
-        if (ticket) {
+        if (fetchError) {
+            if (window.DEBUG) window.DEBUG.error('MESSAGES-API', 'Unread count lookup failed', fetchError.message);
+        } else if (ticket) {
             ticketUpdate.unread_count = (ticket.unread_count || 0) + 1;
         }
     }
 
-    await supabase.from('tickets').update(ticketUpdate).eq('id', payload.ticket_id);
+    const { error } = await supabase
+        .from('tickets')
+        .update(ticketUpdate)
+        .eq('id', payload.ticket_id);
 
-    return { data, error: null };
+    if (error) throw new Error(error.message);
 }

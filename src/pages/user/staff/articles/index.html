@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="/dole-logo.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Browse the DOLE Knowledge Base — articles, guides, and troubleshooting resources." />
+  <title>Browse Articles - DOLE Portal</title>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      var match = path.match(/\/src\/pages\/user\/(admin|staff)\//);
+      if (!match) return;
+
+      var rawSession = localStorage.getItem('dole_session');
+      if (!rawSession) {
+        window.location.replace('/?auth=login_required');
+        return;
+      }
+
+      try {
+        var user = JSON.parse(rawSession);
+        var roleId = Number(user && user.role_id);
+        var requiredRole = match[1];
+        var actualRole = roleId === 1 ? 'admin' : roleId === 2 || roleId === 3 ? 'staff' : null;
+
+        if (!actualRole) {
+          localStorage.removeItem('dole_session');
+          window.location.replace('/?auth=login_required');
+          return;
+        }
+
+        if (actualRole !== requiredRole) {
+          window.location.replace(actualRole === 'admin' ? '/src/pages/user/admin/dashboard/' : '/src/pages/user/staff/dashboard/');
+        }
+      } catch (error) {
+        localStorage.removeItem('dole_session');
+        window.location.replace('/?auth=login_required');
+      }
+    })();
+  </script>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
+
+  <!-- Sidebar placeholder dynamically loaded by sidebar.js -->
+  <div id="sidebar" data-role="staff" data-active="articles"></div>
+
+  <!-- Content Layout wrapper shifting content sm:ml-64 to clear the fixed sidebar -->
+  <div class="sm:ml-64 min-h-screen flex flex-col">
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 transition-all duration-300">
+      
+      <!-- Flowbite Blog Block replacing original content -->
+      <section class="bg-white dark:bg-gray-900 h-full min-h-screen border-l border-gray-200 dark:border-gray-800">
+        
+        <!-- Breadcrumbs Header -->
+        <div class="p-6 md:px-8 pt-8 border-b border-gray-200 dark:border-gray-800">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                    <li class="inline-flex items-center">
+                        <a href="/src/pages/user/staff/tickets/" class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+                            <svg class="w-4 h-4 me-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 12A2.5 2.5 0 0 1 21 9.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v2.5a2.5 2.5 0 0 1 0 5V17a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2.5a2.5 2.5 0 0 1-2.5-2.5Z"/></svg>
+                            My Tickets
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center space-x-1.5">
+                            <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                            <span class="inline-flex items-center text-sm font-semibold text-gray-400 dark:text-gray-500 select-none">Browse Articles</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-12 lg:px-6">
+
+            <!-- Page Header + Filter Dropdown inline -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 pt-4">
+                <div>
+                    <h1 class="text-3xl lg:text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">Knowledge Base</h1>
+                    <p class="mt-2 font-light text-gray-500 sm:text-lg dark:text-gray-400">Browse curated articles to resolve tickets, understand policies, and explore guides.</p>
+                </div>
+
+                <!-- Filter Dropdown — top-right of grid -->
+                <div class="flex-shrink-0">
+                    <button id="dropdownCategoryButton" data-dropdown-toggle="dropdownCategory" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 flex items-center shadow-sm cursor-pointer transition-colors" type="button">
+                        <svg class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M6 12h12m-9 6h6"/></svg>
+                        <span id="selected-category-text">All Articles</span>
+                        <svg class="w-2.5 h-2.5 ms-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/></svg>
+                    </button>
+
+                    <!-- Dropdown menu -->
+                    <div id="dropdownCategory" class="z-50 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600 border border-gray-200 dark:border-gray-600">
+                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownCategoryButton">
+                            <li><a href="#" data-category="All" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer font-bold text-blue-600 dark:text-blue-500 bg-gray-50 dark:bg-gray-800/50">All Articles</a></li>
+                            <li><a href="#" data-category="Tutorial" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Tutorials</a></li>
+                            <li><a href="#" data-category="User Guide" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">User Guides</a></li>
+                            <li><a href="#" data-category="Troubleshooting" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Troubleshooting</a></li>
+                            <li><a href="#" data-category="Policy" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Policies</a></li>
+                            <li><a href="#" data-category="Alert" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Alerts</a></li>
+                            <li><a href="#" data-category="Release" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors cursor-pointer">Releases</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="articles-grid" class="grid gap-6 lg:gap-8 lg:grid-cols-3">
+                <!-- Pre-rendered Skeleton Cards for initial page load -->
+                <div role="status" class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 animate-pulse">
+                    <div class="flex justify-between items-center mb-5"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div></div>
+                    <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4 mb-4"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-full mb-2.5"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6 mb-5"></div>
+                    <div class="flex justify-between items-center"><div class="flex items-center space-x-3"><div class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700"></div><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></div></div>
+                </div>
+                <div role="status" class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 animate-pulse">
+                    <div class="flex justify-between items-center mb-5"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div></div>
+                    <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4 mb-4"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-full mb-2.5"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6 mb-5"></div>
+                    <div class="flex justify-between items-center"><div class="flex items-center space-x-3"><div class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700"></div><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></div></div>
+                </div>
+                <div role="status" class="p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 animate-pulse">
+                    <div class="flex justify-between items-center mb-5"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div></div>
+                    <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4 mb-4"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-full mb-2.5"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6 mb-5"></div>
+                    <div class="flex justify-between items-center"><div class="flex items-center space-x-3"><div class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700"></div><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></div></div>
+                </div>
+            </div>  
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

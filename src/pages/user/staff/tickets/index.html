@@ -29,7 +29,7 @@
         var user = JSON.parse(rawSession);
         var roleId = Number(user && user.role_id);
         var requiredRole = match[1];
-        var actualRole = roleId === 1 || roleId === 2 ? 'admin' : roleId === 3 || roleId === 4 ? 'staff' : null;
+        var actualRole = roleId === 1 ? 'admin' : roleId === 2 || roleId === 3 ? 'staff' : null;
 
         if (!actualRole) {
           localStorage.removeItem('dole_session');
@@ -66,16 +66,10 @@
                 <nav id="table-breadcrumbs" class="hidden" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
                         <li class="inline-flex items-center">
-                            <a href="/"
+                            <a href="/src/pages/user/staff/dashboard/"
                                 class="inline-flex items-center text-sm font-semibold text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
-                                <svg class="w-4 h-4 me-1.5" viewBox="0 0 24 24" aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <g transform="matrix(0.77 0 0 0.77 12 12)">
-                                        <path style="stroke: none; fill: currentColor;" transform="translate(-16, -16)"
-                                            d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z" />
-                                    </g>
-                                </svg>
-                                LOGIN
+                                <svg class="w-4 h-4 me-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"/></svg>
+                                Dashboard
                             </a>
                         </li>
                         <li>
@@ -116,7 +110,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-end">
-                        <button id="btn-create-ticket" class="hidden cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm">
+                        <button id="btn-create-ticket" data-modal-target="close-ticket-modal" class="hidden cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm">
                             <span>Create Ticket</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"></path>
@@ -359,12 +353,12 @@
 
                     <div id="chat-composer-shell" class="hidden border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 p-4 transition-all duration-200">
                                                 <form id="chat-input-form">
-                                                    <input type="file" id="chat-image-upload" accept="image/*" class="hidden" />
+                                                    <input type="file" id="chat-image-upload" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" class="hidden" />
                             <div class="w-full border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-xs overflow-hidden">
                                 <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
                                     <div class="flex flex-wrap items-center divide-gray-200 dark:divide-gray-600 sm:divide-x sm:rtl:divide-x-reverse">
                                         <div class="flex items-center space-x-1 rtl:space-x-reverse sm:pe-4">
-                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
+                                            <button id="btn-upload-file" type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" title="Attach file">
                                                 <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8"/></svg>
                                                 <span class="sr-only">Attach file</span>
                                             </button>
@@ -527,8 +521,3 @@
 </body>
 
 </html>
-
-
-
-
-
