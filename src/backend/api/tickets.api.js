@@ -136,9 +136,15 @@ export async function openTicket(ticketId) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function updateTicket(ticketId, updates) {
+    const isClosing = updates.status === 'Closed';
+    const ticketUpdates = {
+        ...updates,
+        ...(isClosing ? { unread_count: 0 } : {}),
+        updated_at: new Date().toISOString(),
+    };
     const { data, error } = await supabase
         .from('tickets')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(ticketUpdates)
         .eq('id', ticketId)
         .select()
         .single();
@@ -147,6 +153,7 @@ export async function updateTicket(ticketId, updates) {
         if (window.DEBUG) window.DEBUG.error('TICKETS-API', `Update ticket ${ticketId} failed`, error.message);
         return { data: null, error: error.message };
     }
+    if (isClosing) void markCompletedTicketMessagesRead(ticketId);
     return { data, error: null };
 }
 
@@ -158,10 +165,11 @@ export async function updateTicket(ticketId, updates) {
 export async function closeTicket(ticketId) {
     const { error } = await supabase
         .from('tickets')
-        .update({ status: 'Closed', updated_at: new Date().toISOString() })
+        .update({ status: 'Closed', unread_count: 0, updated_at: new Date().toISOString() })
         .eq('id', ticketId);
 
     if (error) return { error: error.message };
+    void markCompletedTicketMessagesRead(ticketId);
     return { error: null };
 }
 
@@ -173,11 +181,28 @@ export async function closeTicket(ticketId) {
 export async function archiveTicket(ticketId) {
     const { error } = await supabase
         .from('tickets')
-        .update({ archived_at: new Date().toISOString() })
+        .update({ archived_at: new Date().toISOString(), unread_count: 0 })
         .eq('id', ticketId);
 
     if (error) return { error: error.message };
+    void markCompletedTicketMessagesRead(ticketId);
     return { error: null };
+}
+
+/**
+ * Clear residual message badges for a completed ticket without preventing the
+ * close/archive operation when message RLS is more restrictive than ticket RLS.
+ */
+async function markCompletedTicketMessagesRead(ticketId) {
+    const { error } = await supabase
+        .from('ticket_messages')
+        .update({ is_read: true })
+        .eq('ticket_id', ticketId)
+        .eq('is_read', false);
+
+    if (error && window.DEBUG) {
+        window.DEBUG.error('TICKETS-API', `Completed-ticket read reset failed for ${ticketId}`, error.message);
+    }
 }
 
 /**

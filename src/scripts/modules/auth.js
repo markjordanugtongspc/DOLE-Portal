@@ -194,7 +194,9 @@ const setupRouteGuard = () => {
 
     const requiredRole = getRequiredRole();
     const userRole = getRoleGroup(user.role_id);
-    if (requiredRole && userRole !== requiredRole) {
+    const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
+    const hasAlertsAccess = isAlertsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2);
+    if (requiredRole && !hasAlertsAccess && userRole !== requiredRole) {
         const redirectRoute = getDashboardRoute(user);
         blockProtectedPageRender();
         showAuthNotice({

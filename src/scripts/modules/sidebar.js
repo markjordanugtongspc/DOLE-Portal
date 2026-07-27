@@ -1,5 +1,6 @@
 import sidebarTemplate from '@/components/sidebar.html?raw';
 import { supabase } from '@/backend/api/supabase.js';
+import { countUnreadNotifications } from '@/backend/api/notifications.api.js';
 import pkg from '../../../package.json';
 import { logout } from '@/backend/api/auth.api.js';
 import { Drawer } from 'flowbite';
@@ -94,7 +95,9 @@ const setupDynamicSidebar = () => {
         window.DEBUG.log('SIDEBAR', 'Initializing dynamic sidebar...');
     }
 
-    const role = sidebarEl.getAttribute('data-role') || 'staff';
+    const requestedRole = sidebarEl.getAttribute('data-role') || 'staff';
+    const sessionUser = (() => { try { return JSON.parse(localStorage.getItem('dole_session') || 'null'); } catch { return null; } })();
+    const role = Number(sessionUser?.role_id) === 2 ? 'hr' : requestedRole === 'alerts' ? 'admin' : requestedRole;
     const activeItem = sidebarEl.getAttribute('data-active') || 'dashboard';
 
     // Inject base template
@@ -122,7 +125,7 @@ const setupDynamicSidebar = () => {
     // Update Role Badge
     const badgeEl = document.getElementById('sidebar-role-badge');
     if (badgeEl) {
-        badgeEl.textContent = role === 'admin' ? 'Admin Access' : 'Staff Access';
+        badgeEl.textContent = role === 'admin' ? 'Admin Access' : role === 'hr' ? 'HR Access' : 'Staff Access';
     }
 
     // Role-based navigation items configuration with SVGs
@@ -133,6 +136,17 @@ const setupDynamicSidebar = () => {
   <path d="M11 6.025a1 1 0 0 0-1.065-.998 8.5 8.5 0 1 0 9.038 9.039A1 1 0 0 0 17.975 13H11V6.025Z"/>
 </svg>
 `;
+    const SVG_ALERTS = `
+<svg class="hidden w-6 h-6 text-gray-800 dark:text-white sm:block sm:group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572 1.236-1.26 1.33-2.112h-6.92Z"/>
+</svg>
+<svg class="hidden w-6 h-6 text-gray-800 dark:text-white max-sm:block sm:group-hover:block sm:text-blue-600 sm:dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M17.133 12.632v-1.8a5.406 5.406 0 0 0-4.154-5.262.955.955 0 0 0 .021-.106V3.1a1 1 0 0 0-2 0v2.364a.955.955 0 0 0 .021.106 5.406 5.406 0 0 0-4.154 5.262v1.8C6.867 15.018 5 15.614 5 16.807 5 17.4 5 18 5.538 18h12.924C19 18 19 17.4 19 16.807c0-1.193-1.867-1.789-1.867-4.175ZM8.823 19a3.453 3.453 0 0 0 6.354 0H8.823Z"/>
+</svg>`;
+    const SVG_ALERTS_ACTIVE = `
+<svg class="w-6 h-6 text-blue-700 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M17.133 12.632v-1.8a5.406 5.406 0 0 0-4.154-5.262.955.955 0 0 0 .021-.106V3.1a1 1 0 0 0-2 0v2.364a.955.955 0 0 0 .021.106 5.406 5.406 0 0 0-4.154 5.262v1.8C6.867 15.018 5 15.614 5 16.807 5 17.4 5 18 5.538 18h12.924C19 18 19 17.4 19 16.807c0-1.193-1.867-1.789-1.867-4.175ZM8.823 19a3.453 3.453 0 0 0 6.354 0H8.823Z"/>
+</svg>`;
     const SVG_STAFFS_ADMIN = `
 <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"/></svg>
 <svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 6a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm-1.5 8a4 4 0 0 0-4 4 2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-3Zm6.82-3.096a5.51 5.51 0 0 0-2.797-6.293 3.5 3.5 0 1 1 2.796 6.292ZM19.5 18h.5a2 2 0 0 0 2-2 4 4 0 0 0-4-4h-1.1a5.503 5.503 0 0 1-.471.762A5.998 5.998 0 0 1 19.5 18ZM4 7.5a3.5 3.5 0 0 1 5.477-2.889 5.5 5.5 0 0 0-2.796 6.293A3.501 3.501 0 0 1 4 7.5ZM7.1 12H6a4 4 0 0 0-4 4 2 2 0 0 0 2 2h.5a5.998 5.998 0 0 1 3.071-5.238A5.505 5.505 0 0 1 7.1 12Z" clip-rule="evenodd"/></svg>`;
@@ -146,7 +160,7 @@ const setupDynamicSidebar = () => {
   <path fill-rule="evenodd" d="M8 3a2 2 0 0 0-2 2v3h12V5a2 2 0 0 0-2-2H8Zm-3 7a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h1v-4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v4h1a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H5Zm4 11a1 1 0 0 1-1-1v-4h8v4a1 1 0 0 1-1 1H9Z" clip-rule="evenodd"/>
 </svg>
 `;
-    
+
     const SVG_ASSISTANTS = `
 <svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
@@ -194,14 +208,31 @@ const setupDynamicSidebar = () => {
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
             { id: 'systems', label: 'Manage Systems', url: '/src/pages/user/admin/systems/', svg: SVG_SYSTEMS_ADMIN },
             { id: 'staffs', label: 'Manage Staffs', url: '/src/pages/user/admin/staffs/', svg: SVG_STAFFS_ADMIN },
-            { 
-                id: 'tickets', 
-                label: 'Manage Tickets', 
-                url: '/src/pages/user/admin/tickets/', 
-                svg: SVG_TICKETS_ADMIN, 
+            { id: 'alerts', label: 'Alerts', url: '/src/pages/user/admin/alerts/', svg: SVG_ALERTS },
+            {
+                id: 'tickets',
+                label: 'Manage Tickets',
+                url: '/src/pages/user/admin/tickets/',
+                svg: SVG_TICKETS_ADMIN,
                 badge: null,
                 dropdown: [
                     { id: 'articles', label: 'Manage Articles', url: '/src/pages/user/admin/articles/', svg: SVG_ARTICLES_ADMIN }
+                ]
+            },
+            { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
+        ],
+        hr: [
+            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
+            { id: 'alerts', label: 'Alerts', url: '/src/pages/user/admin/alerts/', svg: SVG_ALERTS },
+            { id: 'assistants', label: 'Manage Assistants', url: '/src/pages/user/staff/assistants/', svg: SVG_ASSISTANTS },
+            {
+                id: 'tickets',
+                label: 'My Tickets',
+                url: '/src/pages/user/staff/tickets/',
+                svg: SVG_TICKETS_ADMIN,
+                badge: null,
+                dropdown: [
+                    { id: 'articles', label: 'Browse Articles', url: '/src/pages/user/staff/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
             },
             { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
@@ -225,7 +256,7 @@ const setupDynamicSidebar = () => {
 
     const items = navConfigurations[role] || [];
     const listEl = document.getElementById('sidebar-nav-list');
-    
+
     if (listEl) {
         let listHTML = '';
         items.forEach(item => {
@@ -237,16 +268,17 @@ const setupDynamicSidebar = () => {
                 ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group transition-colors'
                 : 'cursor-pointer flex items-center px-2 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group';
 
-            let svgContent = item.svg;
-            if (isActive) {
+            let svgContent = isActive && item.id === 'alerts' ? SVG_ALERTS_ACTIVE : item.svg;
+            if (isActive && item.id !== 'alerts') {
                 svgContent = svgContent.replace('group-hover:hidden', 'hidden').replace('hidden group-hover:block', 'block');
                 // For single SVG items
                 svgContent = svgContent.replace('group-hover:text-blue-600 dark:group-hover:text-blue-500', 'text-blue-700 dark:text-blue-500');
+                svgContent = svgContent.replace(/text-gray-800 dark:text-white/g, 'text-blue-700 dark:text-blue-500');
             }
 
             if (item.dropdown) {
-                const dynamicBadge = item.id === 'tickets'
-                    ? `<span id="sidebar-badge-tickets" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm mr-1"></span>`
+                const dynamicBadge = item.id === 'tickets' || item.id === 'alerts'
+                    ? `<span id="sidebar-badge-${item.id}" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm mr-1"></span>`
                     : '';
 
                 listHTML += `
@@ -269,11 +301,12 @@ const setupDynamicSidebar = () => {
                     const subLinkClass = isSubActive
                         ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group transition-colors'
                         : 'cursor-pointer flex items-center px-2 py-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors group';
-                    
+
                     let childSvg = child.svg;
                     if (isSubActive) {
                         childSvg = childSvg.replace('group-hover:hidden', 'hidden').replace('hidden group-hover:block', 'block');
                         childSvg = childSvg.replace('group-hover:text-blue-600 dark:group-hover:text-blue-500', 'text-blue-700 dark:text-blue-500');
+                        childSvg = childSvg.replace(/text-gray-800 dark:text-white/g, 'text-blue-700 dark:text-blue-500');
                     }
 
                     listHTML += `
@@ -292,8 +325,8 @@ const setupDynamicSidebar = () => {
                 </li>
                 `;
             } else {
-                const dynamicBadge = item.id === 'tickets'
-                    ? `<span id="sidebar-badge-tickets" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm"></span>`
+                const dynamicBadge = item.id === 'tickets' || item.id === 'alerts'
+                    ? `<span id="sidebar-badge-${item.id}" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm"></span>`
                     : '';
 
                 listHTML += `
@@ -313,7 +346,7 @@ const setupDynamicSidebar = () => {
     if (window.DEBUG) {
         window.DEBUG.success('SIDEBAR', `Sidebar loaded for role: ${role}`);
     }
-    
+
     setupSidebarLogout();
 
     // Inject Version
@@ -333,7 +366,7 @@ const setupDynamicSidebar = () => {
 
         if (userNameEl) userNameEl.textContent = user.full_name || user.username || 'System User';
         if (userSubtitleEl) userSubtitleEl.textContent = user.email || 'portal@dole.local';
-        if (userRoleEl) userRoleEl.textContent = role === 'admin' ? 'Admin' : 'Staff';
+        if (userRoleEl) userRoleEl.textContent = role === 'admin' ? 'Admin' : role === 'hr' ? 'HR' : 'Staff';
         if (userAvatarEl) {
             const initials = (user.full_name || user.username || 'SU')
                 .split(' ')
@@ -346,6 +379,7 @@ const setupDynamicSidebar = () => {
 
         // Dynamic global unread badge with realtime notifications
         updateSidebarTicketsBadge(role, user.id);
+        updateSidebarAlertsBadge(role);
         setupSidebarRealtime(role, user.id);
     }
 };
@@ -358,13 +392,14 @@ const updateSidebarTicketsBadge = async (role, userId) => {
 
     try {
         let count = 0;
-        if (role === 'admin') {
+        // Admin and HR both work the support-side ticket inbox; only their navigation labels differ.
+        if (role === 'admin' || role === 'hr') {
             const { data, error } = await supabase
                 .from('ticket_messages')
                 .select('id')
                 .eq('is_read', false)
                 .neq('sender_type', 'admin');
-            
+
             if (!error && data) {
                 count = data.length;
             }
@@ -375,7 +410,7 @@ const updateSidebarTicketsBadge = async (role, userId) => {
                 .eq('is_read', false)
                 .eq('sender_type', 'admin')
                 .eq('tickets.created_by', userId);
-            
+
             if (!error && data) {
                 count = data.length;
             }
@@ -395,6 +430,20 @@ const updateSidebarTicketsBadge = async (role, userId) => {
     }
 };
 
+const updateSidebarAlertsBadge = async (role) => {
+    const badgeEl = document.getElementById('sidebar-badge-alerts');
+    const recipientRole = role === 'admin' ? 'admin' : role === 'hr' ? 'hr' : null;
+    if (!badgeEl || !recipientRole) return;
+
+    const { count, error } = await countUnreadNotifications(recipientRole);
+    if (error) {
+        window.DEBUG?.warn('SIDEBAR', 'Unable to update alerts badge.', error);
+        return;
+    }
+    badgeEl.textContent = count > 99 ? '99+' : String(count);
+    badgeEl.classList.toggle('hidden', count === 0);
+    badgeEl.classList.toggle('inline-flex', count > 0);
+};
 const setupSidebarRealtime = (role, userId) => {
     if (sidebarRealtimeChannel) {
         supabase.removeChannel(sidebarRealtimeChannel);
@@ -407,6 +456,9 @@ const setupSidebarRealtime = (role, userId) => {
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_messages' }, () => {
             updateSidebarTicketsBadge(role, userId);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+            updateSidebarAlertsBadge(role);
         })
         .subscribe();
 };

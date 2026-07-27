@@ -109,6 +109,7 @@ const bootAppModules = async () => {
     await importModule('Ticket support module', () => import('@/scripts/modules/ticket-support.js'));
     await importModule('Assistants management module', () => import('@/scripts/modules/assistants-manage.js'));
     await importModule('Articles browse/view module', () => import('@/scripts/modules/articles-manage.js'));
+    await importModule('Alerts module', () => import('@/scripts/modules/alerts.js'));
 };
 
 bootAppModules();

@@ -3,6 +3,7 @@ import { Modal } from 'flowbite';
 import { archiveGip, createGip, fetchAllGips, updateGip } from '@/backend/api/gips.api.js';
 import { archiveUser, createUser, fetchOffices, fetchRoles, fetchUsers, updateUser } from '@/backend/api/users.api.js';
 import { supabase } from '@/backend/api/supabase.js';
+import { createNotification } from '@/backend/api/notifications.api.js';
 
 export const initStaffsManage = () => {
     const table = document.getElementById('sorting-table');
@@ -210,15 +211,15 @@ export const initStaffsManage = () => {
         sorted.forEach(user => {
             const kids = staffGips(user.id), childClass = `impl-row-${user.id}`;
             const isPending = approvalState(user) === 'PENDING';
-            const pendingClass = isPending ? ' opacity-55 hover:opacity-75' : '';
+            const pendingCellClass = isPending ? ' opacity-55 hover:opacity-75' : '';
             const pendingTitle = isPending ? ' title="This user is pending for approval"' : '';
             activeTbody.insertAdjacentHTML('beforeend', `
-                <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors${pendingClass}" data-id="${user.id}"${pendingTitle}>
-                    <td class="w-4 p-4 text-center align-middle"><input type="checkbox" value="${user.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer"></td>
-                    <td class="px-6 py-4 font-medium text-gray-950 dark:text-white whitespace-nowrap text-left"><div class="flex items-center gap-3"><img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800" src="${avatar(user.full_name)}" alt="${esc(user.full_name)}"><div class="flex flex-col justify-start text-left"><div class="flex items-center gap-2"><span class="text-base font-semibold text-gray-950 dark:text-white leading-tight">${na(user.full_name)}</span>${kids.length ? `<button data-collapse-toggle="${childClass}" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View GIP assistants"><svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path></svg></button>` : ''}</div><div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">${na(user.email)}</div></div></div></td>
-                    <td class="px-6 py-4 text-left align-middle text-sm text-gray-950 dark:text-white font-medium">${esc(roleName(user))}</td>
-                    <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">${esc(officeName(user))}</td>
-                    <td class="px-6 py-4 text-left align-middle"><div class="flex items-center justify-start">${statusBadge(user)}</div></td>
+                <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-id="${user.id}"${pendingTitle}>
+                    <td class="w-4 p-4 text-center align-middle${pendingCellClass}"><input type="checkbox" value="${user.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer"></td>
+                    <td class="px-6 py-4 font-medium text-gray-950 dark:text-white whitespace-nowrap text-left${pendingCellClass}"><div class="flex items-center gap-3"><img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800" src="${avatar(user.full_name)}" alt="${esc(user.full_name)}"><div class="flex flex-col justify-start text-left"><div class="flex items-center gap-2"><span class="text-base font-semibold text-gray-950 dark:text-white leading-tight">${na(user.full_name)}</span>${kids.length ? `<button data-collapse-toggle="${childClass}" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View GIP assistants"><svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path></svg></button>` : ''}</div><div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">${na(user.email)}</div></div></div></td>
+                    <td class="px-6 py-4 text-left align-middle text-sm text-gray-950 dark:text-white font-medium${pendingCellClass}">${esc(roleName(user))}</td>
+                    <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400${pendingCellClass}">${esc(officeName(user))}</td>
+                    <td class="px-6 py-4 text-left align-middle${pendingCellClass}"><div class="flex items-center justify-start">${statusBadge(user)}</div></td>
                     <td class="px-6 py-4 text-left align-middle">${staffActions(user)}</td>
                 </tr>`);
             kids.forEach(gip => activeTbody.insertAdjacentHTML('beforeend', `
@@ -369,6 +370,14 @@ export const initStaffsManage = () => {
                 if (res.error) throw new Error(res.error);
                 const gipError = await saveGipBlocks(res.data.id); if (gipError) throw new Error(gipError);
                 window.DEBUG?.success('STAFFS', 'Staff created.', res.data);
+                void createNotification({
+                    type: 'staff_created',
+                    title: 'Staff account created',
+                    message: `${res.data.full_name || res.data.username || 'A staff user'} was added by portal staff.`,
+                    recipientRoles: ['admin', 'hr'],
+                    subjectUserId: res.data.id,
+                    actionUrl: '/src/pages/user/admin/staffs/'
+                });
                 showToast('success', `Staff member "${res.data.full_name}" was added successfully.`);
             } else if (mode === 'edit-staff') {
                 const updates = staffPayload();

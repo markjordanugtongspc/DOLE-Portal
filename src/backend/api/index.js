@@ -83,3 +83,12 @@ export {
 // ─── Supabase Client (raw access when needed) ──────────────────────────────────
 export { supabase } from './supabase.js';
 
+
+// Notifications
+export {
+    createNotification,
+    fetchNotifications,
+    countUnreadNotifications,
+    markNotificationsRead,
+    deleteNotifications,
+} from './notifications.api.js';

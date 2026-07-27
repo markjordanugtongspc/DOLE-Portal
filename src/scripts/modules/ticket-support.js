@@ -158,9 +158,7 @@ const normalizeMessage = (row) => {
     return {
         id: row.id,
         sender: row.sender_name || (isAdmin ? 'Admin' : 'Staff'),
-        avatar: isAdmin
-            ? `https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff`
-            : avatar(row.sender_name),
+        avatar: avatar(row.sender_name || (isAdmin ? 'Administrator' : 'Staff')),
         time: fmtTime(row.created_at),
         type,
         content: row.content || '',
@@ -223,6 +221,7 @@ class TicketSupportApp {
         this._ticketsChannel = null;
         this._messagesChannel = null;
         this._globalMessagesChannel = null;
+        this._unreadRefreshTimer = null;
 
         // Child components
         this.drawer = new CategoryDrawer(this);
@@ -241,7 +240,7 @@ class TicketSupportApp {
         const modalEl = document.getElementById('close-ticket-modal');
         if (modalEl) {
             this.closeTicketModal = new Modal(modalEl);
-            
+
             // Handle Yes click
             document.getElementById('confirm-close-ticket-btn')?.addEventListener('click', () => {
                 this.closeTicketModal.hide();
@@ -279,17 +278,12 @@ class TicketSupportApp {
 
         if (window.DEBUG) window.DEBUG.success('TICKET-SUPPORT', 'TicketSupportApp fully initialized (Supabase realtime active).');
 
-        // Handle window focus safely without causing network churn
+        // Mark the open conversation read when the user returns to this tab.
         window.addEventListener('focus', () => {
             if (this.selectedTicketDbId) {
-                if (this.isAdmin) {
-                    markMessagesRead(this.selectedTicketDbId);
-                } else {
-                    markAdminMessagesRead(this.selectedTicketDbId);
-                }
+                void this.markConversationRead(this.selectedTicketDbId);
             }
         });
-
         // Cleanup on unload
         window.addEventListener('beforeunload', () => this._cleanup());
     }
@@ -306,10 +300,12 @@ class TicketSupportApp {
             }
             if (result.error) {
                 if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to load tickets', result.error);
-                this.tickets = [];
+                // Keep the last known list visible when the network briefly drops.
+                // Clearing it here incorrectly shows the "no tickets" state.
+                return;
             } else {
                 this.tickets = (result.data || []).map(normalizeTicket);
-                
+
                 // For Staff, compute unread messages based on Admin's unread messages
                 if (!this.isAdmin && this.tickets.length > 0) {
                     const ticketIds = this.tickets.map(t => t.dbId);
@@ -364,25 +360,88 @@ class TicketSupportApp {
 
         this._ticketsChannel = supabase
             .channel('ticket-support-tickets')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, async (payload) => {
-                if (!this.isAdmin && payload.new && payload.new.created_by !== this.sessionUserId) {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, (payload) => {
+                if (!this.isAdmin && payload.new && String(payload.new.created_by) !== String(this.sessionUserId)) {
                     return;
                 }
                 if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Tickets realtime: ${payload.eventType}`);
-                await this.loadTickets();
 
-                if (this.selectedTicketId) {
-                    const updated = this.tickets.find(t => t.id === this.selectedTicketId);
-                    if (updated) {
-                        this.renderChatSidebar();
-                    }
+                if (payload.eventType === 'UPDATE' && payload.new) {
+                    this._applyTicketRealtimeUpdate(payload.new);
+                    this._scheduleUnreadRefresh();
+                    return;
                 }
+
+                // Inserts/deletes change the collection and still require a full refresh.
+                void this.loadTickets();
             })
             .subscribe((status) => {
                 if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Tickets channel: ${status}`);
             });
     }
     /* END _subscribeTickets */
+
+    _applyTicketRealtimeUpdate(row) {
+        const ticket = this.tickets.find((item) => Number(item.dbId) === Number(row.id));
+        if (!ticket) {
+            void this.loadTickets();
+            return;
+        }
+
+        if (row.subject !== undefined) ticket.subject = row.subject || '(No Subject)';
+        if (row.priority !== undefined) ticket.priority = row.priority || 'Low';
+        if (row.status !== undefined) ticket.status = row.status || 'Pending';
+        if (row.team !== undefined) ticket.team = row.team || 'Technical Support';
+        if (row.tags !== undefined) ticket.tags = Array.isArray(row.tags) ? row.tags : (row.tags ? [row.tags] : []);
+        if (row.last_activity !== undefined) {
+            ticket.rawLastActivity = row.last_activity;
+            ticket.lastActivity = row.last_activity ? timeAgo(row.last_activity) : 'N/A';
+        }
+        if (this.isAdmin && row.unread_count !== undefined) {
+            ticket.unreadCount = ticket.id === this.selectedTicketId && document.hasFocus()
+                ? 0
+                : Number(row.unread_count || 0);
+        }
+
+        this.table.render();
+        this.renderChatSidebar();
+        this.updateBadgeCounts();
+    }
+
+    _scheduleUnreadRefresh() {
+        window.clearTimeout(this._unreadRefreshTimer);
+        this._unreadRefreshTimer = window.setTimeout(async () => {
+            const ticketIds = this.tickets.map((ticket) => ticket.dbId).filter(Boolean);
+            if (ticketIds.length === 0) return;
+
+            const query = supabase
+                .from('ticket_messages')
+                .select('ticket_id')
+                .eq('is_read', false)
+                .in('ticket_id', ticketIds);
+
+            const unreadQuery = this.isAdmin
+                ? query.neq('sender_type', 'admin')
+                : query.eq('sender_type', 'admin');
+            const { data, error } = await unreadQuery;
+
+            if (error) {
+                if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to refresh ticket unread badges', error);
+                return;
+            }
+
+            const unreadMap = {};
+            (data || []).forEach((message) => {
+                unreadMap[message.ticket_id] = (unreadMap[message.ticket_id] || 0) + 1;
+            });
+            this.tickets.forEach((ticket) => {
+                ticket.unreadCount = ticket.id === this.selectedTicketId && document.hasFocus()
+                    ? 0
+                    : unreadMap[ticket.dbId] || 0;
+            });
+            this.renderChatSidebar();
+        }, 120);
+    }
 
     /* START _subscribeMessages */
     _subscribeMessages(ticketDbId) {
@@ -417,6 +476,44 @@ class TicketSupportApp {
     }
     /* END _subscribeMessages */
 
+    /**
+     * A bubble belongs on the right only when it was sent by this exact user.
+     * sender_type is deliberately not used here: HR and Admin both send support
+     * messages, but they are still different people.
+     */
+    isCurrentUserMessage(message) {
+        const senderId = message?._raw?.sender_id;
+        if (senderId !== null && senderId !== undefined && this.sessionUserId !== null && this.sessionUserId !== undefined) {
+            return String(senderId) === String(this.sessionUserId);
+        }
+
+        const senderName = String(message?.sender || '').trim().toLowerCase();
+        const currentName = String(this.sessionUserName || '').trim().toLowerCase();
+        if (senderName && currentName) return senderName === currentName;
+
+        // Older records without a sender ID retain the legacy side rule.
+        const senderType = message?._raw?.sender_type;
+        return this.isAdmin ? senderType === 'admin' : senderType !== 'admin';
+    }
+
+    /** Mark messages from the opposite conversation side as read, then refresh the local badge. */
+    async markConversationRead(ticketDbId) {
+        if (!ticketDbId) return { error: null };
+
+        const result = this.isAdmin
+            ? await markMessagesRead(ticketDbId)
+            : await markAdminMessagesRead(ticketDbId);
+
+        if (result.error) {
+            if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', `Failed to mark ticket ${ticketDbId} read`, result.error);
+            return result;
+        }
+
+        const ticket = this.tickets.find((item) => Number(item.dbId) === Number(ticketDbId));
+        if (ticket) ticket.unreadCount = 0;
+        this.renderChatSidebar();
+        return result;
+    }
     /* START _appendRealtimeMessage */
     _appendRealtimeMessage(ticketDbId, rawMsg) {
         if (!rawMsg || Number(this.selectedTicketDbId) !== Number(ticketDbId)) return;
@@ -426,13 +523,40 @@ class TicketSupportApp {
             this.currentMessages = [];
         }
 
-        // Prevent duplicate bubble insertion
-        const exists = this.currentMessages.some(m => String(m.id) === String(norm.id));
+        // Replace the sender's optimistic bubble if realtime arrives before the insert response.
+        const optimisticIndex = this.isCurrentUserMessage(norm)
+            ? this.currentMessages.findIndex((message) =>
+                String(message.id).startsWith('temp-') &&
+                message.type === norm.type &&
+                message.content === norm.content
+            )
+            : -1;
+        if (optimisticIndex !== -1) {
+            this.currentMessages[optimisticIndex] = norm;
+            this.renderConversation(this.currentMessages);
+            ticketCacheStorage.saveMessages(ticketDbId, this.currentMessages);
+            return;
+        }
+
+        // Prevent duplicate bubble insertion.
+        const exists = this.currentMessages.some((message) => String(message.id) === String(norm.id));
         if (exists) return;
 
         this.currentMessages.push(norm);
         this.renderConversation(this.currentMessages);
         ticketCacheStorage.saveMessages(ticketDbId, this.currentMessages);
+
+        // The open, focused conversation is already being read in real time.
+        // Persist that state immediately so its ticket/sidebar badge disappears.
+        if (!this.isCurrentUserMessage(norm)) {
+            if (document.hasFocus()) {
+                void this.markConversationRead(ticketDbId);
+            } else {
+                const ticket = this.tickets.find((item) => Number(item.dbId) === Number(ticketDbId));
+                if (ticket) ticket.unreadCount = (ticket.unreadCount || 0) + 1;
+                this.renderChatSidebar();
+            }
+        }
     }
     /* END _appendRealtimeMessage */
 
@@ -713,6 +837,8 @@ class TicketSupportApp {
         }
         if (ticket) {
             this.selectedTicketDbId = ticket.dbId;
+            // Subscribe before fetch/read writes so inserts cannot land in an opening-ticket gap.
+            this._subscribeMessages(ticket.dbId);
 
             this.updateCloseButtonState(ticket);
 
@@ -722,9 +848,6 @@ class TicketSupportApp {
                 document.getElementById('chat-header-ticket-id').textContent = ticket.id;
                 document.getElementById('chat-header-ticket-subject').textContent = ticket.subject;
             }
-
-            ticket.unreadCount = 0;
-            this.updateBadgeCounts();
 
             const detailsAssignee = document.getElementById('details-assignee');
             if (detailsAssignee) {
@@ -760,18 +883,18 @@ class TicketSupportApp {
             this.updatePriorityPillsUI(ticket.priority);
             this.renderTags(ticket);
 
-            // Mark ticket as Open in Supabase (admin action)
+            // Ticket agents open the ticket; every role marks the viewed conversation read.
             if (document.hasFocus() && ticket.dbId) {
-                try {
-                    if (this.isAdmin) {
-                        openTicketApi(ticket.dbId);
-                        markMessagesRead(ticket.dbId);
-                    } else {
-                        markAdminMessagesRead(ticket.dbId);
+                void (async () => {
+                    try {
+                        if (this.isAdmin) {
+                            await openTicketApi(ticket.dbId);
+                        }
+                        await this.markConversationRead(ticket.dbId);
+                    } catch (err) {
+                        if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to mark ticket read on open', err);
                     }
-                } catch (err) {
-                    if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to mark ticket read on open', err);
-                }
+                })();
             }
         }
 
@@ -781,9 +904,6 @@ class TicketSupportApp {
         this.syncStaffComposerState();
         this.renderChatSidebar();
         await this._loadAndRenderConversation(this.selectedTicketDbId);
-
-        // Subscribe to realtime messages for this ticket
-        this._subscribeMessages(this.selectedTicketDbId);
 
         setTimeout(() => {
             document.querySelector(`[data-chat-id="${ticketId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -802,10 +922,10 @@ class TicketSupportApp {
 
         const headerCreateBtn = document.getElementById('btn-create-ticket');
         const hasTickets = this.tickets.length > 0;
-        
+
         if (headerCreateBtn) {
             const hasSelection = Boolean(this.selectedTicketId && this.selectedTicketDbId);
-            
+
             if (hasSelection) {
                 const ticket = this.tickets.find(t => t.id === this.selectedTicketId);
                 const isClosed = ticket?.status === 'Closed';
@@ -814,7 +934,7 @@ class TicketSupportApp {
                     // Change to Re-open Ticket button (Blue)
                     headerCreateBtn.classList.remove('hidden');
                     headerCreateBtn.classList.add('inline-flex');
-                    
+
                     headerCreateBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm';
                     headerCreateBtn.innerHTML = `
                         <span>Re-open Ticket</span>
@@ -826,7 +946,7 @@ class TicketSupportApp {
                     // Change to Close Ticket button (Red)
                     headerCreateBtn.classList.remove('hidden');
                     headerCreateBtn.classList.add('inline-flex');
-                    
+
                     headerCreateBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm';
                     headerCreateBtn.innerHTML = `
                         <span>Close Ticket</span>
@@ -839,7 +959,7 @@ class TicketSupportApp {
                 // Change to Create Ticket button (Green)
                 headerCreateBtn.classList.toggle('hidden', !hasTickets);
                 headerCreateBtn.classList.toggle('inline-flex', hasTickets);
-                
+
                 headerCreateBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm';
                 headerCreateBtn.innerHTML = `
                     <span>Create Ticket</span>
@@ -882,7 +1002,7 @@ class TicketSupportApp {
             if (innerHeader) {
                 innerHeader.classList.remove('hidden');
                 innerHeader.classList.add('flex');
-                
+
                 const headerId = document.getElementById('staff-chat-header-id');
                 const headerSubject = document.getElementById('staff-chat-header-subject');
                 const headerCategory = document.getElementById('staff-chat-header-category');
@@ -913,7 +1033,7 @@ class TicketSupportApp {
 
     updateCloseButtonState(ticket) {
         const isClosed = ticket.status === 'Closed';
-        
+
         if (this.isAdmin) {
             const adminCloseBtn = document.getElementById('btn-close-chat');
             if (adminCloseBtn) {
@@ -941,8 +1061,6 @@ class TicketSupportApp {
     }
 
     syncStaffComposerState() {
-        if (this.isAdmin) return;
-
         const shell = document.getElementById('chat-composer-shell');
         const form = document.getElementById('chat-input-form');
         const editor = document.getElementById('chat-editor');
@@ -951,13 +1069,19 @@ class TicketSupportApp {
         const labelText = document.getElementById('chat-composer-label');
         if (!editor || !sendBtn || !shell || !form) return;
 
-        const hasSelection = Boolean(this.selectedTicketId && this.selectedTicketDbId);
-        editor.disabled = !hasSelection;
-        editor.value = hasSelection ? editor.value : '';
-        editor.placeholder = hasSelection ? 'Type your reply here...' : '';
+        const selectedTicket = this.tickets.find((ticket) => ticket.id === this.selectedTicketId);
+        if (!this.selectedTicketDbId && selectedTicket?.dbId) {
+            this.selectedTicketDbId = selectedTicket.dbId;
+        }
 
-        shell.classList.toggle('hidden', !hasSelection);
-        form.classList.toggle('pointer-events-none', !hasSelection);
+        const hasTicketSelection = Boolean(this.selectedTicketId);
+        const canSend = Boolean(hasTicketSelection && this.selectedTicketDbId);
+        editor.disabled = !canSend;
+        editor.value = hasTicketSelection ? editor.value : '';
+        editor.placeholder = hasTicketSelection ? 'Type your reply here...' : '';
+
+        shell.classList.toggle('hidden', !hasTicketSelection);
+        form.classList.toggle('pointer-events-none', !canSend);
 
         if (helperText) {
             helperText.textContent = 'Your replies appear in the selected ticket conversation.';
@@ -967,9 +1091,9 @@ class TicketSupportApp {
             labelText.textContent = 'Message';
         }
 
-        sendBtn.disabled = !hasSelection;
-        sendBtn.classList.toggle('opacity-60', !hasSelection);
-        sendBtn.classList.toggle('pointer-events-none', !hasSelection);
+        sendBtn.disabled = !canSend;
+        sendBtn.classList.toggle('opacity-60', !canSend);
+        sendBtn.classList.toggle('pointer-events-none', !canSend);
     }
     renderStaffWelcomeState() {
         if (this.isAdmin) return;
@@ -977,7 +1101,10 @@ class TicketSupportApp {
         const viewport = document.getElementById('chat-messages-viewport');
         if (!viewport) return;
 
-        const hasTickets = this.tickets.length > 0;
+        // The sidebar may already have rendered tickets while a realtime refresh is
+        // completing. Never tell a user to create a ticket when visible tickets exist.
+        const renderedTicketCount = Number(document.getElementById('chat-tickets-count')?.textContent || 0);
+        const hasTickets = this.tickets.length > 0 || renderedTicketCount > 0;
         const eyebrow = hasTickets ? 'No active ticket selected' : 'No tickets yet';
         const title = hasTickets ? 'Click any ticket or create a new one.' : 'Create a new ticket first.';
         const body = hasTickets
@@ -1051,10 +1178,10 @@ class TicketSupportApp {
                     backdrop.remove();
                 });
             }
-            
+
             // Reset form
             document.getElementById('form-create-ticket')?.reset();
-            
+
             // Reset priority to Medium
             document.querySelectorAll('.create-priority-pill').forEach(btn => {
                 const isActive = btn.dataset.priorityBtn === 'Medium';
@@ -1065,7 +1192,7 @@ class TicketSupportApp {
                     btn.classList.remove('ring-2', 'ring-blue-500', 'bg-gray-100', 'dark:bg-gray-700');
                 }
             });
-            
+
             // Reset tags
             const tagsContainer = document.getElementById('create-ticket-tags-container');
             const tagsInput = document.getElementById('create-ticket-tags-input');
@@ -1075,14 +1202,14 @@ class TicketSupportApp {
             }
         }
     }
-    
+
     initCreateTicketDrawer() {
         if (this.isAdmin) return;
 
         const drawerEl = document.getElementById('drawer-create-ticket');
         if (!drawerEl) return;
 
-        const closeBtns = document.querySelectorAll('[data-drawer-hide="drawer-create-ticket"]');
+        const closeBtns = document.querySelectorAll('[data-create-ticket-drawer-close]');
         const hideDrawer = () => {
             drawerEl.classList.add('translate-x-full');
             drawerEl.classList.remove('transform-none');
@@ -1105,13 +1232,13 @@ class TicketSupportApp {
         // Tags Logic
         const tagsContainer = document.getElementById('create-ticket-tags-container');
         const tagsInput = document.getElementById('create-ticket-tags-input');
-        
+
         const createTag = (text) => {
             const span = document.createElement('span');
             span.className = 'create-tag-badge inline-flex items-center gap-1 text-[10px] font-bold bg-gray-900 text-white dark:bg-gray-950 px-2 py-0.5 rounded-md';
             span.innerHTML = `${text.replace(/</g, "&lt;")} <button type="button" class="cursor-pointer text-gray-400 hover:text-white font-bold select-none remove-tag-btn">&times;</button>`;
             span.dataset.value = text;
-            
+
             span.querySelector('.remove-tag-btn').addEventListener('click', () => span.remove());
             tagsContainer.insertBefore(span, tagsInput);
         };
@@ -1139,24 +1266,24 @@ class TicketSupportApp {
         // Form Submission
         const form = document.getElementById('form-create-ticket');
         const submitBtn = document.getElementById('btn-submit-create-ticket');
-        
+
         form?.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!this.sessionUserId || submitBtn.disabled) return;
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Submitting...';
-            
+
             const subject = document.getElementById('create-ticket-subject').value;
             const team = document.getElementById('create-ticket-team').value;
             const categoryName = document.getElementById('create-ticket-category').value;
             const message = document.getElementById('create-ticket-message').value;
-            
+
             const activePriorityBtn = document.querySelector('.create-priority-pill.active');
             const priority = activePriorityBtn ? activePriorityBtn.dataset.priorityBtn : 'Medium';
-            
+
             const tags = Array.from(document.querySelectorAll('.create-tag-badge')).map(el => el.dataset.value);
-            
+
             const category = this.ticketCategories.find(c => c.name === categoryName) || this.ticketCategories[0];
 
             try {
@@ -1175,7 +1302,7 @@ class TicketSupportApp {
                 } else {
                     const createdTicket = result.data;
                     const ticketDbId = createdTicket?.id;
-                    
+
                     if (ticketDbId && message.trim()) {
                         const msgResult = await sendTextMessage(
                             ticketDbId,
@@ -1239,7 +1366,7 @@ class TicketSupportApp {
     /* START handleCloseTicketStatus */
     handleCloseTicketStatus() {
         if (!this.selectedTicketDbId) return;
-        
+
         const ticket = this.tickets.find(t => t.dbId === this.selectedTicketDbId);
         const isClosed = ticket?.status === 'Closed';
 
@@ -1266,7 +1393,7 @@ class TicketSupportApp {
             }
 
             const result = await closeTicketApi(this.selectedTicketDbId);
-            
+
             if (result.error) {
                 if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to close ticket', result.error);
                 this.showToast('danger', `Failed to close ticket: ${result.error}`);
@@ -1276,7 +1403,7 @@ class TicketSupportApp {
             this.showToast('success', 'Ticket closed successfully!');
             await this.loadTickets();
             this.closeTicket(); // Go back to table/welcome view
-            
+
             // Re-render sidebars and badges
             if (this.isAdmin) {
                 this.renderChatSidebar();
@@ -1304,7 +1431,7 @@ class TicketSupportApp {
             }
 
             const result = await updateTicket(this.selectedTicketDbId, { status: 'Open' });
-            
+
             if (result.error) {
                 if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to reopen ticket', result.error);
                 this.showToast('danger', `Failed to reopen ticket: ${result.error}`);
@@ -1313,7 +1440,7 @@ class TicketSupportApp {
 
             this.showToast('success', 'Ticket re-opened successfully!');
             await this.loadTickets();
-            
+
             const ticket = this.tickets.find(t => t.dbId === this.selectedTicketDbId);
             if (ticket) {
                 this.updateCloseButtonState(ticket);
@@ -1437,17 +1564,10 @@ class TicketSupportApp {
         this.currentMessages = messages;
         this.renderConversation(messages);
         ticketCacheStorage.saveMessages(ticketDbId, messages);
-        
-        // Mark messages as read since they are now viewed
+
+        // Persist the read state before a realtime badge refresh can run.
         if (document.hasFocus()) {
-            if (this.isAdmin) {
-                markMessagesRead(ticketDbId);
-                supabase.from('tickets').update({ unread_count: 0 }).eq('id', ticketDbId).then(({ error }) => {
-                    if (error && window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Unread count reset failed', error);
-                });
-            } else {
-                markAdminMessagesRead(ticketDbId);
-            }
+            void this.markConversationRead(ticketDbId);
         }
     }
     /* END _loadAndRenderConversation */
@@ -1726,8 +1846,7 @@ class TicketSupportApp {
 
         let html = '';
         messages.forEach((msg) => {
-            const isMsgAdmin = msg.sender === 'Admin' || (msg._raw && msg._raw.sender_type === 'admin');
-            const isMine = (this.isAdmin && isMsgAdmin) || (!this.isAdmin && !isMsgAdmin);
+            const isMine = this.isCurrentUserMessage(msg);
 
             const bubbleAlign = isMine ? 'justify-end' : 'justify-start';
             const flexRowClass = isMine ? 'flex-row-reverse' : '';
@@ -2081,6 +2200,9 @@ class TicketSupportApp {
                 const idx = this.currentMessages.findIndex(m => String(m.id) === String(tempId));
                 if (idx !== -1) {
                     this.currentMessages[idx] = norm;
+                    this.currentMessages = this.currentMessages.filter((message, messageIndex, messages) =>
+                        messages.findIndex((candidate) => String(candidate.id) === String(message.id)) === messageIndex
+                    );
                     this.renderConversation(this.currentMessages);
                     ticketCacheStorage.saveMessages(this.selectedTicketDbId, this.currentMessages);
                 } else {

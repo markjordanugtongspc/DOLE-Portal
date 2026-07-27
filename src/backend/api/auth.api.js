@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase.js';
+import { createNotification } from './notifications.api.js';
 
 const PUBLIC_USER_SELECT_BASE = 'id, role_id, office_id, full_name, username, email, phone, status, archived_at';
 const PUBLIC_USER_SELECT = `${PUBLIC_USER_SELECT_BASE}, approval_status`;
@@ -186,6 +187,13 @@ async function handleIdentityLookup({ data, error }, notFoundMessage, debugLabel
 async function finishLogin(user) {
     await upgradeLegacyCredentials(user);
     await _setOnlineStatus(user.id);
+    await createNotification({
+        type: 'user_login',
+        title: 'User logged in',
+        message: `${user.full_name || user.username || 'A portal user'} logged in on ${new Date().toLocaleString('en-PH')}.`,
+        actorId: user.id,
+        subjectUserId: user.id,
+    });
     return { data: sanitizeUser(user), error: null };
 }
 /* END FINISH LOGIN */
@@ -257,6 +265,14 @@ export async function registerPendingUser(payload) {
         return { data: null, error: error.message, code: 'register_failed' };
     }
 
+    await createNotification({
+        type: 'registration_pending',
+        title: 'New user registration',
+        message: `${data.full_name || data.username || 'A new user'} registered and is waiting for approval.`,
+        recipientRoles: ['admin', 'hr'],
+        subjectUserId: data.id,
+        actionUrl: '/src/pages/user/admin/staffs/'
+    });
     return { data: sanitizeUser(data), error: null };
 }
 /* END REGISTER PENDING USER */
@@ -387,6 +403,16 @@ export async function logout() {
             .update({ status: 'offline', last_seen: new Date().toISOString() })
             .eq('id', user.id);
         statusError = error;
+    }
+
+    if (user?.id) {
+        await createNotification({
+            type: 'user_logout',
+            title: 'User logged out',
+            message: `${user.full_name || user.username || 'A portal user'} logged out on ${new Date().toLocaleString('en-PH')}.`,
+            actorId: user.id,
+            subjectUserId: user.id,
+        });
     }
 
     localStorage.removeItem('dole_session');
