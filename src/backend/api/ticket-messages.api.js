@@ -253,16 +253,17 @@ async function updateParentTicketAfterMessage(payload) {
     const ticketUpdate = { last_activity: new Date().toISOString(), updated_at: new Date().toISOString() };
 
     if (payload.sender_type !== 'admin') {
-        const { data: ticket, error: fetchError } = await supabase
-            .from('tickets')
-            .select('unread_count')
-            .eq('id', payload.ticket_id)
-            .single();
+        const { count, error: countError } = await supabase
+            .from('ticket_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('ticket_id', payload.ticket_id)
+            .eq('is_read', false)
+            .neq('sender_type', 'admin');
 
-        if (fetchError) {
-            if (window.DEBUG) window.DEBUG.error('MESSAGES-API', 'Unread count lookup failed', fetchError.message);
-        } else if (ticket) {
-            ticketUpdate.unread_count = (ticket.unread_count || 0) + 1;
+        if (countError) {
+            if (window.DEBUG) window.DEBUG.error('MESSAGES-API', 'Unread count lookup failed', countError.message);
+        } else {
+            ticketUpdate.unread_count = count || 1;
         }
     }
 

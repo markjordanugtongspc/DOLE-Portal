@@ -91,7 +91,7 @@ export async function createTicket(payload) {
     const newTicket = {
         ...payload,
         status: 'Pending',
-        unread_count: 1,
+        unread_count: 0,
         last_activity: new Date().toISOString(),
     };
 

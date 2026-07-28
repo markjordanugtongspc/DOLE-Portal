@@ -56,7 +56,24 @@ const MOCK_KB_ARTICLES = {
     }
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const playNotificationPing = () => {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+    } catch { /* Audio Context restricted */ }
+};
 
 const MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024; // 10MB
 const MAX_CHAT_IMAGE_EDGE = 1200; // 1200px max edge
@@ -196,7 +213,11 @@ class TicketSupportApp {
         } catch { this.session = null; }
 
         const roleId = Number(this.session?.role_id || 0);
-        this.isAdmin = roleId === 1 || roleId === 2;
+        // Only the actual Admin role is on the support side of a ticket.
+        // Role 2 (HR) uses the Staff ticket route and must send/receive as the
+        // ticket owner; treating it as Admin prevents the real Admin badge from
+        // counting its messages.
+        this.isAdmin = roleId === 1;
         this.sessionUserId = this.session?.id || null;
         this.sessionUserName = this.session?.full_name || this.session?.username || 'Admin';
 
@@ -256,6 +277,7 @@ class TicketSupportApp {
         await this.loadTickets();
         await this.populateFilterDropdowns();
         this._subscribeTickets();
+        this._subscribeGlobalMessages();
 
         // Check URL for auto-open ticket
         const urlParams = new URLSearchParams(window.location.search);
@@ -306,15 +328,20 @@ class TicketSupportApp {
             } else {
                 this.tickets = (result.data || []).map(normalizeTicket);
 
-                // For Staff, compute unread messages based on Admin's unread messages
-                if (!this.isAdmin && this.tickets.length > 0) {
-                    const ticketIds = this.tickets.map(t => t.dbId);
-                    const { data: unreadMsgs } = await supabase
+                // Compute unread message counts per ticket for both Admin and Staff
+                if (this.tickets.length > 0) {
+                    const ticketIds = this.tickets.map(t => t.dbId).filter(Boolean);
+                    let unreadQuery = supabase
                         .from('ticket_messages')
                         .select('ticket_id')
                         .eq('is_read', false)
-                        .eq('sender_type', 'admin')
                         .in('ticket_id', ticketIds);
+
+                    unreadQuery = this.isAdmin
+                        ? unreadQuery.neq('sender_type', 'admin')
+                        : unreadQuery.eq('sender_type', 'admin');
+
+                    const { data: unreadMsgs } = await unreadQuery;
 
                     const unreadMap = {};
                     (unreadMsgs || []).forEach(msg => {
@@ -326,13 +353,6 @@ class TicketSupportApp {
                             t.unreadCount = 0;
                         } else {
                             t.unreadCount = unreadMap[t.dbId] || 0;
-                        }
-                    });
-                } else if (this.isAdmin && this.tickets.length > 0) {
-                    // Force open ticket unread count to 0 for admin to avoid race conditions
-                    this.tickets.forEach(t => {
-                        if (t.id === this.selectedTicketId && document.hasFocus()) {
-                            t.unreadCount = 0;
                         }
                     });
                 }
@@ -380,6 +400,50 @@ class TicketSupportApp {
             });
     }
     /* END _subscribeTickets */
+
+    /* START _subscribeGlobalMessages */
+    _subscribeGlobalMessages() {
+        if (this._globalMessagesChannel) {
+            supabase.removeChannel(this._globalMessagesChannel);
+        }
+
+        this._globalMessagesChannel = supabase
+            .channel('ticket-support-global-messages')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'ticket_messages',
+            }, (payload) => {
+                const rawMsg = payload.new;
+                if (!rawMsg) return;
+
+                const isIncomingForCurrentRole = this.isAdmin ? rawMsg.sender_type !== 'admin' : rawMsg.sender_type === 'admin';
+                const targetTicket = this.tickets.find(t => Number(t.dbId) === Number(rawMsg.ticket_id));
+
+                if (targetTicket) {
+                    targetTicket.rawLastActivity = rawMsg.created_at;
+                    targetTicket.lastActivity = rawMsg.created_at ? timeAgo(rawMsg.created_at) : 'Just now';
+
+                    if (isIncomingForCurrentRole) {
+                        playNotificationPing();
+                        if (targetTicket.id !== this.selectedTicketId || !document.hasFocus()) {
+                            targetTicket.unreadCount = (targetTicket.unreadCount || 0) + 1;
+                        }
+                    }
+
+                    this.renderChatSidebar();
+                    this.table.render();
+                } else {
+                    // New ticket or message for unlisted ticket — reload tickets list
+                    playNotificationPing();
+                    void this.loadTickets();
+                }
+            })
+            .subscribe((status) => {
+                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Global messages channel: ${status}`);
+            });
+    }
+    /* END _subscribeGlobalMessages */
 
     _applyTicketRealtimeUpdate(row) {
         const ticket = this.tickets.find((item) => Number(item.dbId) === Number(row.id));
@@ -1766,8 +1830,8 @@ class TicketSupportApp {
         });
 
         filtered.sort((a, b) => {
-            const dateA = new Date(a.rawCreatedAt || a.date).getTime();
-            const dateB = new Date(b.rawCreatedAt || b.date).getTime();
+            const dateA = new Date(a.rawLastActivity || a.rawCreatedAt || a.date).getTime();
+            const dateB = new Date(b.rawLastActivity || b.rawCreatedAt || b.date).getTime();
             return (this.chatSortDirection === 'oldest') ? dateA - dateB : dateB - dateA;
         });
 
@@ -1782,7 +1846,7 @@ class TicketSupportApp {
             const hasTickets = this.tickets.length > 0;
             listContainer.innerHTML = hasTickets
                 ? `<div class="rounded-lg border border-dashed border-gray-200 px-4 py-8 text-center text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">No tickets match your current search.</div>`
-                : `<div class="rounded-lg border border-dashed border-gray-200 px-4 py-8 text-center dark:border-gray-800"><p class="text-xs font-semibold text-gray-600 dark:text-gray-300">You do not have any tickets yet.</p><button id="staff-sidebar-create-ticket" type="button" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-emerald-700"><svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" /></svg>Create Ticket</button></div>`;
+                : `<div class="rounded-lg border border-dashed border-gray-200 px-4 py-8 text-center dark:border-gray-800"><p class="text-xs font-semibold text-gray-600 dark:text-gray-300">You do not have any tickets yet.</p><button id="staff-sidebar-create-ticket" type="button" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-emerald-700 cursor-pointer"><svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" /></svg>Create Ticket</button></div>`;
             document.getElementById('staff-sidebar-create-ticket')?.addEventListener('click', () => this.handleCreateTicket());
             return;
         }
@@ -1795,7 +1859,7 @@ class TicketSupportApp {
                 : 'border border-transparent hover:border-gray-200 hover:bg-gray-50 dark:hover:border-gray-800 dark:hover:bg-gray-800/60';
 
             const unreadBadge = ticket.unreadCount > 0
-                ? `<span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm">${ticket.unreadCount}</span>`
+                ? `<span class="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[10px] font-extrabold text-white bg-red-600 rounded-md shadow-sm animate-pulse">${ticket.unreadCount}</span>`
                 : '';
 
             html += `

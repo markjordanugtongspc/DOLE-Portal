@@ -386,14 +386,36 @@ const setupDynamicSidebar = () => {
 
 let sidebarRealtimeChannel = null;
 
+let lastSidebarTicketCount = null;
+
+const playSidebarPing = () => {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+    } catch { /* Audio Context restricted */ }
+};
+
 const updateSidebarTicketsBadge = async (role, userId) => {
     const badgeEl = document.getElementById('sidebar-badge-tickets');
     if (!badgeEl) return;
 
     try {
         let count = 0;
-        // Admin and HR both work the support-side ticket inbox; only their navigation labels differ.
-        if (role === 'admin' || role === 'hr') {
+        // Only Admin works the global support inbox. HR uses the Staff ticket
+        // route, so its badge is scoped to Admin replies on HR-owned tickets.
+        if (role === 'admin') {
             const { data, error } = await supabase
                 .from('ticket_messages')
                 .select('id')
@@ -417,12 +439,18 @@ const updateSidebarTicketsBadge = async (role, userId) => {
         }
 
         if (count > 0) {
-            badgeEl.textContent = count;
+            if (lastSidebarTicketCount !== null && count > lastSidebarTicketCount) {
+                playSidebarPing();
+            }
+            lastSidebarTicketCount = count;
+
+            badgeEl.textContent = count > 99 ? '99+' : String(count);
             badgeEl.classList.remove('hidden');
-            badgeEl.classList.add('inline-flex');
+            badgeEl.classList.add('inline-flex', 'animate-pulse');
         } else {
+            lastSidebarTicketCount = 0;
             badgeEl.classList.add('hidden');
-            badgeEl.classList.remove('inline-flex');
+            badgeEl.classList.remove('inline-flex', 'animate-pulse');
             badgeEl.textContent = '';
         }
     } catch (err) {
