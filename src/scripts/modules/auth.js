@@ -177,6 +177,15 @@ const setupRouteGuard = async () => {
                     window.history.replaceState({}, '', `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`);
                 }
             });
+            return;
+        }
+
+        if (params.get('auth') !== 'logout') {
+            const user = await getCurrentUser({ force: true });
+            if (user) {
+                const redirectRoute = getDashboardRoute(user);
+                window.location.replace(redirectRoute);
+            }
         }
         return;
     }
