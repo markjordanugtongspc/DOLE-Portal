@@ -34,3 +34,9 @@ src/backend/config/.env.*
 # Local-only project memory and migration dumps
 LLMS_GUIDE.md
 src/backend/migrations/*.sql
+
+# Root Vercel server-only development environment
+/.env.local
+.vercel
+.env*
+.env*.local

@@ -420,7 +420,7 @@ const initSystemsManager = () => {
         renderSystems();
     };
 
-    // ── Supabase Realtime: Systems ─────────────────────────────────────────────
+    // Supabase Realtime: Systems
     // Subscribe to systems table changes and refresh the grid live.
     const _systemsChannel = supabase
         .channel('drawer-systems-realtime')
@@ -566,7 +566,18 @@ const initSystemsManager = () => {
 
         if (card) {
             const url = card.getAttribute('data-url');
-            if (url && url.trim() !== '') window.open(url, '_blank', 'noopener,noreferrer');
+            const system = systems.find((item) => String(item.id) === String(card.dataset.systemId));
+            const title = String(system?.title || '').toLowerCase();
+            const systemKey = title.includes('spes') ? 'SPES' : title.includes('gip') ? 'GIP' : null;
+            if (url && url.trim() !== '') {
+                if (systemKey) {
+                    window.dispatchEvent(new CustomEvent('portal:system-launch', {
+                        detail: { systemKey, url, system }
+                    }));
+                } else {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+            }
         }
     });
 
@@ -677,7 +688,7 @@ const initSystemsManager = () => {
     const confirmEl = document.getElementById('confirmActionModal');
     if (confirmEl) {
         confirmModal = new Modal(confirmEl);
-        confirmEl.querySelectorAll('[data-modal-hide="confirmActionModal"]').forEach(b => {
+        confirmEl.querySelectorAll('[data-confirm-modal-close]').forEach(b => {
             b.addEventListener('click', () => confirmModal?.hide());
         });
     }

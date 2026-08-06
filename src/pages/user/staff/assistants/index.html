@@ -14,39 +14,9 @@
         }
     </script>
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@9.0.3/dist/style.min.css" rel="stylesheet">
-  <script>
-    (function () {
-      var path = window.location.pathname;
-      var match = path.match(/\/src\/pages\/user\/(admin|staff)\//);
-      if (!match) return;
 
-      var rawSession = localStorage.getItem('dole_session');
-      if (!rawSession) {
-        window.location.replace('/?auth=login_required');
-        return;
-      }
-
-      try {
-        var user = JSON.parse(rawSession);
-        var roleId = Number(user && user.role_id);
-        var requiredRole = match[1];
-        var actualRole = roleId === 1 ? 'admin' : roleId === 2 || roleId === 3 ? 'staff' : null;
-
-        if (!actualRole) {
-          localStorage.removeItem('dole_session');
-          window.location.replace('/?auth=login_required');
-          return;
-        }
-
-        if (actualRole !== requiredRole) {
-          window.location.replace(actualRole === 'admin' ? '/src/pages/user/admin/dashboard/' : '/src/pages/user/staff/dashboard/');
-        }
-      } catch (error) {
-        localStorage.removeItem('dole_session');
-        window.location.replace('/?auth=login_required');
-      }
-    })();
-  </script>
+    <style>html.portal-auth-checking body { visibility: hidden; }</style>
+    <script type="module" src="/src/scripts/auth-guard.js"></script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
@@ -249,13 +219,13 @@
                         <!-- Password -->
                         <div class="col-span-2 sm:col-span-1" id="modal-password-sec">
                             <label for="password" class="block mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">Password <span class="text-red-500" id="pwd-required-star">*</span></label>
-                            <input type="password" id="password" name="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
+                            <input type="password" id="password" name="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
                         </div>
 
                         <!-- Confirm Password -->
                         <div class="col-span-2 sm:col-span-1" id="modal-confirm-password-sec">
                             <label for="confirm-password" class="block mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">Confirm Password <span class="text-red-500" id="conf-pwd-required-star">*</span></label>
-                            <input type="password" id="confirm-password" name="confirm-password" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
+                            <input type="password" id="confirm-password" name="confirm-password" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
                         </div>
                     </div>
                     <div class="flex justify-end pt-2 gap-2">

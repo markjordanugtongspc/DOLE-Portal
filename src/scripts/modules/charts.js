@@ -1,6 +1,11 @@
 import ApexCharts from 'apexcharts';
 import { fetchTickets } from '@/backend/api/tickets.api.js';
 
+const getTailwindColor = (name, fallback) => {
+    const value = getComputedStyle(document.documentElement).getPropertyValue('--color-' + name).trim();
+    return value || fallback;
+};
+
 /* START TICKET REASONS CHART CONTROLLER */
 class TicketReasonsChartController {
     constructor() {
@@ -27,15 +32,15 @@ class TicketReasonsChartController {
     getThemePalette() {
         const isDark = this.isDarkMode();
         return {
-            labelColor: isDark ? '#d1d5db' : '#4b5563',
-            gridColor: isDark ? '#374151' : '#e5e7eb',
+            labelColor: getTailwindColor(isDark ? 'gray-300' : 'gray-600', isDark ? '#d1d5db' : '#4b5563'),
+            gridColor: getTailwindColor(isDark ? 'gray-700' : 'gray-200', isDark ? '#374151' : '#e5e7eb'),
             tooltipTheme: isDark ? 'dark' : 'light',
             colors: isDark
-                ? ['#60a5fa', '#34d399', '#fbbf24', '#fb7185', '#a78bfa']
-                : ['#1d4ed8', '#059669', '#d97706', '#e11d48', '#7c3aed'],
+                ? ['blue-400', 'emerald-400', 'amber-400', 'rose-400', 'violet-400'].map((color) => getTailwindColor(color, '#9ca3af'))
+                : ['blue-700', 'emerald-600', 'amber-600', 'rose-600', 'violet-600'].map((color) => getTailwindColor(color, '#6b7280')),
             gradientToColors: isDark
-                ? ['#1e40af', '#047857', '#b45309', '#be123c', '#6d28d9']
-                : ['#93c5fd', '#6ee7b7', '#fde68a', '#fda4af', '#c4b5fd']
+                ? ['blue-700', 'emerald-700', 'amber-700', 'rose-700', 'violet-700'].map((color) => getTailwindColor(color, '#4b5563'))
+                : ['blue-300', 'emerald-300', 'amber-300', 'rose-300', 'violet-300'].map((color) => getTailwindColor(color, '#d1d5db'))
         };
     }
 
@@ -253,8 +258,8 @@ const initDashboardChartsAndPopovers = () => {
         if (window.DEBUG) {
             window.DEBUG.log('CHARTS', 'Initializing dashboard area chart...');
         }
-        const brandColor = "#1A56DB"; // Tailwind blue-700
-        const brandSecondaryColor = "#0E9F6E"; // Tailwind emerald-600
+        const brandColor = getTailwindColor('blue-700', '#1d4ed8');
+        const brandSecondaryColor = getTailwindColor('emerald-600', '#059669');
 
         const areaOptions = {
             xaxis: {
@@ -323,7 +328,7 @@ const initDashboardChartsAndPopovers = () => {
             grid: {
                 show: true,
                 strokeDashArray: 4,
-                borderColor: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb',
+                borderColor: getTailwindColor(document.documentElement.classList.contains('dark') ? 'gray-700' : 'gray-200', '#e5e7eb'),
                 padding: {
                     left: 15,
                     right: 35,

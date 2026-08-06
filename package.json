@@ -1,10 +1,12 @@
 {
   "name": "portal",
-  "version": "3.7.6",
+  "version": "4.3.6",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/local-dev-server.js",
+    "dev:vite": "vite",
+    "dev:vercel": "npx --yes vercel@latest dev",
     "build": "npm version patch --no-git-tag-version && vite build",
     "preview": "vite preview"
   },

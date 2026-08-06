@@ -35,82 +35,8 @@ export async function hashCredential(value) {
 }
 /* END HASH CREDENTIAL */
 
-/* START FIND USER BY IDENTITY - Fetches the user row for a login identifier */
-async function findUserByIdentity(field, value) {
-    let result = await supabase
-        .from('users')
-        .select(`${PUBLIC_USER_SELECT}, password, pin`)
-        .eq(field, value)
-        .is('archived_at', null)
-        .maybeSingle();
 
-    if (result.error && /approval_status/i.test(result.error.message || '') && /column/i.test(result.error.message || '')) {
-        result = await supabase
-            .from('users')
-            .select(`${PUBLIC_USER_SELECT_BASE}, password, pin`)
-            .eq(field, value)
-            .is('archived_at', null)
-            .maybeSingle();
-    }
 
-    return result;
-}
-/* END FIND USER BY IDENTITY */
-
-/* START VERIFY CREDENTIAL - Accepts hashed credentials and upgrades matching legacy plaintext */
-async function verifyCredential(user, credentialField, rawCredential) {
-    const storedCredential = user?.[credentialField] || '';
-    const submittedCredential = String(rawCredential || '');
-
-    if (isHashedCredential(submittedCredential)) {
-        return storedCredential === submittedCredential;
-    }
-
-    const hashedCredential = await hashCredential(submittedCredential);
-
-    if (storedCredential === hashedCredential) return true;
-
-    if (storedCredential && storedCredential === submittedCredential) {
-        const { error } = await supabase
-            .from('users')
-            .update({ [credentialField]: hashedCredential, updated_at: new Date().toISOString() })
-            .eq('id', user.id);
-
-        if (error) {
-            if (window.DEBUG) window.DEBUG.error('AUTH-API', `Failed to hash ${credentialField}`, error.message);
-            return false;
-        }
-        user[credentialField] = hashedCredential;
-        return true;
-    }
-
-    return false;
-}
-/* END VERIFY CREDENTIAL */
-
-/* START UPGRADE LEGACY CREDENTIALS - Converts any remaining plaintext password/PIN after login */
-async function upgradeLegacyCredentials(user) {
-    const updates = {};
-
-    for (const field of ['password', 'pin']) {
-        const storedCredential = user?.[field];
-        if (storedCredential && !storedCredential.startsWith(HASH_PREFIX)) {
-            updates[field] = await hashCredential(storedCredential);
-        }
-    }
-
-    if (Object.keys(updates).length === 0) return;
-
-    const { error } = await supabase
-        .from('users')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-
-    if (error && window.DEBUG) {
-        window.DEBUG.error('AUTH-API', 'Failed to upgrade legacy credentials', error.message);
-    }
-}
-/* END UPGRADE LEGACY CREDENTIALS */
 
 /* START SANITIZE USER - Removes credential columns before returning session data */
 function sanitizeUser(user) {
@@ -120,83 +46,10 @@ function sanitizeUser(user) {
 }
 /* END SANITIZE USER */
 
-/* START GET APPROVAL STATUS - Normalizes the approval column when present */
-function getApprovalStatus(user) {
-    return String(user?.approval_status || APPROVAL_APPROVED).toUpperCase();
-}
-/* END GET APPROVAL STATUS */
 
-/* START GET APPROVAL ERROR - Converts approval states into auth blocking messages */
-function getApprovalError(user) {
-    const approvalStatus = getApprovalStatus(user);
 
-    if (approvalStatus === APPROVAL_PENDING) {
-        return {
-            data: null,
-            error: 'Your registration is still pending approval.',
-            code: 'approval_pending',
-            field: 'identity',
-            status: APPROVAL_PENDING
-        };
-    }
 
-    if (approvalStatus === APPROVAL_DECLINED) {
-        return {
-            data: null,
-            error: 'Your registration request was declined. Please contact your HR office or portal administrator.',
-            code: 'approval_declined',
-            field: 'identity',
-            status: APPROVAL_DECLINED
-        };
-    }
 
-    return null;
-}
-/* END GET APPROVAL ERROR */
-
-/* START DETECT AUTH VISIBILITY ISSUE - Checks whether anon can see required auth lookup data */
-async function detectAuthVisibilityIssue() {
-    const { data, error } = await supabase
-        .from('roles')
-        .select('id')
-        .limit(1);
-
-    return Boolean(error || !data || data.length === 0);
-}
-/* END DETECT AUTH VISIBILITY ISSUE */
-
-/* START HANDLE IDENTITY LOOKUP - Converts Supabase lookup result into auth-friendly errors */
-async function handleIdentityLookup({ data, error }, notFoundMessage, debugLabel) {
-    if (error) {
-        if (window.DEBUG) window.DEBUG.error('AUTH-API', debugLabel, error.message);
-        return { data: null, error: AUTH_CONFIG_ERROR, code: 'auth_query_failed', field: 'credential' };
-    }
-
-    if (!data) {
-        if (await detectAuthVisibilityIssue()) {
-            return { data: null, error: AUTH_CONFIG_ERROR, code: 'auth_visibility_failed', field: 'credential' };
-        }
-        return { data: null, error: notFoundMessage, code: 'identity_not_found', field: 'identity' };
-    }
-
-    return { data, error: null };
-}
-/* END HANDLE IDENTITY LOOKUP */
-
-/* START FINISH LOGIN - Upgrades credentials, marks user online, and returns safe session data */
-async function finishLogin(user) {
-    await upgradeLegacyCredentials(user);
-    await _setOnlineStatus(user.id);
-    await createNotification({
-        type: 'user_login',
-        title: 'User logged in',
-        message: `${user.full_name || user.username || 'A portal user'} logged in on ${new Date().toLocaleString('en-PH')}.`,
-        actorId: user.id,
-        subjectUserId: user.id,
-    });
-    return { data: sanitizeUser(user), error: null };
-}
-/* END FINISH LOGIN */
 
 /* START FIND EXISTING REGISTRATION FIELD - Checks duplicate identities before public registration */
 async function findExistingRegistrationField(field, value) {
@@ -277,155 +130,60 @@ export async function registerPendingUser(payload) {
 }
 /* END REGISTER PENDING USER */
 
-/**
- * Login with Username and Password.
- * @param {string} username
- * @param {string} password
- * @returns {{ data: object|null, error: string|null, code?: string, field?: string }}
- */
-export async function loginWithUsername(username, password) {
-    if (window.DEBUG) window.DEBUG.log('AUTH-API', `Login attempt: username="${username}"`);
+/* START BACKEND COOKIE AUTH CLIENT */
+// Clear the legacy browser session on the login page too.
+try { localStorage.removeItem('dole_session'); } catch {}
+let currentUserCache = window.__PORTAL_SESSION || null;
 
-    const lookup = await handleIdentityLookup(
-        await findUserByIdentity('username', username),
-        'Username was not found.',
-        'Username lookup failed'
-    );
-    if (lookup.error) return lookup;
-
-    if (!(await verifyCredential(lookup.data, 'password', password))) {
-        return { data: null, error: 'Incorrect password.', code: 'credential_invalid', field: 'credential' };
-    }
-
-    const approvalError = getApprovalError(lookup.data);
-    if (approvalError) return approvalError;
-
-    if (window.DEBUG) window.DEBUG.success('AUTH-API', `Logged in: ${lookup.data.username}`);
-    return finishLogin(lookup.data);
-}
-
-/**
- * Login with Email and Password.
- * @param {string} email
- * @param {string} password
- * @returns {{ data: object|null, error: string|null, code?: string, field?: string }}
- */
-export async function loginWithEmail(email, password) {
-    if (window.DEBUG) window.DEBUG.log('AUTH-API', `Login attempt: email="${email}"`);
-
-    const lookup = await handleIdentityLookup(
-        await findUserByIdentity('email', email),
-        'Email address was not found.',
-        'Email lookup failed'
-    );
-    if (lookup.error) return lookup;
-
-    if (!(await verifyCredential(lookup.data, 'password', password))) {
-        return { data: null, error: 'Incorrect password.', code: 'credential_invalid', field: 'credential' };
-    }
-
-    const approvalError = getApprovalError(lookup.data);
-    if (approvalError) return approvalError;
-
-    return finishLogin(lookup.data);
-}
-
-/**
- * Login with Phone Number and 4-digit PIN.
- * @param {string} phone - PH format: starts with 9, 10 digits
- * @param {string} pin - 4-digit PIN
- * @returns {{ data: object|null, error: string|null, code?: string, field?: string }}
- */
-export async function loginWithPhone(phone, pin) {
-    if (window.DEBUG) window.DEBUG.log('AUTH-API', `Login attempt: phone="+63${phone}"`);
-
-    const normalizedPhone = phone.startsWith('+63') ? phone : `+63${phone}`;
-    const lookup = await handleIdentityLookup(
-        await findUserByIdentity('phone', normalizedPhone),
-        'Phone number was not found.',
-        'Phone lookup failed'
-    );
-    if (lookup.error) return lookup;
-
-    if (!(await verifyCredential(lookup.data, 'pin', pin))) {
-        return { data: null, error: 'Incorrect PIN.', code: 'credential_invalid', field: 'credential' };
-    }
-
-    const approvalError = getApprovalError(lookup.data);
-    if (approvalError) return approvalError;
-
-    return finishLogin(lookup.data);
-}
-
-/**
- * Get the current session user from localStorage.
- * @returns {object|null}
- */
-export function getCurrentUser() {
-    const raw = localStorage.getItem('dole_session');
-    if (!raw) return null;
+const portalApiRequest = async (url, options = {}) => {
     try {
-        return JSON.parse(raw);
-    } catch {
-        return null;
-    }
-}
-
-/**
- * Save the user session to localStorage after successful login.
- * @param {object} user
- */
-export function saveSession(user) {
-    localStorage.setItem('dole_session', JSON.stringify({
-        id: user.id,
-        role_id: user.role_id,
-        office_id: user.office_id,
-        full_name: user.full_name,
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        status: 'online',
-        loggedInAt: new Date().toISOString()
-    }));
-    if (window.DEBUG) window.DEBUG.success('AUTH-API', 'Session saved to localStorage.');
-}
-
-/**
- * Clear the session on logout and set user status to offline.
- */
-export async function logout() {
-    const user = getCurrentUser();
-    let statusError = null;
-
-    if (user?.id) {
-        const { error } = await supabase
-            .from('users')
-            .update({ status: 'offline', last_seen: new Date().toISOString() })
-            .eq('id', user.id);
-        statusError = error;
-    }
-
-    if (user?.id) {
-        await createNotification({
-            type: 'user_logout',
-            title: 'User logged out',
-            message: `${user.full_name || user.username || 'A portal user'} logged out on ${new Date().toLocaleString('en-PH')}.`,
-            actorId: user.id,
-            subjectUserId: user.id,
+        const response = await fetch(url, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            ...options
         });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) return { data: null, error: payload.error || 'The Portal authentication request failed.', code: payload.code, field: payload.field };
+        return { data: payload.data ?? payload, error: null };
+    } catch {
+        return { data: null, error: 'Unable to reach the Portal authentication service.', code: 'auth_backend_unavailable', field: 'credential' };
     }
+};
 
-    localStorage.removeItem('dole_session');
-    if (statusError && window.DEBUG) {
-        window.DEBUG.error('AUTH-API', 'Failed to set user offline during logout', statusError.message);
-    }
-    if (window.DEBUG) window.DEBUG.log('AUTH-API', 'Session cleared. User logged out.');
-    return { error: statusError?.message || null };
+const loginWithPortalBackend = async (mode, identity, credential, remember = false) => {
+    const result = await portalApiRequest('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ mode, identity, credential, remember })
+    });
+    if (!result.error) saveSession(result.data);
+    return result;
+};
+
+export const loginWithUsername = (username, password, remember = false) => loginWithPortalBackend('username', username, password, remember);
+export const loginWithEmail = (email, password, remember = false) => loginWithPortalBackend('email', email, password, remember);
+export const loginWithPhone = (phone, pin, remember = false) => loginWithPortalBackend('phone', phone, pin, remember);
+
+export const getCachedCurrentUser = () => currentUserCache;
+
+export async function getCurrentUser({ force = false } = {}) {
+    if (!force && currentUserCache) return currentUserCache;
+    const result = await portalApiRequest('/api/auth/me');
+    currentUserCache = result.error ? null : result.data;
+    if (currentUserCache) window.__PORTAL_SESSION = currentUserCache;
+    else delete window.__PORTAL_SESSION;
+    return currentUserCache;
 }
 
-async function _setOnlineStatus(userId) {
-    await supabase
-        .from('users')
-        .update({ status: 'online', last_seen: new Date().toISOString() })
-        .eq('id', userId);
+/* Kept for login-form compatibility; this now stores only verified in-memory display state. */
+export function saveSession(user) {
+    currentUserCache = user || null;
+    if (currentUserCache) window.__PORTAL_SESSION = currentUserCache;
+    else delete window.__PORTAL_SESSION;
 }
+
+export async function logout() {
+    const result = await portalApiRequest('/api/auth/logout', { method: 'POST' });
+    saveSession(null);
+    return { error: result.error };
+}
+/* END BACKEND COOKIE AUTH CLIENT */

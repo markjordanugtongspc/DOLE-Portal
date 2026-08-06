@@ -1,5 +1,5 @@
 /* START MODERN DEBUGGER SYSTEM */
-const ENABLE_DEBUG = true; // Global Toggle: set to true to enable logging, false to disable
+const ENABLE_DEBUG = false; // Global Toggle: set to true to enable logging, false to disable
 
 window.DEBUG = {
     log: (module, message, data = '') => {
@@ -95,6 +95,7 @@ const importModule = async (label, loader) => {
 const bootAppModules = async () => {
     await importModule('Supabase API module', () => import('@/backend/api/supabase.js'));
     await importModule('Auth module', () => import('@/scripts/modules/auth.js'));
+    await window.__PORTAL_SESSION_READY;
     if (window.__AUTH_ROUTE_BLOCKED) {
         window.DEBUG?.warn('IMPORT', 'Protected page boot halted by auth route guard.');
         return;
@@ -102,6 +103,8 @@ const bootAppModules = async () => {
     await importModule('Theme toggler module', () => import('@/scripts/modules/theme-toggler.js'));
     await importModule('Slider module', () => import('@/scripts/modules/slider.js'));
     await importModule('Drawer/systems module', () => import('@/scripts/modules/drawer.js'));
+    await importModule('Staff assignment drawer module', () => import('@/scripts/modules/assignment-drawer.js'));
+    await importModule('External systems controller', () => import('@/scripts/modules/externals.js'));
     await importModule('Sidebar module', () => import('@/scripts/modules/sidebar.js'));
     await importModule('Charts module', () => import('@/scripts/modules/charts.js'));
     await importModule('Dashboard module', () => import('@/scripts/modules/dashboard.js'));

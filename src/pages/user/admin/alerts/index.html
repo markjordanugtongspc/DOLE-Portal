@@ -7,15 +7,10 @@
   <title>Alerts - DOLE Portal</title>
   <script>
     if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-    (function () {
-      var raw = localStorage.getItem('dole_session');
-      if (!raw) { window.location.replace('/?auth=login_required'); return; }
-      try {
-        var roleId = Number(JSON.parse(raw).role_id);
-        if (roleId !== 1 && roleId !== 2) window.location.replace('/src/pages/user/staff/dashboard/');
-      } catch (error) { localStorage.removeItem('dole_session'); window.location.replace('/?auth=login_required'); }
-    })();
+
   </script>
+    <style>html.portal-auth-checking body { visibility: hidden; }</style>
+    <script type="module" src="/src/scripts/auth-guard.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-white">
   <div id="sidebar" data-role="alerts" data-active="alerts"></div>

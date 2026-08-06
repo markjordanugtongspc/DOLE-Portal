@@ -542,7 +542,17 @@ export const initStaffsManage = () => {
         await load();
     });
     q('bulk-archived')?.addEventListener('click', async (e) => { e.preventDefault(); const ids = selectedUserIds(); if (!ids.length || !(await showFlowbiteConfirm({ title: `Archive ${ids.length} selected staff account(s)?`, message: 'Are you sure you want to archive the selected staff accounts?', confirmText: 'Archive Accounts', tone: 'danger' }))) return; for (const id of ids) await archiveUser(id); await load(); });
-    editEl?.querySelectorAll('[data-modal-hide="editUserModal"]').forEach(b => b.addEventListener('click', () => editModal?.hide()));
+    /* START STAFF ASSIGNMENT DRAWER TRIGGER */
+    window.addEventListener('portal:request-assignment', () => {
+        const ids = selectedUserIds();
+        if (ids.length !== 1) {
+            showToast('warning', 'Select exactly one staff account to assign.');
+            return;
+        }
+        const user = users.find((item) => Number(item.id) === Number(ids[0]));
+        if (user) window.dispatchEvent(new CustomEvent('portal:assign-user', { detail: { user } }));
+    });
+    /* END STAFF ASSIGNMENT DRAWER TRIGGER */    editEl?.querySelectorAll('[data-modal-hide="editUserModal"]').forEach(b => b.addEventListener('click', () => editModal?.hide()));
     viewEl?.querySelectorAll('[data-modal-hide="viewUserModal"]').forEach(b => b.addEventListener('click', () => viewModal?.hide()));
 
     const initDropdowns = () => {
@@ -567,7 +577,7 @@ export const initStaffsManage = () => {
     initDropdowns();
     load();
 
-    // ── Supabase Realtime ─────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Supabase Realtime Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // Subscribe to users table changes and refresh the table live.
     const channel = supabase
         .channel('staffs-realtime')

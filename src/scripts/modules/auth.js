@@ -71,10 +71,8 @@ const applyRememberedLogin = () => {
         const rememberInput = document.getElementById(`${prefix}-remember`);
 
         if (identityInput) identityInput.value = rememberedLogin.identifier;
-        if (credentialInput) {
-            credentialInput.value = rememberedLogin.credential;
-            if (credentialInput.id.endsWith('-password')) credentialInput.type = 'password';
-        }
+        // Passwords and PINs are never restored from browser storage.
+        if (credentialInput?.id.endsWith('-password')) credentialInput.type = 'password';
         if (rememberInput) rememberInput.checked = true;
     });
 };
@@ -165,7 +163,7 @@ const blockProtectedPageRender = () => {
 /* END BLOCK PROTECTED PAGE RENDER */
 
 /* START SETUP ROUTE GUARD - Blocks anonymous users and wrong roles from protected pages */
-const setupRouteGuard = () => {
+const setupRouteGuard = async () => {
     if (!isProtectedPage()) {
         const params = new URLSearchParams(window.location.search);
         if (params.get('auth') === 'login_required') {
@@ -183,7 +181,7 @@ const setupRouteGuard = () => {
         return;
     }
 
-    const user = getCurrentUser();
+    const user = await getCurrentUser({ force: true });
     if (!user) {
         window.__AUTH_ROUTE_BLOCKED = true;
         document.documentElement.classList.add('overflow-hidden');
@@ -724,12 +722,12 @@ const setupLoginForms = () => {
 
             setLoading(form, true);
             try {
+                const remember = Boolean(document.getElementById(`${prefix}-remember`)?.checked);
                 const result = mode === 'email'
-                    ? await loginWithEmail(identityValue, credentialValue)
+                    ? await loginWithEmail(identityValue, credentialValue, remember)
                     : mode === 'phone'
-                        ? await loginWithPhone(identityValue, credentialValue)
-                        : await loginWithUsername(identityValue, credentialValue);
-
+                        ? await loginWithPhone(identityValue, credentialValue, remember)
+                        : await loginWithUsername(identityValue, credentialValue, remember);
                 if (result.error) {
                     if (result.code === 'approval_pending') {
                         showAuthStatusModal({ title: 'Account pending approval', message: result.error, tone: 'warning' });
@@ -745,11 +743,7 @@ const setupLoginForms = () => {
 
                 const rememberInput = document.getElementById(`${prefix}-remember`);
                 if (rememberInput?.checked) {
-                    setRememberedLogin({
-                        mode,
-                        identifier: identityValue,
-                        credential: credentialValue
-                    });
+                    setRememberedLogin({ mode, identifier: identityValue });
                 } else {
                     clearRememberedLogin();
                 }
@@ -774,7 +768,8 @@ const setupLoginForms = () => {
 const initializeAuth = async () => {
     renderRegistrationShell();
     setupDesktopPanelMotion();
-    setupRouteGuard();
+    await setupRouteGuard();
+    if (window.__AUTH_ROUTE_BLOCKED) return;
     setupPasswordToggle();
     setupAuthMethodSwitcher();
     applyRememberedLogin();

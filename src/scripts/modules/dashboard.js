@@ -5,6 +5,7 @@ import { DashboardCarousel } from './slider.js';
 import { fetchUserDashboardCounts, fetchUsers } from '@/backend/api/users.api.js';
 import { fetchSystems } from '@/backend/api/systems.api.js';
 import { fetchTickets } from '@/backend/api/tickets.api.js';
+import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -623,12 +624,7 @@ class StaffDashboardController {
     }
 
     getCurrentUserId() {
-        try {
-            const session = JSON.parse(localStorage.getItem('dole_session') || '{}');
-            return session.id || 'default';
-        } catch {
-            return 'default';
-        }
+        return getCachedCurrentUser()?.id || 'default';
     }
 
     getSavedSystemOrder(userId) {

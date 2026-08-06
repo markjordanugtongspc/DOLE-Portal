@@ -7,6 +7,7 @@ import path from 'node:path'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ─── Plugin: auto-increment patch version on each build ───────────────────────
+
 function autoVersion() {
   return {
     name: 'auto-version',
@@ -102,6 +103,7 @@ function getHtmlEntries() {
   findHtml(srcDir)
   return entries
 }
+
 
 export default defineConfig({
   plugins: [

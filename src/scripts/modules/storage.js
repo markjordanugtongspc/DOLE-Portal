@@ -42,11 +42,10 @@ export const preferencesStorage = {
 };
 
 export const authStorage = {
-    setRememberedLogin({ mode, identifier, credential }) {
+    setRememberedLogin({ mode, identifier }) {
         writeValue(REMEMBERED_LOGIN_KEY, JSON.stringify({
             mode: mode || 'username',
-            identifier: identifier || '',
-            credential: credential || ''
+            identifier: identifier || ''
         }));
     },
 
@@ -54,13 +53,17 @@ export const authStorage = {
         try {
             const raw = readValue(REMEMBERED_LOGIN_KEY);
             if (!raw) return null;
-
             const rememberedLogin = JSON.parse(raw);
-            if (!rememberedLogin?.identifier || !rememberedLogin?.credential) {
+            if (!rememberedLogin?.identifier) {
                 removeValue(REMEMBERED_LOGIN_KEY);
                 return null;
             }
-
+            // Remove credentials left by the previous insecure Remember Me implementation.
+            if (Object.hasOwn(rememberedLogin, 'credential')) {
+                const safeLogin = { mode: rememberedLogin.mode || 'username', identifier: rememberedLogin.identifier };
+                writeValue(REMEMBERED_LOGIN_KEY, JSON.stringify(safeLogin));
+                return safeLogin;
+            }
             return rememberedLogin;
         } catch (error) {
             removeValue(REMEMBERED_LOGIN_KEY);

@@ -2,7 +2,7 @@ import sidebarTemplate from '@/components/sidebar.html?raw';
 import { supabase } from '@/backend/api/supabase.js';
 import { countUnreadNotifications } from '@/backend/api/notifications.api.js';
 import pkg from '../../../package.json';
-import { logout } from '@/backend/api/auth.api.js';
+import { getCachedCurrentUser, logout } from '@/backend/api/auth.api.js';
 import { Drawer } from 'flowbite';
 
 let sidebarDrawerInstance = null;
@@ -70,7 +70,7 @@ const setupSidebarLogout = () => {
             await logout();
         } catch (error) {
             if (window.DEBUG) window.DEBUG.error('SIDEBAR', 'Logout failed', error);
-            localStorage.removeItem('dole_session');
+            // The HttpOnly session is cleared by the backend logout endpoint.
         } finally {
             window.location.replace('/');
         }
@@ -96,7 +96,7 @@ const setupDynamicSidebar = () => {
     }
 
     const requestedRole = sidebarEl.getAttribute('data-role') || 'staff';
-    const sessionUser = (() => { try { return JSON.parse(localStorage.getItem('dole_session') || 'null'); } catch { return null; } })();
+    const sessionUser = getCachedCurrentUser();
     const role = Number(sessionUser?.role_id) === 2 ? 'hr' : requestedRole === 'alerts' ? 'admin' : requestedRole;
     const activeItem = sidebarEl.getAttribute('data-active') || 'dashboard';
 
@@ -356,8 +356,7 @@ const setupDynamicSidebar = () => {
     }
 
     // Populate user profile info dynamically from session
-    const rawSession = localStorage.getItem('dole_session');
-    const user = rawSession ? JSON.parse(rawSession) : null;
+    const user = getCachedCurrentUser();
     if (user) {
         const userNameEl = document.getElementById('sidebar-user-name');
         const userSubtitleEl = document.getElementById('sidebar-user-subtitle');

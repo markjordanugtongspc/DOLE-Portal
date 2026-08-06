@@ -1,5 +1,6 @@
 import { Modal } from 'flowbite';
 import { fetchGipsByStaff, createGip, updateGip, archiveGip } from '@/backend/api/gips.api.js';
+import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
 
 /* START STAFF ASSISTANTS MANAGEMENT CONTROLLER */
 export const initAssistantsManage = () => {
@@ -300,7 +301,7 @@ export const initAssistantsManage = () => {
         resetForm();
         if (modalTitle) modalTitle.textContent = 'Add Assistant';
         if (submitBtn) submitBtn.textContent = 'Add Assistant';
-        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = '••••••••'; }
+        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'; }
         if (confirmPasswordInput) confirmPasswordInput.required = true;
         if (pwdRequiredStar) pwdRequiredStar.classList.remove('hidden');
         if (confPwdRequiredStar) confPwdRequiredStar.classList.remove('hidden');
@@ -348,14 +349,7 @@ export const initAssistantsManage = () => {
         });
     }
 
-    const getUserId = () => {
-        try {
-            const session = JSON.parse(localStorage.getItem('dole_session') || '{}');
-            return session.id;
-        } catch {
-            return null;
-        }
-    };
+    const getUserId = () => getCachedCurrentUser()?.id || null;
 
     const load = async () => {
         const staffId = getUserId();
