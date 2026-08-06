@@ -1,6 +1,6 @@
 {
   "name": "portal",
-  "version": "4.4.4",
+  "version": "4.5.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,10 +8,11 @@
     "dev:vite": "vite",
     "dev:vercel": "npx --yes vercel@latest dev",
     "build": "npm version patch --no-git-tag-version && vite build",
-    "preview": "vite preview"
+    "preview": "node scripts/local-preview-server.js"
   },
   "devDependencies": {
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "vite-plugin-pwa": "^1.3.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.3",

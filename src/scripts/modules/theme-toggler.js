@@ -5,7 +5,7 @@ const getPreferredTheme = () => {
     return localStorage.getItem('color-theme');
   }
 
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'light';
 };
 
 const syncThemeButtons = (isCurrentlyDark = getPreferredTheme() === 'dark') => {

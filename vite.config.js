@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -83,7 +84,7 @@ function copyStaticAssets() {
 // ─── Helper: Auto-discover all HTML files ───────────────────────────────────────
 function getHtmlEntries() {
   const entries = { main: path.resolve(__dirname, 'index.html') }
-  const srcDir = path.resolve(__dirname, 'src')
+  const srcPagesDir = path.resolve(__dirname, 'src/pages')
 
   function findHtml(dir) {
     if (!fs.existsSync(dir)) return
@@ -100,7 +101,7 @@ function getHtmlEntries() {
     }
   }
 
-  findHtml(srcDir)
+  findHtml(srcPagesDir)
   return entries
 }
 
@@ -110,6 +111,41 @@ export default defineConfig({
     tailwindcss(),
     autoVersion(),
     copyStaticAssets(),
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'dole-logo.ico', 'icons.svg'],
+      manifest: {
+        name: 'DOLE ILIGAN Portal',
+        short_name: 'DOLE Portal',
+        description: 'DOLE Region X Implementors Login Portal & Administrative System',
+        theme_color: '#1d4ed8',
+        background_color: '#030712',
+        display: 'standalone',
+        orientation: 'any',
+        start_url: '/',
+        icons: [
+          {
+            src: '/src/assets/logos/dole_logo.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/src/assets/logos/dole_logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 7 * 1024 * 1024,
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true
+      }
+    })
   ],
   resolve: {
     alias: {
@@ -120,6 +156,10 @@ export default defineConfig({
   envDir: path.resolve(__dirname, 'src/backend/config'),
   // public/ is copied as-is to dist/ root by Vite automatically (favicon, icons.svg, etc.)
   publicDir: 'public',
+  preview: {
+    port: 4180,
+    strictPort: true
+  },
   build: {
     rollupOptions: {
       input: getHtmlEntries()
