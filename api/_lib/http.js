@@ -20,16 +20,27 @@ export const getRequestBody = (req) => {
 export const requireSameOrigin = (req, res) => {
     const origin = String(req.headers.origin || '').replace(/\/$/, '');
     if (!origin) return true;
-    const configuredOrigin = String(process.env.PORTAL_APP_ORIGIN || '').replace(/\/$/, '');
-    if (!configuredOrigin) {
+
+    const configuredOrigin = String(
+        process.env.PORTAL_APP_ORIGIN ||
+        (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+    ).replace(/\/$/, '');
+
+    const requestHost = String(req.headers['x-forwarded-host'] || req.headers.host || '').trim();
+    const requestProto = String(req.headers['x-forwarded-proto'] || 'https').trim();
+    const requestOrigin = requestHost ? `${requestProto}://${requestHost}`.replace(/\/$/, '') : '';
+
+    if (configuredOrigin && origin === configuredOrigin) return true;
+    if (requestOrigin && origin === requestOrigin) return true;
+
+    if (!configuredOrigin && !requestOrigin) {
         sendJson(res, 500, { error: 'Portal origin is not configured.' });
         return false;
     }
-    if (origin !== configuredOrigin) {
-        sendJson(res, 403, { error: 'Cross-origin request rejected.' });
-        return false;
-    }
-    return true;
+
+    sendJson(res, 403, { error: 'Cross-origin request rejected.' });
+    return false;
 };
 
 export const parseCookies = (req) => Object.fromEntries(
