@@ -550,8 +550,12 @@ class StaffDashboardController {
     }
 
     bindCardClick(card, sysId) {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
             const url = card.getAttribute('data-url');
+            const system = this.systems.find((item) => String(item.id) === String(sysId));
+            const title = String(system?.title || '').toLowerCase();
+            const systemKey = title.includes('spes') ? 'SPES' : title.includes('gip') ? 'GIP' : null;
+            const openInNewTab = Boolean(e.ctrlKey || e.metaKey || e.button === 1);
             
             // Increment click counter
             if (sysId) {
@@ -566,7 +570,15 @@ class StaffDashboardController {
 
             // Redirect
             if (url && url.trim() !== '') {
-                window.open(url, '_blank', 'noopener,noreferrer');
+                if (systemKey) {
+                    window.dispatchEvent(new CustomEvent('portal:system-launch', {
+                        detail: { systemKey, url, system, openInNewTab }
+                    }));
+                } else if (openInNewTab) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                    window.location.href = url;
+                }
             }
         });
     }

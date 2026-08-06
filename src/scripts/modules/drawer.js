@@ -569,13 +569,17 @@ const initSystemsManager = () => {
             const system = systems.find((item) => String(item.id) === String(card.dataset.systemId));
             const title = String(system?.title || '').toLowerCase();
             const systemKey = title.includes('spes') ? 'SPES' : title.includes('gip') ? 'GIP' : null;
+            const openInNewTab = Boolean(event.ctrlKey || event.metaKey || event.button === 1);
+
             if (url && url.trim() !== '') {
                 if (systemKey) {
                     window.dispatchEvent(new CustomEvent('portal:system-launch', {
-                        detail: { systemKey, url, system }
+                        detail: { systemKey, url, system, openInNewTab }
                     }));
-                } else {
+                } else if (openInNewTab) {
                     window.open(url, '_blank', 'noopener,noreferrer');
+                } else {
+                    window.location.href = url;
                 }
             }
         }

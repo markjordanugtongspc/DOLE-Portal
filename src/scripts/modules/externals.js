@@ -37,31 +37,46 @@ export class ExternalsController {
         return requestSystemSsoLaunch(systemKey);
     }
 
-    async launchSystem({ systemKey, url } = {}) {
+    async launchSystem({ systemKey, url, openInNewTab = false } = {}) {
         if (!systemKey) return;
 
-        // Open a blank tab synchronously to prevent popup blockers
-        const newTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+        let newTab = null;
+        if (openInNewTab) {
+            newTab = window.open('about:blank', '_blank', 'noopener,noreferrer');
+        }
 
         const result = await this.generateAuthToken(systemKey);
         if (!result.error && result.data?.redirect_url) {
-            if (newTab) {
-                newTab.location.href = result.data.redirect_url;
+            const targetUrl = result.data.redirect_url;
+            if (openInNewTab) {
+                if (newTab) {
+                    newTab.location.href = targetUrl;
+                } else {
+                    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                }
             } else {
-                window.open(result.data.redirect_url, '_blank', 'noopener,noreferrer');
+                window.location.href = targetUrl;
             }
             return;
         }
 
         window.DEBUG?.warn('EXTERNALS', 'SSO launch is not available; opening the normal system link.', result.error || 'Missing redirect URL.');
-        if (newTab) {
-            if (url) {
-                newTab.location.href = url;
-            } else {
-                newTab.close();
+        if (result.error) {
+            this.showNotice(result.error, 'danger');
+        }
+
+        if (openInNewTab) {
+            if (newTab) {
+                if (url) {
+                    newTab.location.href = url;
+                } else {
+                    newTab.close();
+                }
+            } else if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
             }
         } else if (url) {
-            window.open(url, '_blank', 'noopener,noreferrer');
+            window.location.href = url;
         }
     }
 
