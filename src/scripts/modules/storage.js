@@ -74,6 +74,42 @@ export const authStorage = {
 
     clearRememberedLogin() {
         removeValue(REMEMBERED_LOGIN_KEY);
+    },
+
+    setUserSession(user) {
+        try {
+            if (user) {
+                const raw = JSON.stringify(user);
+                sessionStorage.setItem('portal_user', raw);
+                localStorage.setItem('portal_user_backup', raw);
+            } else {
+                sessionStorage.removeItem('portal_user');
+                localStorage.removeItem('portal_user_backup');
+            }
+        } catch (error) {
+            console.error('Error saving user session to storage:', error);
+        }
+    },
+
+    getUserSession() {
+        try {
+            const rawSession = sessionStorage.getItem('portal_user');
+            if (rawSession) return JSON.parse(rawSession);
+            const rawBackup = localStorage.getItem('portal_user_backup');
+            if (rawBackup) return JSON.parse(rawBackup);
+            return null;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    clearUserSession() {
+        try {
+            sessionStorage.removeItem('portal_user');
+            localStorage.removeItem('portal_user_backup');
+        } catch (error) {
+            console.error('Error clearing user session from storage:', error);
+        }
     }
 };
 

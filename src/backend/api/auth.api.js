@@ -174,15 +174,16 @@ export async function getCurrentUser({ force = false } = {}) {
     return currentUserCache;
 }
 
-/* Kept for login-form compatibility; this now stores only verified in-memory display state. */
+import { authStorage } from '../../scripts/modules/storage.js';
+
 export function saveSession(user) {
     currentUserCache = user || null;
     if (currentUserCache) {
         window.__PORTAL_SESSION = currentUserCache;
-        try { sessionStorage.setItem('portal_user', JSON.stringify(currentUserCache)); } catch {}
+        authStorage.setUserSession(currentUserCache);
     } else {
         delete window.__PORTAL_SESSION;
-        try { sessionStorage.removeItem('portal_user'); } catch {}
+        authStorage.clearUserSession();
     }
 }
 

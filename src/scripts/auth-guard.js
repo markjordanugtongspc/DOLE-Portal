@@ -7,10 +7,11 @@ const dashboardFor = (roleId) => Number(roleId) === 1
     ? '/src/pages/user/admin/dashboard/'
     : '/src/pages/user/staff/dashboard/';
 
+import { authStorage } from './modules/storage.js';
+
 let cachedSessionUser = null;
 try {
-    const raw = sessionStorage.getItem('portal_user');
-    if (raw) cachedSessionUser = JSON.parse(raw);
+    cachedSessionUser = authStorage.getUserSession();
 } catch {}
 
 if (routeMatch && cachedSessionUser) {
@@ -36,12 +37,18 @@ const validateProtectedRoute = async () => {
         const payload = await response.json().catch(() => ({}));
         const user = response.ok ? payload.data : null;
         if (!user) {
-            try { sessionStorage.removeItem('portal_user'); } catch {}
+            // Graceful fallback to cached session user if available
+            if (cachedSessionUser && String(cachedSessionUser.approval_status || '').toUpperCase() === 'APPROVED') {
+                window.__PORTAL_SESSION = cachedSessionUser;
+                document.documentElement.classList.remove('portal-auth-checking');
+                return;
+            }
+            authStorage.clearUserSession();
             return redirectToLogin();
         }
 
         window.__PORTAL_SESSION = user;
-        try { sessionStorage.setItem('portal_user', JSON.stringify(user)); } catch {}
+        authStorage.setUserSession(user);
 
         const roleId = Number(user.role_id);
         const requiredRole = routeMatch[1];
@@ -52,7 +59,12 @@ const validateProtectedRoute = async () => {
         if (!allowed) return window.location.replace(dashboardFor(roleId));
         document.documentElement.classList.remove('portal-auth-checking');
     } catch {
-        try { sessionStorage.removeItem('portal_user'); } catch {}
+        if (cachedSessionUser && String(cachedSessionUser.approval_status || '').toUpperCase() === 'APPROVED') {
+            window.__PORTAL_SESSION = cachedSessionUser;
+            document.documentElement.classList.remove('portal-auth-checking');
+            return;
+        }
+        authStorage.clearUserSession();
         redirectToLogin();
     }
 };
