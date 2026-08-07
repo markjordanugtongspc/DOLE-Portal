@@ -117,3 +117,82 @@ const bootAppModules = async () => {
 
 bootAppModules();
 /* END APP MODULE BOOTSTRAP */
+
+/* START VERCEL STATUS PAGE SYSTEM */
+const fetchVercelStatusSummary = async () => {
+    const percentageEls = document.querySelectorAll('[data-vercel-status-percentage]');
+    const descriptionEls = document.querySelectorAll('[data-vercel-status-description]');
+
+    if (!percentageEls.length && !descriptionEls.length) return;
+
+    try {
+        const response = await fetch('https://www.vercel-status.com/api/v2/summary.json');
+        if (!response.ok) throw new Error(`Vercel status API HTTP ${response.status}`);
+        const data = await response.json();
+
+        const components = data.components || [];
+        const statusObj = data.status || {};
+        const indicator = statusObj.indicator || 'none';
+
+        let calculatedPercentage = 99.99;
+        if (components.length > 0) {
+            let totalScore = 0;
+            components.forEach((c) => {
+                const st = String(c.status || '').toLowerCase();
+                if (st === 'operational') totalScore += 1;
+                else if (st === 'degraded_performance') totalScore += 0.9;
+                else if (st === 'partial_outage') totalScore += 0.75;
+                else if (st === 'major_outage' || st === 'under_maintenance') totalScore += 0.5;
+                else totalScore += 1;
+            });
+            const ratio = (totalScore / components.length) * 100;
+            calculatedPercentage = Math.min(99.99, Math.round(ratio * 100) / 100);
+            if (ratio === 100) calculatedPercentage = 99.99;
+        } else if (indicator === 'minor') {
+            calculatedPercentage = 98.50;
+        } else if (indicator === 'major') {
+            calculatedPercentage = 92.00;
+        } else if (indicator === 'critical') {
+            calculatedPercentage = 85.00;
+        }
+
+        const formattedPercentage = `${calculatedPercentage.toFixed(2)}%`;
+        percentageEls.forEach((el) => {
+            el.textContent = formattedPercentage;
+        });
+
+        const isNormal = indicator === 'none' || String(statusObj.description || '').toLowerCase().includes('operational');
+        const isMinor = indicator === 'minor';
+        let descText = statusObj.description || (isNormal ? 'All Systems Normal' : 'Partial Outage');
+        if (!descText.startsWith('●')) {
+            descText = `● ${descText}`;
+        }
+
+        descriptionEls.forEach((el) => {
+            el.textContent = descText;
+            el.classList.remove('text-emerald-400', 'text-amber-400', 'text-rose-400', 'text-green-400');
+            if (isNormal) {
+                el.classList.add('text-emerald-400');
+            } else if (isMinor) {
+                el.classList.add('text-amber-400');
+            } else {
+                el.classList.add('text-rose-400');
+            }
+        });
+
+        if (window.DEBUG) {
+            window.DEBUG.success('VERCEL_STATUS', `Fetched Vercel Status: ${formattedPercentage} (${descText})`);
+        }
+    } catch (err) {
+        if (window.DEBUG) {
+            window.DEBUG.error('VERCEL_STATUS', 'Failed to fetch live Vercel status page API', err);
+        }
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchVercelStatusSummary);
+} else {
+    fetchVercelStatusSummary();
+}
+/* END VERCEL STATUS PAGE SYSTEM */

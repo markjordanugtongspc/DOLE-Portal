@@ -108,7 +108,7 @@ const setupDynamicSidebar = () => {
     const toggleBtn = document.querySelector('[data-drawer-toggle="default-sidebar"]');
     if (sidebarNode && toggleBtn) {
         sidebarDrawerInstance = new Drawer(sidebarNode, {
-            placement: 'left',
+            placement: 'right',
             backdrop: true,
             bodyScrolling: false,
             edge: false,

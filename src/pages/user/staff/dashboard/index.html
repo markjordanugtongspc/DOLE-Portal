@@ -65,40 +65,44 @@
 
       <!-- Network Performance & Portal Stats Cards Grid (Desktop View) -->
       <div class="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Card 1: Latency -->
+        <!-- Card 1: Office Hours / Status -->
         <div class="group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
-            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Server Latency</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">14 ms</p>
-            <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Active / Stable</span>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OFFICE STATUS</h3>
+            <p id="staff-office-status-value" data-staff-office-status-value class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">OPEN</p>
+            <span id="staff-office-status-subtext" data-staff-office-status-subtext class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Mon - Fri (8:00 AM - 5:00 PM)</span>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           </div>
         </div>
 
-        <!-- Card 2: Uptime -->
+        <!-- Card 2: Active Assistants -->
         <div class="group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
-            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Portal Uptime</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">99.98%</p>
-            <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● 30-Day Average</span>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE ASSISTANTS</h3>
+            <p id="staff-active-assistants-value" data-staff-active-assistants-value class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+            </p>
+            <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● GIP Assistants</span>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
             </svg>
           </div>
         </div>
 
-        <!-- Card 3: Connected Users -->
+        <!-- Card 3: Active Staffs -->
         <div class="group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
-            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Active Users</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">1,248</p>
-            <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Live Sessions</span>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE STAFFS</h3>
+            <p id="staff-active-staffs-value" data-staff-active-staffs-value class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+            </p>
+            <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Online Net Count</span>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -107,16 +111,19 @@
           </div>
         </div>
 
-        <!-- Card 4: Vercel Uptime -->
+        <!-- Card 4: System Status -->
         <div class="group bg-gradient-to-br from-slate-900 via-stone-900 to-black p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
-            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Vercel Status</h3>
-            <p class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">99.99%</p>
-            <span class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems Normal</span>
+            <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">SYSTEM STATUS</h3>
+            <p id="staff-vercel-status-percentage" data-vercel-status-percentage class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-20 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading System status...</span></span>
+            </p>
+            <span id="staff-vercel-status-description" data-vercel-status-description class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems Normal</span>
           </div>
           <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 116 100">
               <path d="M57.5 0L115 100H0L57.5 0z" />
+            </svg>
           </div>
         </div>
       </div>
@@ -128,13 +135,13 @@
           <div class="hidden duration-700 ease-in-out" data-carousel-item="active">
             <div class="group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
-                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Server Latency</h3>
-                <p class="text-2xl font-extrabold mt-1 tracking-tight">14 ms</p>
-                <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Active / Stable</span>
+                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OFFICE STATUS</h3>
+                <p id="mobile-office-status-value" data-staff-office-status-value class="text-2xl font-extrabold mt-1 tracking-tight">OPEN</p>
+                <span id="mobile-office-status-subtext" data-staff-office-status-subtext class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Mon - Fri (8:00 AM - 5:00 PM)</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               </div>
             </div>
@@ -143,13 +150,15 @@
           <div class="hidden duration-700 ease-in-out" data-carousel-item>
             <div class="group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
-                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Portal Uptime</h3>
-                <p class="text-2xl font-extrabold mt-1 tracking-tight">99.98%</p>
-                <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● 30-Day Average</span>
+                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE ASSISTANTS</h3>
+                <p id="mobile-active-assistants-value" data-staff-active-assistants-value class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
+                  <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+                </p>
+                <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● GIP Assistants</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                 </svg>
               </div>
             </div>
@@ -158,9 +167,11 @@
           <div class="hidden duration-700 ease-in-out" data-carousel-item>
             <div class="group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
-                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Active Users</h3>
-                <p class="text-2xl font-extrabold mt-1 tracking-tight">1,248</p>
-                <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Live Sessions</span>
+                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE STAFFS</h3>
+                <p id="mobile-active-staffs-value" data-staff-active-staffs-value class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
+                  <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+                </p>
+                <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Online Net Count</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -173,9 +184,11 @@
           <div class="hidden duration-700 ease-in-out" data-carousel-item>
             <div class="group bg-gradient-to-br from-slate-900 via-stone-900 to-black p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
-                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">Vercel Status</h3>
-                <p class="text-2xl font-extrabold mt-1 tracking-tight">99.99%</p>
-                <span class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems Normal</span>
+                <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">SYSTEM STATUS</h3>
+                <p id="mobile-vercel-status-percentage" data-vercel-status-percentage class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
+                  <span class="inline-block h-7 w-20 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading System status...</span></span>
+                </p>
+                <span id="mobile-vercel-status-description" data-vercel-status-description class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems Normal</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 116 100">
@@ -249,8 +262,8 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">Active Users Peak</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Real-time peak of active users within specific time ranges</p>
+                <h3 class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">Support Tickets Activity</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Weekly volume of support tickets received and resolved by staff</p>
               </div>
             </div>
 
@@ -265,83 +278,31 @@
           </div>
         </div>
 
-        <!-- Right: Top 5 Systems (1/3 width on LG) -->
+        <!-- Right: Recent Active Staff (1/3 width on LG) -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full">
           <div>
             <div class="border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
-              <h3 class="text-lg font-extrabold text-gray-900 dark:text-white">Top 5 Systems</h3>
-              <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">Live status of the most active DOLE system services</p>
+              <h3 class="text-lg font-extrabold text-gray-900 dark:text-white">Recent Active Staff</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">Live status of online and recently active staff members</p>
             </div>
 
-            <!-- Systems checklist -->
-            <div class="space-y-4 text-left">
-              <!-- Item 1 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-400 dark:border-yellow-700/50 shadow-sm">1</div>
-                  <div>
-                    <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">GIP Monitoring</h4>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                  </div>
-                </div>
-                <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">100% Uptime</span>
-              </div>
-
-              <!-- Item 2 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs bg-gray-200 text-gray-700 border border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 shadow-sm">2</div>
-                  <div>
-                    <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">SPES Monitoring</h4>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                  </div>
-                </div>
-                <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">99.99% Uptime</span>
-              </div>
-
-              <!-- Item 3 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-700/50 shadow-sm">3</div>
-                  <div>
-                    <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">TUPAD Monitoring</h4>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                  </div>
-                </div>
-                <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">99.95% Uptime</span>
-              </div>
-
-              <!-- Item 4 -->
-              <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">4</div>
-                  <div>
-                    <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">PEIS Portal</h4>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                  </div>
-                </div>
-                <span class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">99.90% Uptime</span>
-              </div>
-
-              <!-- Item 5 -->
-              <div class="flex items-center justify-between py-2">
-                <div class="flex items-center gap-3">
-                  <div class="flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">5</div>
-                  <div>
-                    <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">DILEEP Database</h4>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                  </div>
-                </div>
-                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-emerald-900/60 dark:text-emerald-400">Running</span>
+            <!-- Recent active staff list -->
+            <div id="staff-recent-active-list" class="space-y-4 text-left">
+              <div class="animate-pulse space-y-3">
+                <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
               </div>
             </div>
           </div>
 
           <div class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
-            <a href="#" class="cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center justify-center gap-1 transition-colors uppercase tracking-wider">
-              Refresh Diagnostics
+            <button type="button" id="btn-refresh-recent-staff" class="w-full cursor-pointer text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center justify-center gap-1 transition-colors uppercase tracking-wider">
+              Refresh Staff Status
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -349,7 +310,7 @@
       <div id="charts-mobile-carousel" class="relative w-full sm:hidden mt-8 mb-6">
         <!-- Carousel wrapper -->
         <div class="relative h-[480px] overflow-hidden">
-          <!-- Slide 1: Active Users Peak Chart -->
+          <!-- Slide 1: Support Tickets Activity Chart -->
           <div class="hidden duration-700 ease-in-out px-2" data-carousel-item="active">
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-[440px]">
               <div>
@@ -361,8 +322,8 @@
                     </svg>
                   </div>
                   <div>
-                    <h3 class="text-base font-extrabold text-gray-900 dark:text-white leading-tight">Active Users Peak</h3>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Real-time peak of active users within specific time ranges</p>
+                    <h3 class="text-base font-extrabold text-gray-900 dark:text-white leading-tight">Support Tickets Activity</h3>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Weekly volume of support tickets received and resolved by staff</p>
                   </div>
                 </div>
                 <!-- ApexCharts container for staff mobile -->
@@ -371,87 +332,45 @@
               <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
                 <div class="flex justify-between items-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <span>Next Refresh: <span class="text-blue-700 dark:text-blue-500">Auto-update active</span></span>
+                  <div class="flex items-center gap-1 opacity-80 text-gray-400 dark:text-gray-500 animate-pulse">
+                    <span class="text-[9px]">Swipe</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Slide 2: Top 5 Systems -->
+          <!-- Slide 2: Recent Active Staff -->
           <div class="hidden duration-700 ease-in-out px-2" data-carousel-item>
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-[440px]">
               <div>
                 <div class="border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
-                  <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Top 5 Systems</h3>
-                  <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-1">Live status of the most active DOLE system services</p>
+                  <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Recent Active Staff</h3>
+                  <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-1">Live status of online and recently active staff members</p>
                 </div>
-                <!-- Systems checklist -->
-                <div class="space-y-3.5 text-left">
-                  <!-- Item 1 -->
-                  <div class="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
-                      <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-400 dark:border-yellow-700/50 shadow-sm">1</div>
-                      <div>
-                        <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">GIP Monitoring</h4>
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                      </div>
-                    </div>
-                    <span class="bg-green-100 text-green-800 text-[9px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">100% Uptime</span>
-                  </div>
-                  <!-- Item 2 -->
-                  <div class="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
-                      <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs bg-gray-200 text-gray-700 border border-gray-400 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 shadow-sm">2</div>
-                      <div>
-                        <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">SPES Monitoring</h4>
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                      </div>
-                    </div>
-                    <span class="bg-green-100 text-green-800 text-[9px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">99.99% Uptime</span>
-                  </div>
-                  <!-- Item 3 -->
-                  <div class="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
-                      <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs bg-orange-100 text-orange-700 border border-orange-300 dark:bg-orange-900/40 dark:text-orange-400 dark:border-orange-700/50 shadow-sm">3</div>
-                      <div>
-                        <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">TUPAD Monitoring</h4>
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                      </div>
-                    </div>
-                    <span class="bg-green-100 text-green-800 text-[9px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">99.95% Uptime</span>
-                  </div>
-                  <!-- Item 4 -->
-                  <div class="flex items-center justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
-                      <div class="flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">4</div>
-                      <div>
-                        <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">PEIS Portal</h4>
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                      </div>
-                    </div>
-                    <span class="bg-green-100 text-green-800 text-[9px] font-bold px-2 py-0.5 rounded dark:bg-green-900/60 dark:text-green-400">99.90% Uptime</span>
-                  </div>
-                  <!-- Item 5 -->
-                  <div class="flex items-center justify-between py-1.5">
-                    <div class="flex items-center gap-3">
-                      <div class="flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">5</div>
-                      <div>
-                        <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">DILEEP Database</h4>
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400">System Uptime</p>
-                      </div>
-                    </div>
-                    <span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded dark:bg-emerald-900/60 dark:text-emerald-400">Running</span>
+                <!-- Staff list -->
+                <div id="mobile-recent-active-list" class="space-y-3.5 text-left">
+                  <div class="animate-pulse space-y-3">
+                    <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                    <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                    <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
                   </div>
                 </div>
               </div>
-              <div class="border-t border-gray-100 dark:border-gray-800 pt-3 mt-3">
-                <a href="#" class="cursor-pointer text-[10px] font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center justify-center gap-1 transition-colors uppercase tracking-wider">
-                  Refresh Diagnostics
+              <div class="border-t border-gray-100 dark:border-gray-800 pt-3 flex justify-between items-center">
+                <div class="flex items-center gap-1 opacity-80 text-gray-400 dark:text-gray-500 animate-pulse">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                  <span class="text-[9px]">Swipe</span>
+                </div>
+                <button type="button" id="mobile-btn-refresh-recent-staff" class="cursor-pointer text-[10px] font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center justify-center gap-1 transition-colors uppercase tracking-wider">
+                  Refresh Status
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
-                </a>
+                </button>
               </div>
             </div>
           </div>
-        </div>
+
 
         <!-- Slider indicators (Muted dots at bottom, hidden) -->
         <div class="absolute z-30 hidden space-x-2 rtl:space-x-reverse bottom-0 left-1/2 -translate-x-1/2">

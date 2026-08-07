@@ -376,43 +376,67 @@
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm w-full transition-colors mt-6">
         <div class="flex justify-between">
           <div>
-            <h5 class="text-2xl font-bold text-gray-900 dark:text-white">4,232</h5>
-            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">Tickets this week</p>
+            <h5 id="admin-tickets-period-count" class="text-2xl font-bold text-gray-900 dark:text-white" role="status" aria-live="polite">
+              <span class="inline-block h-7 w-20 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse align-middle"><span class="sr-only">Loading tickets count...</span></span>
+            </h5>
+            <p id="admin-tickets-period-sublabel" class="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">Tickets this week</p>
           </div>
-          <div class="flex items-center px-2.5 py-0.5 font-bold text-green-600 dark:text-green-400 text-center">
-            <svg class="w-5 h-5 me-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v13m0-13 4 4m-4-4-4 4"/></svg>
-            12%
+          <div id="admin-tickets-percentage-badge" class="flex items-center px-2.5 py-0.5 font-bold text-green-600 dark:text-green-400 text-center" role="status" aria-live="polite">
+            <span class="inline-block h-5 w-12 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse align-middle"><span class="sr-only">Loading percentage...</span></span>
           </div>
         </div>
-        <div id="labels-chart" class="py-4 md:py-6"></div>
+        <div id="labels-chart" class="py-4 md:py-6">
+          <div role="status" class="h-[280px] w-full animate-pulse px-2 pb-2 pt-3" aria-label="Loading area chart">
+            <div class="relative h-full overflow-hidden border-b border-gray-100 dark:border-gray-800">
+              <div class="absolute left-2 top-0 space-y-3">
+                <div class="h-2 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-2 w-7 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-2 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+              <div class="absolute inset-x-12 top-4 h-px bg-gray-100 dark:bg-gray-800"></div>
+              <div class="absolute inset-x-12 top-[40%] h-px bg-gray-100 dark:bg-gray-800"></div>
+              <div class="absolute inset-x-12 top-[80%] h-px bg-gray-100 dark:bg-gray-800"></div>
+              <div class="absolute inset-x-10 bottom-0 flex h-[220px] items-end justify-between px-4">
+                <div class="h-32 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-24 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-40 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-28 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-36 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-20 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div class="h-44 w-12 rounded-t-lg bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+            </div>
+            <span class="sr-only">Loading tickets area chart...</span>
+          </div>
+        </div>
         <div class="grid grid-cols-1 items-center border-t border-gray-100 dark:border-gray-800 justify-between">
           <div class="flex justify-between items-center pt-4 md:pt-6 relative">
             <!-- Button -->
             <button id="dropdownLastDays9Button" class="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-500 text-center inline-flex items-center cursor-pointer transition-colors" type="button">
-                Last 7 days
+                <span id="tickets-area-period-label">Last 7 days</span>
                 <svg class="w-4 h-4 ms-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
             </button>
             <!-- Dropdown menu -->
             <div id="LastDays9dropdown" class="z-10 hidden absolute top-full left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-44">
                 <ul class="p-2 text-sm text-gray-700 dark:text-gray-200 font-medium" aria-labelledby="dropdownLastDays9Button">
                   <li>
-                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Yesterday</a>
+                    <a href="#" data-period="yesterday" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Yesterday</a>
                   </li>
                   <li>
-                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Today</a>
+                    <a href="#" data-period="today" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Today</a>
                   </li>
                   <li>
-                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 7 days</a>
+                    <a href="#" data-period="last-7-days" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 7 days</a>
                   </li>
                   <li>
-                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 30 days</a>
+                    <a href="#" data-period="last-30-days" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 30 days</a>
                   </li>
                   <li>
-                    <a href="#" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 90 days</a>
+                    <a href="#" data-period="last-90-days" class="inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors">Last 90 days</a>
                   </li>
                 </ul>
             </div>
-            <a href="#" class="inline-flex items-center text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 gap-1 uppercase tracking-wider cursor-pointer transition-colors">
+            <a href="/src/pages/user/admin/tickets/" class="inline-flex items-center text-xs font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 gap-1 uppercase tracking-wider cursor-pointer transition-colors">
               Progress report
               <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5m14 0-4 4m4-4-4-4"/></svg>
             </a>

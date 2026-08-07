@@ -6,6 +6,7 @@ import { fetchUserDashboardCounts, fetchUsers } from '@/backend/api/users.api.js
 import { fetchSystems } from '@/backend/api/systems.api.js';
 import { fetchTickets } from '@/backend/api/tickets.api.js';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
+import { countGipsByStaff, fetchGipsByStaff } from '@/backend/api/gips.api.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -375,6 +376,10 @@ class StaffDashboardController {
         this.initNetworkChart();
         this.initMobileCarousel();
         this.initChartsMobileCarousel();
+        this.renderOfficeStatus();
+        this.renderActiveAssistantsMetric();
+        this.renderActiveStaffsMetric();
+        this.renderRecentActiveStaff();
     }
 
     async loadSystems() {
@@ -509,6 +514,25 @@ class StaffDashboardController {
                 this.render();
             });
         }
+
+        // Refresh Recent Active Staff Action (Real-time Supabase Refetch)
+        const bindRefresh = (btnId) => {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const svg = btn.querySelector('svg');
+                if (svg) svg.classList.add('animate-spin');
+                await this.renderRecentActiveStaff();
+                await this.renderActiveStaffsMetric();
+                if (svg) {
+                    setTimeout(() => svg.classList.remove('animate-spin'), 500);
+                }
+            });
+        };
+
+        bindRefresh('btn-refresh-recent-staff');
+        bindRefresh('mobile-btn-refresh-recent-staff');
     }
 
     getFilteredCount() {
@@ -741,14 +765,46 @@ class StaffDashboardController {
         }
     }
 
-    initNetworkChart() {
-        const brandColor = '#1A56DB'; // Tailwind blue-700
+    async initNetworkChart() {
+        const brandColor = '#1A56DB';
         const brandSecondaryColor = '#0E9F6E'; // Tailwind emerald-600
+
+        let categories = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        let receivedData = [14, 22, 19, 28, 24, 11, 8];
+        let resolvedData = [12, 18, 16, 25, 21, 9, 7];
+
+        try {
+            const { data: tickets } = await fetchTickets();
+            if (Array.isArray(tickets) && tickets.length > 0) {
+                const receivedCounts = [0, 0, 0, 0, 0, 0, 0];
+                const resolvedCounts = [0, 0, 0, 0, 0, 0, 0];
+
+                tickets.forEach(ticket => {
+                    if (!ticket.created_at) return;
+                    const d = new Date(ticket.created_at);
+                    let dayIdx = d.getDay() - 1; // 0 = Mon, 6 = Sun
+                    if (dayIdx === -1) dayIdx = 6; // Sunday
+
+                    receivedCounts[dayIdx]++;
+                    const st = String(ticket.status || '').toUpperCase();
+                    if (['RESOLVED', 'CLOSED'].includes(st)) {
+                        resolvedCounts[dayIdx]++;
+                    }
+                });
+
+                if (receivedCounts.some(c => c > 0)) {
+                    receivedData = receivedCounts;
+                    resolvedData = resolvedCounts;
+                }
+            }
+        } catch (e) {
+            // fallback to default trend
+        }
 
         const areaOptions = {
             xaxis: {
                 show: true,
-                categories: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+                categories: categories,
                 labels: {
                     show: true,
                     style: {
@@ -774,13 +830,13 @@ class StaffDashboardController {
             },
             series: [
                 {
-                    name: "Peak Users",
-                    data: [420, 580, 810, 850, 720, 930, 890],
+                    name: "Received Tickets",
+                    data: receivedData,
                     color: brandColor,
                 },
                 {
-                    name: "Active Users",
-                    data: [310, 420, 680, 710, 620, 780, 750],
+                    name: "Resolved Tickets",
+                    data: resolvedData,
                     color: brandSecondaryColor,
                 },
             ],
@@ -795,7 +851,7 @@ class StaffDashboardController {
             },
             tooltip: {
                 enabled: true,
-                x: { show: false },
+                x: { show: true },
             },
             fill: {
                 type: "gradient",
@@ -1002,6 +1058,253 @@ class StaffDashboardController {
         }, { passive: true });
     }
     /* END MOBILE CHARTS CAROUSEL INITIALIZATION */
+
+    /* START STAFF OFFICE HOURS SYSTEM */
+    renderOfficeStatus() {
+        const valueEls = document.querySelectorAll('[data-staff-office-status-value], #staff-office-status-value, #mobile-office-status-value');
+        const subtextEls = document.querySelectorAll('[data-staff-office-status-subtext], #staff-office-status-subtext, #mobile-office-status-subtext');
+
+        if (!valueEls.length && !subtextEls.length) return;
+
+        const now = new Date();
+        const day = now.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        const currentMinutes = hours * 60 + minutes;
+
+        let statusText = 'CLOSED';
+        let subtext = '● Office Closed';
+        let colorClass = 'text-rose-500 dark:text-rose-400';
+
+        if (day === 0 || day === 6) {
+            // Weekend
+            statusText = 'CLOSED';
+            subtext = '● Closed on Weekends';
+            colorClass = 'text-rose-500 dark:text-rose-400';
+        } else {
+            // Monday - Friday
+            const openMorning = 8 * 60; // 8:00 AM (480 mins)
+            const lunchStart = 12 * 60 + 1; // 12:01 PM (721 mins)
+            const lunchEnd = 13 * 60; // 1:00 PM (780 mins)
+            const openAfternoonEnd = 17 * 60 + 1; // 5:01 PM (1021 mins)
+
+            if (currentMinutes < openMorning) {
+                statusText = 'CLOSED';
+                subtext = '● Opens at 8:00 AM';
+                colorClass = 'text-rose-500 dark:text-rose-400';
+            } else if (currentMinutes >= openMorning && currentMinutes < lunchStart) {
+                statusText = 'OPEN';
+                subtext = '● Mon - Fri (8:00 AM - 5:00 PM)';
+                colorClass = 'text-emerald-500 dark:text-emerald-400';
+            } else if (currentMinutes >= lunchStart && currentMinutes <= lunchEnd) {
+                statusText = 'LUNCH BREAK';
+                subtext = '● Resumes at 1:01 PM';
+                colorClass = 'text-amber-500 dark:text-amber-400';
+            } else if (currentMinutes > lunchEnd && currentMinutes <= openAfternoonEnd) {
+                statusText = 'OPEN';
+                subtext = '● Mon - Fri (8:00 AM - 5:00 PM)';
+                colorClass = 'text-emerald-500 dark:text-emerald-400';
+            } else {
+                statusText = 'CLOSED';
+                subtext = '● Office Closed';
+                colorClass = 'text-rose-500 dark:text-rose-400';
+            }
+        }
+
+        valueEls.forEach(el => {
+            el.textContent = statusText;
+        });
+
+        subtextEls.forEach(el => {
+            el.textContent = subtext;
+            el.className = `block text-[9px] font-bold ${colorClass} mt-1 uppercase tracking-wider`;
+        });
+
+        if (window.DEBUG) {
+            window.DEBUG.success('OFFICE_HOURS', `DOLE Office Status: ${statusText} (${subtext})`);
+        }
+    }
+    /* END STAFF OFFICE HOURS SYSTEM */
+
+    async renderActiveAssistantsMetric() {
+        const valEls = document.querySelectorAll('[data-staff-active-assistants-value], #staff-active-assistants-value, #mobile-active-assistants-value');
+        if (!valEls.length) return;
+
+        const currentUser = getCachedCurrentUser();
+        const userId = currentUser?.id;
+        if (!userId) {
+            valEls.forEach(el => { el.textContent = '0'; });
+            return;
+        }
+
+        const { data: gips, error } = await fetchGipsByStaff(userId);
+        if (error || !Array.isArray(gips)) {
+            valEls.forEach(el => { el.textContent = '0'; });
+            return;
+        }
+
+        let onlineCount = 0;
+        let offlineCount = 0;
+
+        gips.forEach(gip => {
+            const status = String(gip?.status || '').toLowerCase();
+            const isOnline = ['active', 'online'].includes(status);
+            if (isOnline) {
+                onlineCount++;
+            } else {
+                offlineCount++;
+            }
+        });
+
+        const netCount = onlineCount - offlineCount;
+        const displayCount = Math.max(0, netCount);
+        valEls.forEach(el => {
+            el.textContent = displayCount.toLocaleString();
+        });
+    }
+
+    /* START RECENT ACTIVE STAFF SYSTEM */
+    async renderRecentActiveStaff() {
+        const desktopContainer = document.getElementById('staff-recent-active-list');
+        const mobileContainer = document.getElementById('mobile-recent-active-list');
+
+        if (!desktopContainer && !mobileContainer) return;
+
+        const { data: users, error } = await fetchUsers();
+        if (error || !Array.isArray(users) || users.length === 0) {
+            const errHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 py-2">No active staff found.</p>';
+            if (desktopContainer) desktopContainer.innerHTML = errHtml;
+            if (mobileContainer) mobileContainer.innerHTML = errHtml;
+            return;
+        }
+
+        // Filter staff & hr users
+        const staffUsers = users.filter(user => {
+            const roleName = String(user?.roles?.name || '').trim().toLowerCase();
+            return ['hr', 'staff'].includes(roleName) || [2, 3].includes(Number(user?.role_id));
+        });
+
+        const parseTime = (u) => {
+            if (u.last_seen) return new Date(u.last_seen).getTime();
+            if (u.created_at) return new Date(u.created_at).getTime();
+            return 0;
+        };
+
+        const onlineStaff = staffUsers
+            .filter(u => ['active', 'online'].includes(String(u.status || '').toLowerCase()))
+            .sort((a, b) => parseTime(b) - parseTime(a));
+
+        const offlineStaff = staffUsers
+            .filter(u => !['active', 'online'].includes(String(u.status || '').toLowerCase()))
+            .sort((a, b) => parseTime(b) - parseTime(a));
+
+        let selectedOnline = onlineStaff.slice(0, 3);
+        let selectedOffline = offlineStaff.slice(0, 2);
+
+        if (selectedOnline.length < 3) {
+            const fillCount = 3 - selectedOnline.length;
+            selectedOffline = [...selectedOffline, ...offlineStaff.slice(2, 2 + fillCount)];
+        }
+
+        if (selectedOffline.length < 2) {
+            const fillCount = 2 - selectedOffline.length;
+            selectedOnline = [...selectedOnline, ...onlineStaff.slice(3, 3 + fillCount)];
+        }
+
+        const finalStaffList = [...selectedOnline, ...selectedOffline].slice(0, 5);
+
+        const timeAgo = (timestamp) => {
+            if (!timestamp) return 'Recently';
+            const now = Date.now();
+            const diffSec = Math.max(0, Math.floor((now - new Date(timestamp).getTime()) / 1000));
+            if (diffSec < 60) return 'Just now';
+            if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+            if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+            return `${Math.floor(diffSec / 86400)}d ago`;
+        };
+
+        const renderItems = (items, isMobile = false) => {
+            if (!items.length) {
+                return '<p class="text-xs text-gray-500 dark:text-gray-400 py-2">No staff activity recorded.</p>';
+            }
+
+            const badgeStyles = [
+                'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-400 dark:border-yellow-700/50',
+                'bg-slate-200 text-slate-700 border-slate-400 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-500',
+                'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-700/50',
+                'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700',
+                'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
+            ];
+
+            return items.map((staff, idx) => {
+                const name = this.escapeHtml(staff.full_name || staff.username || 'Staff Member');
+                const isOnline = ['active', 'online'].includes(String(staff.status || '').toLowerCase());
+                const lastSeenText = timeAgo(staff.last_seen || staff.created_at);
+                const badgeStyle = badgeStyles[idx] || badgeStyles[3];
+                const statusBadge = isOnline
+                    ? '<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-emerald-900/60 dark:text-emerald-400">● Online</span>'
+                    : '<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded dark:bg-rose-900/60 dark:text-rose-400">● Offline</span>';
+
+                const pyClass = isMobile ? 'py-1.5' : 'py-2';
+                const borderClass = idx < items.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : '';
+
+                return `
+                    <div class="flex items-center justify-between ${pyClass} ${borderClass}">
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-center w-6 h-6 rounded-full font-extrabold text-xs border shadow-sm ${badgeStyle}">
+                                ${idx + 1}
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-900 dark:text-white leading-tight">${name}</h4>
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400">${isOnline ? 'Online' : 'Offline'} • ${lastSeenText}</p>
+                            </div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                `;
+            }).join('');
+        };
+
+        const desktopHtml = renderItems(finalStaffList, false);
+        const mobileHtml = renderItems(finalStaffList, true);
+
+        if (desktopContainer) desktopContainer.innerHTML = desktopHtml;
+        if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
+    }
+    /* END RECENT ACTIVE STAFF SYSTEM */
+
+    async renderActiveStaffsMetric() {
+        const valEls = document.querySelectorAll('[data-staff-active-staffs-value], #staff-active-staffs-value, #mobile-active-staffs-value');
+        if (!valEls.length) return;
+
+        const { data: users, error } = await fetchUsers();
+        if (error || !Array.isArray(users)) {
+            valEls.forEach(el => { el.textContent = '0'; });
+            return;
+        }
+
+        let onlineCount = 0;
+        let offlineCount = 0;
+
+        users.forEach(user => {
+            const roleName = String(user?.roles?.name || '').trim().toLowerCase();
+            const isStaff = ['hr', 'staff'].includes(roleName) || [2, 3].includes(Number(user?.role_id));
+            if (isStaff) {
+                const status = String(user?.status || '').toLowerCase();
+                const isOnline = ['active', 'online'].includes(status);
+                if (isOnline) {
+                    onlineCount++;
+                } else {
+                    offlineCount++;
+                }
+            }
+        });
+
+        const netCount = onlineCount - offlineCount;
+        valEls.forEach(el => {
+            el.textContent = netCount.toLocaleString();
+        });
+    }
 }
 /* END STAFF-EXCLUSIVE DASHBOARD CONTROLLER */
 
