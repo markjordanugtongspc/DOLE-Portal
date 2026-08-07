@@ -283,16 +283,16 @@ const setupDynamicSidebar = () => {
 
                 listHTML += `
                 <li>
-                    <div class="w-full relative">
-                        <a href="${item.url}" class="${linkClass} flex items-center w-full" onclick="document.getElementById('dropdown-${item.id}')?.classList.toggle('hidden');">
+                    <div class="w-full relative flex items-center">
+                        <a href="${item.url}" class="${linkClass} flex-1 flex items-center">
                             ${svgContent}
                             <span class="ms-3 mr-1">${item.label}</span>
-                            <span class="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 z-10" aria-controls="dropdown-${item.id}">
-                                <svg class="w-4 h-4 transition duration-200" aria-hidden="true" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
-                            </span>
                             <div class="flex-1"></div>
                             ${dynamicBadge}
                         </a>
+                        <button type="button" class="cursor-pointer text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1.5 z-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" onclick="event.preventDefault(); event.stopPropagation(); const el = document.getElementById('dropdown-${item.id}'); if (el) el.classList.toggle('hidden');" aria-controls="dropdown-${item.id}">
+                            <svg class="w-4 h-4 transition duration-200" aria-hidden="true" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+                        </button>
                     </div>
                     <ul id="dropdown-${item.id}" class="${(isChildActive || isActive) ? '' : 'hidden'} py-1 space-y-1 mt-1 ml-7">
                 `;

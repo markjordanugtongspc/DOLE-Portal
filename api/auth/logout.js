@@ -15,11 +15,11 @@ export default async function handler(req, res) {
                 admin.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', session.user.id)
             ]);
         }
-        res.setHeader('Set-Cookie', clearSessionCookie());
+        res.setHeader('Set-Cookie', clearSessionCookie(req));
         return sendJson(res, 200, { data: { logged_out: true } });
     } catch (error) {
         console.error('[PORTAL AUTH] Logout failed:', error.message);
-        res.setHeader('Set-Cookie', clearSessionCookie());
+        res.setHeader('Set-Cookie', clearSessionCookie(req));
         return sendJson(res, 200, { data: { logged_out: true } });
     }
 }

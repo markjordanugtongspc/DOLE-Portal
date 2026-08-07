@@ -8,9 +8,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(__dirname, '../dist');
 const port = Number(process.env.PORT || 4180);
 
-const localEnvironment = loadEnv('production', process.cwd(), '');
+const configDir = path.resolve(__dirname, '../src/backend/config');
+const localEnvironment = {
+    ...loadEnv('production', process.cwd(), ''),
+    ...loadEnv('development', process.cwd(), ''),
+    ...loadEnv('production', configDir, ''),
+    ...loadEnv('development', configDir, '')
+};
 for (const [name, value] of Object.entries(localEnvironment)) {
-    if (!(name in process.env)) process.env[name] = value;
+    if (value && !(name in process.env)) process.env[name] = value;
 }
 process.env.PORTAL_APP_ORIGIN = `http://localhost:${port}`;
 
@@ -101,6 +107,17 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        const nextPort = port + 1;
+        console.warn(`\n  ⚠️ Port ${port} is already in use. Retrying preview server on http://localhost:${nextPort}...\n`);
+        server.listen(nextPort);
+    } else {
+        console.error('[LOCAL PREVIEW SERVER ERROR]', err);
+    }
+});
+
 server.listen(port, () => {
-    console.log(`\n  ➜ Portal Production Preview ready at http://localhost:${port}\n`);
+    const currentPort = server.address()?.port || port;
+    console.log(`\n  ➜ Portal Production Preview ready at http://localhost:${currentPort}\n`);
 });

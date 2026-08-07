@@ -301,7 +301,7 @@ export const initAssistantsManage = () => {
         resetForm();
         if (modalTitle) modalTitle.textContent = 'Add Assistant';
         if (submitBtn) submitBtn.textContent = 'Add Assistant';
-        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'; }
+        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = '••••••••'; }
         if (confirmPasswordInput) confirmPasswordInput.required = true;
         if (pwdRequiredStar) pwdRequiredStar.classList.remove('hidden');
         if (confPwdRequiredStar) confPwdRequiredStar.classList.remove('hidden');

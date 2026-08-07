@@ -16,14 +16,19 @@ const safeUser = (user = {}) => ({
     approval_status: user.approval_status, status: user.status
 });
 
-const isSecureRuntime = () => process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL_URL);
-const cookieAttributes = (maxAge) => [
-    'Path=/', `Max-Age=${maxAge}`, 'HttpOnly', isSecureRuntime() ? 'Secure' : '', 'SameSite=Lax'
+const isSecureRuntime = (req) => {
+    const host = String(req?.headers?.host || '').toLowerCase();
+    if (host.includes('localhost') || host.includes('127.0.0.1')) return false;
+    return process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL_URL);
+};
+
+const cookieAttributes = (maxAge, req) => [
+    'Path=/', `Max-Age=${maxAge}`, 'HttpOnly', isSecureRuntime(req) ? 'Secure' : '', 'SameSite=Lax'
 ].filter(Boolean).join('; ');
 
 /* START PORTAL DATABASE SESSION HELPERS */
-export const createSessionCookie = (token, maxAge) => `${COOKIE_NAME}=${encodeURIComponent(token)}; ${cookieAttributes(maxAge)}`;
-export const clearSessionCookie = () => `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; ${isSecureRuntime() ? 'Secure; ' : ''}SameSite=Lax`;
+export const createSessionCookie = (token, maxAge, req) => `${COOKIE_NAME}=${encodeURIComponent(token)}; ${cookieAttributes(maxAge, req)}`;
+export const clearSessionCookie = (req) => `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; ${isSecureRuntime(req) ? 'Secure; ' : ''}SameSite=Lax`;
 
 export const issuePortalSession = async (admin, userId, remember = false) => {
     const ttlHours = numberEnvironment('PORTAL_REMEMBER_SESSION_TTL_HOURS', DEFAULT_REMEMBER_TTL_HOURS);

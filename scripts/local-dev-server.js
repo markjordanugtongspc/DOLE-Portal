@@ -1,10 +1,20 @@
 import http from 'node:http';
 import { createServer as createViteServer, loadEnv } from 'vite';
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const configDir = path.resolve(__dirname, '../src/backend/config');
 const port = Number(process.env.PORT || 5173);
-const localEnvironment = loadEnv('development', process.cwd(), '');
+const localEnvironment = {
+    ...loadEnv('production', process.cwd(), ''),
+    ...loadEnv('development', process.cwd(), ''),
+    ...loadEnv('production', configDir, ''),
+    ...loadEnv('development', configDir, '')
+};
 for (const [name, value] of Object.entries(localEnvironment)) {
-    if (!(name in process.env)) process.env[name] = value;
+    if (value && !(name in process.env)) process.env[name] = value;
 }
 process.env.PORTAL_APP_ORIGIN = `http://localhost:${port}`;
 

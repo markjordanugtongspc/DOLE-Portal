@@ -58,7 +58,7 @@ export default async function handler(req, res) {
         await admin.from('users').update({ status: 'online', last_seen: new Date().toISOString() }).eq('id', user.id);
 
         const session = await issuePortalSession(admin, user.id, Boolean(body.remember));
-        res.setHeader('Set-Cookie', createSessionCookie(session.token, session.maxAge));
+        res.setHeader('Set-Cookie', createSessionCookie(session.token, session.maxAge, req));
         return sendJson(res, 200, { data: safeUser(user) });
     } catch (error) {
         console.error('[PORTAL AUTH] Login failed:', error.message);

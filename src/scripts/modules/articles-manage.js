@@ -895,17 +895,19 @@ class ArticlesBrowseController {
             const viewUrl = `${this.articlesBasePath}view.html?id=${art.id}`;
             
             // Extract cover image tag if summary starts with an <img> tag
-            let summaryContent = art.summary || '';
+            let summaryContent = (art.summary || '').replace(/<img\b[^>]*src=["']blob:[^"']+["'][^>]*>/gi, '');
             let coverBannerHtml = '';
             const imgMatch = summaryContent.match(/^<img [^>]*src=["']([^"']+)["'][^>]*>/i);
 
             if (imgMatch) {
                 const imgUrl = imgMatch[1];
-                coverBannerHtml = `
-                    <div class="mb-4 rounded-lg overflow-hidden -mx-6 -mt-6">
-                        <img src="${imgUrl}" alt="${this.escapeHtml(art.title)}" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                `;
+                if (!imgUrl.startsWith('blob:')) {
+                    coverBannerHtml = `
+                        <div class="mb-4 rounded-lg overflow-hidden -mx-6 -mt-6">
+                            <img src="${imgUrl}" alt="${this.escapeHtml(art.title)}" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300" />
+                        </div>
+                    `;
+                }
                 summaryContent = summaryContent.replace(imgMatch[0], '').trim();
             }
             
@@ -1143,7 +1145,11 @@ class ArticlesViewController {
     resolveArticleImageSrc(src) {
         const value = String(src || '').trim();
         if (!value) return '';
-        if (/^(https?:|data:|blob:|\/)/i.test(value)) return value;
+        if (value.startsWith('blob:')) {
+            // Local blob URLs from previous draft sessions cannot be loaded cross-session; strip them safely
+            return '';
+        }
+        if (/^(https?:|data:|\/)/i.test(value)) return value;
         if (value.startsWith('articles/')) return this.getStoragePublicUrl(value);
         if (/^[\w.-]+\.(png|jpe?g|gif|webp|svg)$/i.test(value)) return this.getStoragePublicUrl(`articles/${value}`);
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {

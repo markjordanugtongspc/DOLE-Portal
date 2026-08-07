@@ -249,6 +249,9 @@ export async function fetchTicketCategories() {
  * @returns {{ data: Array, error: string|null }}
  */
 export async function fetchTicketsByUser(userId, filters = {}) {
+    if (!userId) {
+        return { data: [], error: null };
+    }
     let query = supabase
         .from('tickets')
         .select(`
