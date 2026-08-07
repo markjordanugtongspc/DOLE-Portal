@@ -27,28 +27,19 @@ if (routeMatch && cachedSessionUser) {
     }
 }
 
+import { detectActiveUserSession } from '../backend/api/auth.api.js';
+
 const validateProtectedRoute = async () => {
     if (!routeMatch) return;
     if (!cachedSessionUser) {
         document.documentElement.classList.add('portal-auth-checking');
     }
     try {
-        const response = await fetch('/api/auth/me', { credentials: 'include', headers: { Accept: 'application/json' } });
-        const payload = await response.json().catch(() => ({}));
-        const user = response.ok ? payload.data : null;
+        const user = await detectActiveUserSession({ force: true });
         if (!user) {
-            // Graceful fallback to cached session user if available
-            if (cachedSessionUser && String(cachedSessionUser.approval_status || '').toUpperCase() === 'APPROVED') {
-                window.__PORTAL_SESSION = cachedSessionUser;
-                document.documentElement.classList.remove('portal-auth-checking');
-                return;
-            }
             authStorage.clearUserSession();
             return redirectToLogin();
         }
-
-        window.__PORTAL_SESSION = user;
-        authStorage.setUserSession(user);
 
         const roleId = Number(user.role_id);
         const requiredRole = routeMatch[1];
@@ -56,6 +47,7 @@ const validateProtectedRoute = async () => {
         const allowed = isAlertsRoute
             ? roleId === 1 || roleId === 2
             : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
+
         if (!allowed) return window.location.replace(dashboardFor(roleId));
         document.documentElement.classList.remove('portal-auth-checking');
     } catch {

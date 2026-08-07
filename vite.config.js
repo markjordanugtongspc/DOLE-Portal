@@ -113,6 +113,7 @@ export default defineConfig({
     copyStaticAssets(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'script-defer',
       includeAssets: ['favicon.ico', 'dole-logo.ico', 'icons.svg'],
       manifest: {
         name: 'DOLE ILIGAN Portal',
@@ -139,12 +140,27 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,jpg,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,ico,png,jpg,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            urlPattern: /\/api\/.*/i,
+            handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /.*\.html.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-pages',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
             handler: 'CacheFirst',

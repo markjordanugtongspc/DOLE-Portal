@@ -165,13 +165,77 @@ export const loginWithPhone = (phone, pin, remember = false) => loginWithPortalB
 
 export const getCachedCurrentUser = () => currentUserCache;
 
-export async function getCurrentUser({ force = false } = {}) {
-    if (!force && currentUserCache) return currentUserCache;
-    const result = await portalApiRequest('/api/auth/me');
-    currentUserCache = result.error ? null : result.data;
-    if (currentUserCache) window.__PORTAL_SESSION = currentUserCache;
-    else delete window.__PORTAL_SESSION;
-    return currentUserCache;
+/**
+ * Detects if a user is currently logged in across all storage and backend API layers.
+ * 1. Checks memory cache
+ * 2. Queries /api/auth/me serverless endpoint
+ * 3. Fallbacks to verifying stored user against Supabase database directly
+ * 4. Fallbacks to browser storage (sessionStorage/localStorage)
+ * Ensures user session state is updated globally on window.__PORTAL_SESSION and authStorage.
+ */
+export async function detectActiveUserSession({ force = false } = {}) {
+    if (!force && currentUserCache) {
+        window.__PORTAL_SESSION = currentUserCache;
+        return currentUserCache;
+    }
+
+    let user = null;
+
+    // 1. Try serverless backend session check (/api/auth/me)
+    try {
+        const result = await portalApiRequest('/api/auth/me');
+        if (!result.error && result.data) {
+            user = result.data;
+        }
+    } catch (err) {
+        if (window.DEBUG) window.DEBUG.warn('AUTH-API', 'Serverless session fetch error', err);
+    }
+
+    // 2. Retrieve local/session browser storage
+    const storedUser = authStorage.getUserSession();
+
+    // 3. If server check produced no user, query Supabase database directly for stored user ID
+    if (!user && storedUser?.id) {
+        try {
+            const { data: dbUser, error: dbError } = await supabase
+                .from('users')
+                .select('id, role_id, office_id, full_name, username, email, phone, approval_status, status, archived_at')
+                .eq('id', Number(storedUser.id))
+                .maybeSingle();
+
+            if (!dbError && dbUser && !dbUser.archived_at) {
+                const approvalStatus = String(dbUser.approval_status || 'APPROVED').toUpperCase();
+                if (approvalStatus === 'APPROVED') {
+                    user = {
+                        id: Number(dbUser.id),
+                        role_id: Number(dbUser.role_id),
+                        office_id: dbUser.office_id === null ? null : Number(dbUser.office_id),
+                        full_name: dbUser.full_name,
+                        username: dbUser.username,
+                        email: dbUser.email,
+                        phone: dbUser.phone,
+                        approval_status: dbUser.approval_status || 'APPROVED',
+                        status: dbUser.status || 'online'
+                    };
+                }
+            }
+        } catch (err) {
+            if (window.DEBUG) window.DEBUG.error('AUTH-API', 'Supabase user session detection failed', err);
+        }
+    }
+
+    // 4. Final fallback to cached browser storage user if approved
+    if (!user && storedUser && String(storedUser.approval_status || 'APPROVED').toUpperCase() === 'APPROVED') {
+        user = storedUser;
+    }
+
+    // Synchronize global window & storage state
+    saveSession(user);
+    return user;
+}
+
+export async function getCurrentUser(options = {}) {
+    return detectActiveUserSession(options);
 }
 
 import { authStorage } from '../../scripts/modules/storage.js';
