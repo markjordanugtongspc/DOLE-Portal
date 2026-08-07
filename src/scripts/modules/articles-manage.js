@@ -869,6 +869,39 @@ class ArticlesBrowseController {
         } else {
             return { name: 'System Admin', avatar: 'https://ui-avatars.com/api/?name=Admin+Sys&background=random' };
         }
+    }    sanitizeSummaryAndExtractCover(rawHtml = '', articleTitle = '') {
+        if (!rawHtml) return { coverBannerHtml: '', summaryContent: '' };
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(rawHtml, 'text/html');
+
+            // Remove any leftover temporary blob: image elements
+            doc.querySelectorAll('img[src^="blob:"]').forEach(img => img.remove());
+
+            let coverBannerHtml = '';
+            const firstChild = doc.body.firstElementChild;
+            if (firstChild && firstChild.tagName.toLowerCase() === 'img') {
+                const src = firstChild.getAttribute('src');
+                if (src && !src.startsWith('blob:')) {
+                    coverBannerHtml = `
+                        <div class="mb-4 rounded-lg overflow-hidden -mx-6 -mt-6">
+                            <img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(articleTitle)}" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300" />
+                        </div>
+                    `;
+                }
+                firstChild.remove();
+            }
+
+            return {
+                coverBannerHtml,
+                summaryContent: doc.body.innerHTML
+            };
+        } catch {
+            return {
+                coverBannerHtml: '',
+                summaryContent: rawHtml.replace(/<img\b[^>]*src=["']blob:[^"']+["'][^>]*>/gi, '')
+            };
+        }
     }
 
     render() {
@@ -894,22 +927,8 @@ class ArticlesBrowseController {
             const articleEl = document.createElement('article');
             const viewUrl = `${this.articlesBasePath}view.html?id=${art.id}`;
             
-            // Extract cover image tag if summary starts with an <img> tag
-            let summaryContent = (art.summary || '').replace(/<img\b[^>]*src=["']blob:[^"']+["'][^>]*>/gi, '');
-            let coverBannerHtml = '';
-            const imgMatch = summaryContent.match(/^<img [^>]*src=["']([^"']+)["'][^>]*>/i);
-
-            if (imgMatch) {
-                const imgUrl = imgMatch[1];
-                if (!imgUrl.startsWith('blob:')) {
-                    coverBannerHtml = `
-                        <div class="mb-4 rounded-lg overflow-hidden -mx-6 -mt-6">
-                            <img src="${imgUrl}" alt="${this.escapeHtml(art.title)}" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300" />
-                        </div>
-                    `;
-                }
-                summaryContent = summaryContent.replace(imgMatch[0], '').trim();
-            }
+            // Clean summary & extract cover banner via DOMParser
+            const { coverBannerHtml, summaryContent } = this.sanitizeSummaryAndExtractCover(art.summary || '', art.title);
             
             articleEl.className = 'p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 cursor-pointer hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between';
             articleEl.setAttribute('role', 'button');
@@ -980,15 +999,16 @@ class ArticlesViewController {
 
     async load() {
         const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
+        const rawId = params.get('id');
+        const numId = Number.parseInt(rawId, 10);
 
-        if (!id) {
-            this.showError('No article ID specified in the URL.');
+        if (!rawId || Number.isNaN(numId) || numId <= 0) {
+            this.showError('Invalid or missing article ID in the URL.');
             return;
         }
 
         try {
-            const { data, error } = await fetchArticleById(id);
+            const { data, error } = await fetchArticleById(numId);
 
             if (error || !data) {
                 this.showError(error?.message || 'Article not found.');

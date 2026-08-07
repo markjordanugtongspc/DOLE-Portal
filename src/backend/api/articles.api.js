@@ -49,10 +49,15 @@ export async function createArticle(payload) {
  * @returns {Promise<{ data: object|null, error: string|null }>}
  */
 export async function fetchArticleById(id) {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+        return { data: null, error: 'Invalid article ID provided.' };
+    }
+
     const { data, error } = await supabase
         .from('kb_articles')
         .select('*')
-        .eq('id', id)
+        .eq('id', numericId)
         .maybeSingle();
 
     if (error) {
@@ -64,10 +69,15 @@ export async function fetchArticleById(id) {
 }
 
 export async function updateArticle(id, payload) {
+    const numericId = Number(id);
+    if (!Number.isFinite(numericId) || numericId <= 0) {
+        return { data: null, error: 'Invalid article ID provided.' };
+    }
+
     const { data, error } = await supabase
         .from('kb_articles')
         .update(payload)
-        .eq('id', id)
+        .eq('id', numericId)
         .select('*')
         .maybeSingle();
 
@@ -87,6 +97,7 @@ export async function updateArticle(id, payload) {
 }
 
 const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'system-images';
+const MAX_IMAGE_SIZE_BYTES = 6 * 1024 * 1024; // 6MB limit
 
 /**
  * Upload an image file for a knowledge base article to Supabase Storage.
@@ -95,6 +106,13 @@ const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'system-i
  */
 export async function uploadArticleImage(file) {
     if (!file) return { url: null, error: 'No file provided' };
+
+    if (file.type && !file.type.startsWith('image/')) {
+        return { url: null, error: 'Only image files are allowed.' };
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        return { url: null, error: 'Image size exceeds the maximum allowed 6MB limit.' };
+    }
 
     const ext = file.name.split('.').pop().toLowerCase();
     const filePath = `articles/article-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
