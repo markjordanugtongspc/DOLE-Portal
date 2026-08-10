@@ -774,7 +774,9 @@ class TicketSupportApp {
 
     /* START bindChatViewEvents */
     bindChatViewEvents() {
-        document.getElementById('btn-back-to-table')?.addEventListener('click', () => this.closeTicket());
+        document.getElementById('btn-back-to-table')?.addEventListener('click', () => this.handleChatBack());
+        document.getElementById('btn-toggle-chat-details')?.addEventListener('click', () => this.setMobileChatMode('details'));
+        window.addEventListener('resize', () => this.syncMobileBackButton(), { passive: true });
         document.getElementById('btn-close-chat')?.addEventListener('click', () => this.handleCloseTicketStatus());
         document.getElementById('btn-create-ticket')?.addEventListener('click', () => this.handleCreateTicket());
         document.getElementById('btn-upload-image')?.addEventListener('click', () => {
@@ -937,6 +939,7 @@ class TicketSupportApp {
         window.history.pushState({ ...window.history.state, ticketId, category: this.selectedCategory }, '', `${window.location.pathname}?${ticketParams.toString()}`);
 
         this.showChatView();
+        this.setMobileChatMode('conversation');
 
         const ticket = this.tickets.find(t => t.id === ticketId);
         const viewport = document.getElementById('chat-messages-viewport');
@@ -1018,11 +1021,85 @@ class TicketSupportApp {
         }, 100);
     }
 
+    syncMobileBackButton() {
+        const backButton = document.getElementById('btn-back-to-table');
+        const mobileSlot = document.getElementById('mobile-chat-back-slot');
+        const headerSlot = document.getElementById('chat-header-back-slot');
+        if (!backButton || !mobileSlot || !headerSlot) return;
+
+        const isMobile = window.matchMedia('(max-width: 639px)').matches;
+        const target = isMobile && !document.getElementById('chat-view-container')?.classList.contains('hidden')
+            ? mobileSlot
+            : headerSlot;
+        if (backButton.parentElement !== target) target.appendChild(backButton);
+        backButton.classList.toggle('ms-2', target === mobileSlot);
+        backButton.classList.toggle('mt-3', target === mobileSlot);
+    }
+    setMobileChatMode(mode) {
+        this.mobileChatMode = mode;
+        const list = document.getElementById('chat-tickets-drawer');
+        const conversation = document.getElementById('chat-conversation-panel');
+        const details = document.getElementById('chat-details-panel');
+        if (!list || !conversation || !details) return;
+
+        const show = (element) => {
+            element.classList.remove('hidden');
+            element.classList.add('flex');
+        };
+        const hide = (element) => {
+            element.classList.add('hidden');
+            element.classList.remove('flex');
+        };
+
+        if (mode === 'list') {
+            show(list);
+            hide(conversation);
+            hide(details);
+        } else if (mode === 'details') {
+            hide(list);
+            hide(conversation);
+            show(details);
+        } else {
+            hide(list);
+            show(conversation);
+            hide(details);
+        }
+    }
+
+    handleChatBack() {
+        if (this.mobileChatMode === 'details') {
+            this.setMobileChatMode('conversation');
+        } else if (this.mobileChatMode === 'conversation' && this.selectedTicketId) {
+            this.showChatTicketList();
+        } else {
+            this.closeTicket();
+        }
+    }
+
+    showChatTicketList() {
+        this.selectedTicketId = null;
+        this.selectedTicketDbId = null;
+        if (this._messagesChannel) {
+            supabase.removeChannel(this._messagesChannel);
+            this._messagesChannel = null;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        params.delete('ticket');
+        params.delete('id');
+        const query = params.toString();
+        window.history.pushState({ ...window.history.state, category: this.selectedCategory }, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+        localStorage.removeItem('active-ticket-id');
+        this.setMobileChatMode('list');
+        this.renderChatSidebar();
+    }
     showChatView() {
         document.getElementById('table-breadcrumbs')?.classList.add('hidden');
         document.getElementById('table-view-container')?.classList.add('hidden');
         document.getElementById('chat-breadcrumbs')?.classList.remove('hidden');
         document.getElementById('chat-view-container')?.classList.remove('hidden');
+        this.syncMobileBackButton();
+        this.setMobileChatMode('list');
     }
 
     updateStaffCreateTicketVisibility() {
@@ -1043,7 +1120,7 @@ class TicketSupportApp {
                     headerCreateBtn.classList.remove('hidden');
                     headerCreateBtn.classList.add('inline-flex');
 
-                    headerCreateBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm';
+                    headerCreateBtn.className = 'cursor-pointer inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 px-4 py-2.5 rounded-lg transition-colors shadow-sm';
                     headerCreateBtn.innerHTML = `
                         <span>Re-open Ticket</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1055,7 +1132,7 @@ class TicketSupportApp {
                     headerCreateBtn.classList.remove('hidden');
                     headerCreateBtn.classList.add('inline-flex');
 
-                    headerCreateBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm';
+                    headerCreateBtn.className = 'cursor-pointer inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 px-4 py-2.5 rounded-lg transition-colors shadow-sm';
                     headerCreateBtn.innerHTML = `
                         <span>Close Ticket</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1068,7 +1145,7 @@ class TicketSupportApp {
                 headerCreateBtn.classList.toggle('hidden', !hasTickets);
                 headerCreateBtn.classList.toggle('inline-flex', hasTickets);
 
-                headerCreateBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-3.5 py-2 rounded-lg transition-colors shadow-sm';
+                headerCreateBtn.className = 'cursor-pointer inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 px-4 py-2.5 rounded-lg transition-colors shadow-sm';
                 headerCreateBtn.innerHTML = `
                     <span>Create Ticket</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1146,7 +1223,7 @@ class TicketSupportApp {
             const adminCloseBtn = document.getElementById('btn-close-chat');
             if (adminCloseBtn) {
                 if (isClosed) {
-                    adminCloseBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm';
+                    adminCloseBtn.className = 'cursor-pointer max-md:hidden inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm';
                     adminCloseBtn.innerHTML = `
                         <span>Re-open</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1154,7 +1231,7 @@ class TicketSupportApp {
                         </svg>
                     `;
                 } else {
-                    adminCloseBtn.className = 'cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm';
+                    adminCloseBtn.className = 'cursor-pointer max-md:hidden inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors shadow-sm';
                     adminCloseBtn.innerHTML = `
                         <span>Close</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1469,6 +1546,7 @@ class TicketSupportApp {
         this.activeView = 'table';
         document.getElementById('chat-breadcrumbs')?.classList.add('hidden');
         document.getElementById('chat-view-container')?.classList.add('hidden');
+        this.syncMobileBackButton();
         document.getElementById('table-breadcrumbs')?.classList.remove('hidden');
         document.getElementById('table-view-container')?.classList.remove('hidden');
         this.table.render();
@@ -1692,7 +1770,7 @@ class TicketSupportApp {
         let html = '';
         const tags = ticket.tags || [];
         tags.forEach((tag, idx) => {
-            html += `<span class="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-900 text-white dark:bg-gray-950 dark:text-white px-2 py-0.5 rounded-md">${esc(tag)} <button type="button" class="cursor-pointer text-gray-400 hover:text-white font-bold select-none remove-tag-btn" data-tag-idx="${idx}">ÃƒÆ’Ã¢â‚¬â€</button></span>`;
+            html += `<span class="inline-flex items-center gap-1 text-[10px] font-bold bg-gray-900 text-white dark:bg-gray-950 dark:text-white px-2 py-0.5 rounded-md">${esc(tag)} <button type="button" class="cursor-pointer text-gray-400 hover:text-white font-bold select-none remove-tag-btn" data-tag-idx="${idx}">&times;</button></span>`;
         });
         html += `<input type="text" id="details-tags-input" class="bg-transparent border-0 outline-none text-[10px] text-gray-900 dark:text-white p-0 focus:ring-0 flex-1 min-w-[60px]" placeholder="+ Add tag..." />`;
         container.innerHTML = html;
@@ -2360,16 +2438,22 @@ class CategoryDrawer {
     }
 
     toggle() {
-        const isCollapsed = this.drawerEl.classList.toggle('w-0');
-        this.drawerEl.classList.toggle('w-72', !isCollapsed);
-        this.drawerEl.classList.toggle('p-5', !isCollapsed);
-        this.drawerEl.classList.toggle('p-0', isCollapsed);
-        this.drawerEl.classList.toggle('border', !isCollapsed);
-        this.drawerEl.classList.toggle('border-0', isCollapsed);
-        this.drawerEl.classList.toggle('opacity-0', isCollapsed);
-        this.drawerEl.classList.toggle('pointer-events-none', isCollapsed);
+        const isCollapsed = this.drawerEl.classList.contains('w-0');
+        if (isCollapsed) {
+            clearTimeout(this.collapseTimer);
+            this.drawerEl.classList.remove('hidden');
+            this.drawerEl.classList.remove('w-0', 'p-0', 'border-0', 'opacity-0', 'pointer-events-none');
+            this.drawerEl.classList.add('w-full', 'lg:w-72', 'p-5', 'border');
+        } else {
+            this.drawerEl.classList.remove('w-full', 'lg:w-72', 'p-5', 'border');
+            this.drawerEl.classList.add('w-0', 'p-0', 'border-0', 'opacity-0', 'pointer-events-none');
+            clearTimeout(this.collapseTimer);
+            this.collapseTimer = setTimeout(() => {
+                if (this.drawerEl.classList.contains('w-0')) this.drawerEl.classList.add('hidden');
+            }, 300);
+        }
         this.toggleBtns.forEach(btn => btn.classList.toggle('text-blue-600', !isCollapsed));
-        if (window.DEBUG) window.DEBUG.log('TICKET-SUPPORT', `Category drawer toggled. Collapsed: ${isCollapsed}`);
+        if (window.DEBUG) window.DEBUG.log('TICKET-SUPPORT', 'Category drawer toggled. Collapsed: ' + !isCollapsed);
     }
 
     setActiveCategoryUI(category) {

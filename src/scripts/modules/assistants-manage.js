@@ -154,7 +154,7 @@ export const initAssistantsManage = () => {
                         <input type="checkbox" value="${asst.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
                     </div>
                 </td>
-                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
+                <td class="min-w-[240px] px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap text-left">
                     <div class="flex items-center gap-3">
                         <img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800" src="${asst.avatar}" alt="${asst.name}">
                         <div class="flex flex-col justify-start text-left">
@@ -163,10 +163,10 @@ export const initAssistantsManage = () => {
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium">
+                <td class="min-w-[150px] px-6 py-4 text-left align-middle text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">
                     ${asst.username}
                 </td>
-                <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400">
+                <td class="min-w-[150px] px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     ${asst.phone || '<span class="italic text-gray-300 dark:text-gray-700 font-normal">None</span>'}
                 </td>
                 <td class="px-6 py-4 text-left align-middle">

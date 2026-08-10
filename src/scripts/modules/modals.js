@@ -197,8 +197,8 @@ const settingsAvatarFallback = (user = {}) => {
 
 const settingsField = (id, label, type = 'text', extra = '') => `
     <div>
-        <label for="${id}" class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300">${label}</label>
-        <input id="${id}" name="${id}" type="${type}" placeholder="Enter ${label.toLowerCase()}" ${extra} class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+        <label for="${id}" class="mb-1 block text-xs font-bold sm:mb-1.5 uppercase tracking-wide text-gray-700 dark:text-gray-300">${label}</label>
+        <input id="${id}" name="${id}" type="${type}" placeholder="Enter ${label.toLowerCase()}" ${extra} class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 sm:p-2.5 text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
     </div>`;
 
 const createSettingsModal = () => {
@@ -207,13 +207,13 @@ const createSettingsModal = () => {
     modal.id = 'global-settings-modal';
     modal.tabIndex = -1;
     modal.setAttribute('aria-hidden', 'true');
-    modal.className = 'fixed inset-0 z-50 hidden h-full w-full overflow-y-auto overflow-x-hidden p-4 md:inset-0';
+    modal.className = 'fixed inset-0 z-50 hidden h-full w-full overflow-y-auto overflow-x-hidden p-2 sm:p-4 md:inset-0';
     modal.innerHTML = `
-        <div class="relative mx-auto my-4 w-full max-w-3xl md:my-8">
+        <div class="relative mx-auto my-2 w-full max-w-3xl sm:my-4 md:my-8">
             <div class="relative rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
-                <div class="flex items-center justify-between rounded-t-xl border-b border-gray-200 p-4 dark:border-gray-700 md:p-5">
+                <div class="flex items-center justify-between rounded-t-xl border-b border-gray-200 p-3 dark:border-gray-700 sm:p-4 md:p-5">
                     <div>
-                        <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Settings</h2>
+                        <h2 class="text-lg font-extrabold text-gray-900 dark:text-white sm:text-xl">Settings</h2>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Manage your Portal profile and security settings.</p>
                     </div>
                     <button type="button" data-settings-modal-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white" aria-label="Close settings">
@@ -221,27 +221,27 @@ const createSettingsModal = () => {
                     </button>
                 </div>
                 <form id="global-settings-form">
-                    <div class="grid gap-6 p-4 md:grid-cols-[180px_1fr] md:p-6">
-                        <div class="flex flex-col items-center gap-3">
-                            <img id="settings-avatar-preview" class="h-32 w-32 rounded-full border-4 border-blue-100 object-cover shadow-sm dark:border-blue-900" alt="Profile avatar" />
+                    <div class="grid gap-4 p-3 sm:gap-5 sm:p-4 md:grid-cols-[180px_1fr] md:gap-6 md:p-6">
+                        <div class="flex flex-col items-center gap-2 sm:gap-3">
+                            <img id="settings-avatar-preview" class="h-24 w-24 rounded-full border-4 sm:h-28 sm:w-28 md:h-32 md:w-32 border-blue-100 object-cover shadow-sm dark:border-blue-900" alt="Profile avatar" />
                             <label for="settings-avatar-file" class="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Change avatar</label>
                             <input id="settings-avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
                             <p class="text-center text-[11px] text-gray-500 dark:text-gray-400">PNG, JPG, or WEBP<br />Maximum 3MB</p>
                         </div>
-                        <div class="space-y-5">
-                            <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-4 sm:space-y-5">
+                            <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
                                 ${settingsField('full_name', 'Full name', 'text', 'autocomplete="name" required maxlength="160"')}
                                 ${settingsField('birthday', 'Birthday', 'date', 'autocomplete="bday"')}
                             </div>
-                            <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
                                 ${settingsField('username', 'Username', 'text', 'autocomplete="username" required maxlength="80"')}
                                 ${settingsField('email', 'Email', 'email', 'autocomplete="email" required maxlength="180"')}
                             </div>
                             ${settingsField('phone', 'Phone number', 'tel', 'autocomplete="tel" maxlength="40"')}
-                            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+                            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 sm:p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
                                 <h3 class="text-sm font-extrabold text-amber-900 dark:text-amber-200">Change password</h3>
                                 <p class="mt-1 text-xs text-amber-800 dark:text-amber-300">Leave all four fields empty to keep your current password.</p>
-                                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                                <div class="mt-3 grid gap-3 sm:mt-4 sm:gap-4 sm:grid-cols-2">
                                     ${settingsField('current_password', 'Current password', 'password', 'autocomplete="current-password" minlength="1"')}
                                     ${settingsField('current_password_confirm', 'Confirm current password', 'password', 'autocomplete="current-password" minlength="1"')}
                                     ${settingsField('new_password', 'New password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
@@ -251,9 +251,9 @@ const createSettingsModal = () => {
                             <p id="settings-form-status" class="hidden rounded-lg p-3 text-sm font-semibold" role="alert"></p>
                         </div>
                     </div>
-                    <div class="flex flex-col-reverse gap-3 rounded-b-xl border-t border-gray-200 p-4 dark:border-gray-700 sm:flex-row sm:justify-end md:p-6">
-                        <button type="button" data-settings-modal-close class="cursor-pointer rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
-                        <button id="settings-save-button" type="submit" class="cursor-pointer rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">Save settings</button>
+                    <div class="flex flex-col-reverse gap-2 rounded-b-xl border-t border-gray-200 p-3 dark:border-gray-700 sm:flex-row sm:justify-end sm:gap-3 md:p-6">
+                        <button type="button" data-settings-modal-close class="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
+                        <button id="settings-save-button" type="submit" class="cursor-pointer rounded-lg bg-blue-700 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">Save settings</button>
                     </div>
                 </form>
             </div>
