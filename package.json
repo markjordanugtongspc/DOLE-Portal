@@ -1,6 +1,6 @@
 {
   "name": "portal",
-  "version": "5.2.2",
+  "version": "5.2.6",
   "private": true,
   "type": "module",
   "scripts": {

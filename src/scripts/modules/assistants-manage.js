@@ -1,6 +1,7 @@
 import { Modal } from 'flowbite';
 import { fetchGipsByStaff, createGip, updateGip, archiveGip } from '@/backend/api/gips.api.js';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
+import { assistantAddDraftStorage } from '@/scripts/modules/storage.js';
 
 /* START STAFF ASSISTANTS MANAGEMENT CONTROLLER */
 export const initAssistantsManage = () => {
@@ -296,6 +297,28 @@ export const initAssistantsManage = () => {
         if (idInput) idInput.value = '';
     };
 
+    /* START ASSISTANT ADD DRAFT CACHE */
+    const assistantDraftData = () => ({
+        full_name: nameInput?.value.trim() || '',
+        username: usernameInput?.value.trim() || '',
+        email: emailInput?.value.trim() || '',
+        phone: phoneInput?.value.trim() || ''
+    });
+
+    const restoreAssistantDraft = () => {
+        const draft = assistantAddDraftStorage.getDraft();
+        if (!draft) return;
+        if (nameInput) nameInput.value = draft.full_name || '';
+        if (usernameInput) usernameInput.value = draft.username || '';
+        if (emailInput) emailInput.value = draft.email || '';
+        if (phoneInput) phoneInput.value = draft.phone || '';
+        window.DEBUG?.flow('ASSISTANTS', 'Restored Add Assistant draft.');
+    };
+
+    const cacheAssistantDraft = () => {
+        if (!idInput?.value) assistantAddDraftStorage.saveDraft(assistantDraftData());
+    };
+    /* END ASSISTANT ADD DRAFT CACHE */
     // Configure Add Mode
     const configureAddMode = () => {
         resetForm();
@@ -305,6 +328,7 @@ export const initAssistantsManage = () => {
         if (confirmPasswordInput) confirmPasswordInput.required = true;
         if (pwdRequiredStar) pwdRequiredStar.classList.remove('hidden');
         if (confPwdRequiredStar) confPwdRequiredStar.classList.remove('hidden');
+        restoreAssistantDraft();
     };
 
     // Configure Edit Mode
@@ -337,6 +361,11 @@ export const initAssistantsManage = () => {
         });
     };
     setupModalClose(editModalEl, editModal);
+    /* START ASSISTANT ADD DRAFT CANCEL CLEAR */
+    editModalEl?.querySelectorAll('[data-modal-hide="editAssistantModal"]').forEach((button) => button.addEventListener('click', () => {
+        if (!idInput?.value) assistantAddDraftStorage.clearDraft();
+    }));
+    /* END ASSISTANT ADD DRAFT CANCEL CLEAR */
     setupModalClose(viewModalEl, viewModal);
     setupModalClose(archiveModalEl, archiveModal);
 
@@ -443,6 +472,7 @@ export const initAssistantsManage = () => {
                     };
                     const res = await createGip(payload);
                     if (res.error) throw new Error(res.error);
+                    assistantAddDraftStorage.clearDraft();
                 } else {
                     // EDIT
                     const updates = {
@@ -478,6 +508,9 @@ export const initAssistantsManage = () => {
         });
     }
 
+
+    form?.addEventListener('input', cacheAssistantDraft);
+    form?.addEventListener('change', cacheAssistantDraft);
     // Archive Variables
     let assistantToArchiveId = null;
     const btnConfirmArchive = document.getElementById('btn-confirm-archive');

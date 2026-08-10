@@ -4,6 +4,7 @@ import { archiveGip, createGip, fetchAllGips, updateGip } from '@/backend/api/gi
 import { archiveUser, createUser, fetchOffices, fetchRoles, fetchUsers, updateUser } from '@/backend/api/users.api.js';
 import { supabase } from '@/backend/api/supabase.js';
 import { createNotification } from '@/backend/api/notifications.api.js';
+import { staffAddDraftStorage } from '@/scripts/modules/storage.js';
 
 export const initStaffsManage = () => {
     const table = document.getElementById('sorting-table');
@@ -295,6 +296,7 @@ export const initStaffsManage = () => {
         if (els.confPwdRequiredStar) els.confPwdRequiredStar.classList.remove('hidden');
         if (els.pinRequiredStar) els.pinRequiredStar.classList.remove('hidden');
         gipBtnState();
+        restoreStaffDraft();
         window.DEBUG?.flow('STAFFS', 'Configured Add Staff modal.');
     };
     const editStaffMode = (u) => {
@@ -329,6 +331,51 @@ export const initStaffsManage = () => {
         els.gipBox.appendChild(block); gipBtnState();
     };
     const collectGips = () => Array.from(els.gipBox?.children || []).map(b => ({ full_name: b.querySelector('[name="gip_name[]"]')?.value.trim() || '', username: b.querySelector('[name="gip_username[]"]')?.value.trim() || '', email: b.querySelector('[name="gip_email[]"]')?.value.trim() || '', phone: b.querySelector('[name="gip_phone[]"]')?.value.trim() || null, password: b.querySelector('[name="gip_password[]"]')?.value || '', confirm: b.querySelector('[name="gip_confirm_password[]"]')?.value || '' }));
+
+    /* START STAFF ADD DRAFT CACHE */
+    const staffDraftData = () => ({
+        full_name: els.staffName?.value.trim() || '',
+        birthday: els.birthday?.value || '',
+        role_id: els.role?.value || '',
+        office_id: els.office?.value || '',
+        username: els.username?.value.trim() || '',
+        email: els.email?.value.trim() || '',
+        phone: els.phone?.value.trim() || '',
+        gips: Array.from(els.gipBox?.children || []).map((block) => ({
+            full_name: block.querySelector('[name="gip_name[]"]')?.value.trim() || '',
+            username: block.querySelector('[name="gip_username[]"]')?.value.trim() || '',
+            email: block.querySelector('[name="gip_email[]"]')?.value.trim() || '',
+            phone: block.querySelector('[name="gip_phone[]"]')?.value.trim() || ''
+        }))
+    });
+
+    const restoreStaffDraft = () => {
+        const draft = staffAddDraftStorage.getDraft();
+        if (!draft) return;
+        if (els.staffName) els.staffName.value = draft.full_name || '';
+        if (els.birthday) els.birthday.value = draft.birthday || '';
+        if (positionDropdown) positionDropdown.setValue(draft.role_id || '');
+        if (officeDropdown) officeDropdown.setValue(draft.office_id || '');
+        if (els.username) els.username.value = draft.username || '';
+        if (els.email) els.email.value = draft.email || '';
+        if (els.phone) els.phone.value = draft.phone || '';
+        (draft.gips || []).forEach((gip) => {
+            addGipBlock();
+            const block = els.gipBox?.lastElementChild;
+            if (!block) return;
+            block.querySelector('[name="gip_name[]"]').value = gip.full_name || '';
+            block.querySelector('[name="gip_username[]"]').value = gip.username || '';
+            block.querySelector('[name="gip_email[]"]').value = gip.email || '';
+            block.querySelector('[name="gip_phone[]"]').value = gip.phone || '';
+        });
+        gipBtnState();
+        window.DEBUG?.flow('STAFFS', 'Restored Add Staff draft.');
+    };
+
+    const cacheStaffDraft = () => {
+        if (mode === 'add-staff') staffAddDraftStorage.saveDraft(staffDraftData());
+    };
+    /* END STAFF ADD DRAFT CACHE */
     const saveGipBlocks = async (ownerId) => {
         for (const g of collectGips()) {
             if (g.password !== g.confirm) return `Passwords do not match for ${g.full_name || 'a GIP assistant'}.`;
@@ -369,6 +416,7 @@ export const initStaffsManage = () => {
                 const res = await createUser({ ...staffPayload(), password: els.password.value, pin: pinVal, approval_status: 'APPROVED' });
                 if (res.error) throw new Error(res.error);
                 const gipError = await saveGipBlocks(res.data.id); if (gipError) throw new Error(gipError);
+                staffAddDraftStorage.clearDraft();
                 window.DEBUG?.success('STAFFS', 'Staff created.', res.data);
                 void createNotification({
                     type: 'staff_created',
@@ -430,6 +478,8 @@ export const initStaffsManage = () => {
     addBtn.addEventListener('click', () => { addMode(); editModal?.show(); });
     els.addGip?.addEventListener('click', addGipBlock);
     form?.addEventListener('submit', submitForm);
+    form?.addEventListener('input', cacheStaffDraft);
+    form?.addEventListener('change', cacheStaffDraft);
     document.addEventListener('click', async (e) => {
         const table = document.getElementById('sorting-table');
         if (!table || !table.contains(e.target)) return;
@@ -552,7 +602,13 @@ export const initStaffsManage = () => {
         const user = users.find((item) => Number(item.id) === Number(ids[0]));
         if (user) window.dispatchEvent(new CustomEvent('portal:assign-user', { detail: { user } }));
     });
-    /* END STAFF ASSIGNMENT DRAWER TRIGGER */    editEl?.querySelectorAll('[data-modal-hide="editUserModal"]').forEach(b => b.addEventListener('click', () => editModal?.hide()));
+    /* END STAFF ASSIGNMENT DRAWER TRIGGER */
+    /* START STAFF ADD DRAFT CANCEL CLEAR */
+    editEl?.querySelectorAll('[data-modal-hide="editUserModal"]').forEach((button) => button.addEventListener('click', () => {
+        if (mode === 'add-staff') staffAddDraftStorage.clearDraft();
+        editModal?.hide();
+    }));
+    /* END STAFF ADD DRAFT CANCEL CLEAR */
     viewEl?.querySelectorAll('[data-modal-hide="viewUserModal"]').forEach(b => b.addEventListener('click', () => viewModal?.hide()));
 
     const initDropdowns = () => {

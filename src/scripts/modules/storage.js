@@ -158,6 +158,42 @@ export const getArticleDraft = () => articleDraftStorage.getDraft();
 export const clearArticleDraft = () => articleDraftStorage.clearDraft();
 /* === END ARTICLE DRAFT STORAGE === */
 
+/* START USER ADD-MODAL DRAFT STORAGE */
+const USER_ADD_DRAFT_TTL_MS = 25 * 60 * 1000;
+
+const createTtlDraftStorage = (key) => ({
+    saveDraft(data) {
+        try {
+            writeValue(key, JSON.stringify({ data, expiresAt: Date.now() + USER_ADD_DRAFT_TTL_MS }));
+        } catch (error) {
+            console.error('Error saving user add-modal draft:', error);
+        }
+    },
+
+    getDraft() {
+        try {
+            const raw = readValue(key);
+            if (!raw) return null;
+            const payload = JSON.parse(raw);
+            if (!payload?.expiresAt || Date.now() > payload.expiresAt) {
+                removeValue(key);
+                return null;
+            }
+            return payload.data || null;
+        } catch {
+            removeValue(key);
+            return null;
+        }
+    },
+
+    clearDraft() {
+        removeValue(key);
+    }
+});
+
+export const staffAddDraftStorage = createTtlDraftStorage('dole_staff_add_draft');
+export const assistantAddDraftStorage = createTtlDraftStorage('dole_assistant_add_draft');
+/* END USER ADD-MODAL DRAFT STORAGE */
 /* === TICKET CONVERSATION CACHE STORAGE === */
 const TICKET_MESSAGES_KEY_PREFIX = 'dole_ticket_msgs_';
 
@@ -238,6 +274,8 @@ export const appStorage = {
     auth: authStorage,
     preferences: preferencesStorage,
     articleDraft: articleDraftStorage,
+    staffAddDraft: staffAddDraftStorage,
+    assistantAddDraft: assistantAddDraftStorage,
     ticketCache: ticketCacheStorage
 };
 
