@@ -1,5 +1,5 @@
 /**
- * DOLE Iligan Portal — GIPs API
+ * DOLE Iligan Portal â€” GIPs API
  * CRUD operations for GIP assistants table.
  * Used by: assistants-manage.js (Staff manages own GIP assistants, max 2)
  */
@@ -9,13 +9,13 @@ import { hashCredential } from './auth.api.js';
 
 /**
  * Fetch all active GIP assistants created by a specific staff user.
- * @param {number} createdBy  — The staff user's ID (users.id)
+ * @param {number} createdBy  â€” The staff user's ID (users.id)
  * @returns {{ data: Array, error: string|null }}
  */
 export async function fetchGipsByStaff(createdBy) {
     const { data, error } = await supabase
         .from('gips')
-        .select('id, full_name, username, email, phone, status, created_at')
+        .select('id, full_name, username, email, phone, avatar_url, status, created_at')
         .eq('created_by', createdBy)
         .is('archived_at', null)
         .order('created_at', { ascending: true });
@@ -28,14 +28,14 @@ export async function fetchGipsByStaff(createdBy) {
 }
 
 /**
- * Fetch all GIPs (admin view — all assistants).
+ * Fetch all GIPs (admin view â€” all assistants).
  * @returns {{ data: Array, error: string|null }}
  */
 export async function fetchAllGips() {
     const { data, error } = await supabase
         .from('gips')
         .select(`
-            id, full_name, username, email, phone, status, created_at, created_by,
+            id, full_name, username, email, phone, avatar_url, status, created_at, created_by,
             users!gips_created_by_fkey ( full_name, username )
         `)
         .is('archived_at', null)
@@ -67,7 +67,7 @@ export async function countGipsByStaff(createdBy) {
 /**
  * Create a new GIP assistant.
  * Enforces max 2 per staff member at application level.
- * @param {object} payload  — { full_name, username, email, phone, password, created_by }
+ * @param {object} payload  â€” { full_name, username, email, phone, password, created_by }
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function createGip(payload) {

@@ -382,7 +382,15 @@ const setupDynamicSidebar = () => {
                 .join('')
                 .slice(0, 2)
                 .toUpperCase();
-            userAvatarEl.textContent = initials;
+            if (user.avatar_url) {
+                userAvatarEl.textContent = '';
+                userAvatarEl.style.backgroundImage = `url("${user.avatar_url}")`;
+                userAvatarEl.style.backgroundSize = 'cover';
+                userAvatarEl.style.backgroundPosition = 'center';
+            } else {
+                userAvatarEl.textContent = initials;
+                userAvatarEl.style.backgroundImage = '';
+            }
         }
 
         // Dynamic global unread badge with realtime notifications
@@ -392,6 +400,27 @@ const setupDynamicSidebar = () => {
     }
 };
 
+
+/* START LIVE PROFILE AVATAR REFRESH */
+window.addEventListener('portal:profile-updated', (event) => {
+    const user = event.detail || {};
+    const nameEl = document.getElementById('sidebar-user-name');
+    const subtitleEl = document.getElementById('sidebar-user-subtitle');
+    const avatarEl = document.getElementById('sidebar-user-avatar');
+    if (nameEl) nameEl.textContent = user.full_name || user.username || 'System User';
+    if (subtitleEl) subtitleEl.textContent = user.email || 'portal@dole.local';
+    if (!avatarEl) return;
+    if (user.avatar_url) {
+        avatarEl.textContent = '';
+        avatarEl.style.backgroundImage = `url("${user.avatar_url}")`;
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+    } else {
+        avatarEl.textContent = (user.full_name || user.username || 'SU').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+        avatarEl.style.backgroundImage = '';
+    }
+});
+/* END LIVE PROFILE AVATAR REFRESH */
 let sidebarRealtimeChannel = null;
 
 let lastSidebarTicketCount = null;

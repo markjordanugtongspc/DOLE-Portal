@@ -4,6 +4,7 @@ import { randomToken, sha256 } from './security.js';
 const COOKIE_NAME = 'portal_session';
 const DEFAULT_TTL_HOURS = 8;
 const DEFAULT_REMEMBER_TTL_HOURS = 24 * 7;
+const DEFAULT_INACTIVITY_HOURS = 2;
 
 const numberEnvironment = (name, fallback) => {
     const value = Number(process.env[name]);
@@ -13,6 +14,7 @@ const numberEnvironment = (name, fallback) => {
 const safeUser = (user = {}) => ({
     id: Number(user.id), role_id: Number(user.role_id), office_id: user.office_id === null ? null : Number(user.office_id),
     full_name: user.full_name, username: user.username, email: user.email, phone: user.phone,
+    birthday: user.birthday, avatar_url: user.avatar_url || null,
     approval_status: user.approval_status, status: user.status
 });
 
@@ -35,9 +37,12 @@ export const issuePortalSession = async (admin, userId, remember = false) => {
     const normalTtlHours = numberEnvironment('PORTAL_SESSION_TTL_HOURS', DEFAULT_TTL_HOURS);
     const maxAge = Math.floor((remember ? ttlHours : normalTtlHours) * 60 * 60);
     const token = randomToken();
-    const expiresAt = new Date(Date.now() + maxAge * 1000).toISOString();
+    const now = new Date();
     const { error } = await admin.from('portal_sessions').insert({
-        user_id: Number(userId), token_hash: sha256(token), expires_at: expiresAt
+        user_id: Number(userId),
+        token_hash: sha256(token),
+        expires_at: new Date(now.getTime() + maxAge * 1000).toISOString(),
+        last_activity_at: now.toISOString()
     });
     if (error) throw new Error('Unable to create the secure Portal session.');
     return { token, maxAge };
@@ -46,16 +51,37 @@ export const issuePortalSession = async (admin, userId, remember = false) => {
 export const getPortalSession = async (req, admin) => {
     const token = parseCookies(req)[COOKIE_NAME];
     if (!token) return null;
+
     const { data, error } = await admin
         .from('portal_sessions')
-        .select('id, user_id, expires_at, users!inner(id, role_id, office_id, full_name, username, email, phone, approval_status, status, archived_at)')
+        .select('id, user_id, expires_at, last_activity_at, users!inner(id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at)')
         .eq('token_hash', sha256(token))
         .is('revoked_at', null)
-        .gt('expires_at', new Date().toISOString())
         .maybeSingle();
     if (error || !data) return null;
+
+    const now = Date.now();
+    const inactivityHours = numberEnvironment('PORTAL_INACTIVITY_TIMEOUT_HOURS', DEFAULT_INACTIVITY_HOURS);
+    const inactivityCutoff = now - inactivityHours * 60 * 60 * 1000;
+    const expiresAt = new Date(data.expires_at || 0).getTime();
+    const lastActivityAt = new Date(data.last_activity_at || 0).getTime();
+
+    if (!Number.isFinite(expiresAt) || expiresAt <= now || !Number.isFinite(lastActivityAt) || lastActivityAt <= inactivityCutoff) {
+        const timestamp = new Date(now).toISOString();
+        await Promise.all([
+            admin.from('portal_sessions').update({ revoked_at: timestamp }).eq('id', data.id),
+            admin.from('users').update({ status: 'offline', last_seen: timestamp }).eq('id', data.user_id)
+        ]);
+        return null;
+    }
+
     const user = Array.isArray(data.users) ? data.users[0] : data.users;
     if (!user || user.archived_at || String(user.approval_status || '').toUpperCase() !== 'APPROVED') return null;
+
+    // START SESSION ACTIVITY TOUCH
+    // Every authenticated request keeps the server-side inactivity window current.
+    await admin.from('portal_sessions').update({ last_activity_at: new Date(now).toISOString() }).eq('id', data.id);
+    // END SESSION ACTIVITY TOUCH
     return { sessionId: data.id, user: safeUser(user) };
 };
 

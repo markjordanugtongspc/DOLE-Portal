@@ -27,8 +27,51 @@ if (routeMatch && cachedSessionUser) {
     }
 }
 
-import { detectActiveUserSession } from '../backend/api/auth.api.js';
+import { detectActiveUserSession, logout, refreshPortalSession } from '../backend/api/auth.api.js';
 
+/* START INACTIVITY SESSION TIMEOUT */
+const INACTIVITY_LIMIT_MS = 2 * 60 * 60 * 1000;
+const SESSION_HEARTBEAT_MS = 5 * 60 * 1000;
+let inactivityTimer = null;
+let heartbeatTimer = null;
+let lastInteractionAt = Date.now();
+let timeoutInProgress = false;
+
+const startInactivityMonitor = () => {
+    if (inactivityTimer || !routeMatch) return;
+
+    const expireSession = async () => {
+        if (timeoutInProgress) return;
+        timeoutInProgress = true;
+        window.clearInterval(heartbeatTimer);
+        await logout();
+        window.location.replace('/?auth=session_timeout');
+    };
+
+    const scheduleExpiry = () => {
+        window.clearTimeout(inactivityTimer);
+        const remaining = Math.max(0, INACTIVITY_LIMIT_MS - (Date.now() - lastInteractionAt));
+        inactivityTimer = window.setTimeout(expireSession, remaining);
+    };
+
+    const recordInteraction = () => {
+        lastInteractionAt = Date.now();
+        scheduleExpiry();
+    };
+
+    ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach((eventName) => {
+        window.addEventListener(eventName, recordInteraction, { passive: true });
+    });
+
+    heartbeatTimer = window.setInterval(async () => {
+        if (Date.now() - lastInteractionAt >= INACTIVITY_LIMIT_MS) return expireSession();
+        const user = await refreshPortalSession();
+        if (!user) window.location.replace('/?auth=session_expired');
+    }, SESSION_HEARTBEAT_MS);
+
+    scheduleExpiry();
+};
+/* END INACTIVITY SESSION TIMEOUT */
 const validateProtectedRoute = async () => {
     if (!routeMatch) return;
     if (!cachedSessionUser) {
@@ -49,13 +92,10 @@ const validateProtectedRoute = async () => {
             : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
 
         if (!allowed) return window.location.replace(dashboardFor(roleId));
+        window.__PORTAL_SESSION = user;
         document.documentElement.classList.remove('portal-auth-checking');
+        startInactivityMonitor();
     } catch {
-        if (cachedSessionUser && String(cachedSessionUser.approval_status || '').toUpperCase() === 'APPROVED') {
-            window.__PORTAL_SESSION = cachedSessionUser;
-            document.documentElement.classList.remove('portal-auth-checking');
-            return;
-        }
         authStorage.clearUserSession();
         redirectToLogin();
     }

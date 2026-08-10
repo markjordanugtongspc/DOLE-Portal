@@ -1284,7 +1284,6 @@ class StaffDashboardController {
         }
 
         let onlineCount = 0;
-        let offlineCount = 0;
 
         users.forEach(user => {
             const roleName = String(user?.roles?.name || '').trim().toLowerCase();
@@ -1294,16 +1293,17 @@ class StaffDashboardController {
                 const isOnline = ['active', 'online'].includes(status);
                 if (isOnline) {
                     onlineCount++;
-                } else {
-                    offlineCount++;
                 }
             }
         });
 
-        const netCount = onlineCount - offlineCount;
+        // START ONLINE STAFF COUNT FIX
+        // This card represents currently online staff, not online minus offline.
+        const onlineStaffCount = Math.max(0, onlineCount);
         valEls.forEach(el => {
-            el.textContent = netCount.toLocaleString();
+            el.textContent = onlineStaffCount.toLocaleString();
         });
+        // END ONLINE STAFF COUNT FIX
     }
 }
 /* END STAFF-EXCLUSIVE DASHBOARD CONTROLLER */

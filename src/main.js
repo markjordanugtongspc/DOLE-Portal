@@ -114,6 +114,7 @@ const bootAppModules = async () => {
         window.DEBUG?.warn('IMPORT', 'Protected page boot halted by auth route guard.');
         return;
     }
+    await importModule('Settings modal module', () => import('@/scripts/modules/modals.js'));
     await importModule('Sidebar module', () => import('@/scripts/modules/sidebar.js'));
     await importModule('Theme toggler module', () => import('@/scripts/modules/theme-toggler.js'));
     await importModule('Slider module', () => import('@/scripts/modules/slider.js'));

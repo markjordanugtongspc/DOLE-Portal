@@ -12,9 +12,11 @@ export {
     loginWithEmail,
     loginWithPhone,
     getCurrentUser,
+    refreshPortalSession,
     saveSession,
     logout,
     hashCredential,
+    getCachedCurrentUser,
 } from './auth.api.js';
 
 // ─── Users ─────────────────────────────────────────────────────────────────────
@@ -92,3 +94,5 @@ export {
     markNotificationsRead,
     deleteNotifications,
 } from './notifications.api.js';
+
+export { fetchCurrentProfile, updateCurrentProfile, uploadUserAvatar } from './profile.api.js';

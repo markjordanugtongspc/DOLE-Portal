@@ -324,7 +324,7 @@ export const initAssistantsManage = () => {
         resetForm();
         if (modalTitle) modalTitle.textContent = 'Add Assistant';
         if (submitBtn) submitBtn.textContent = 'Add Assistant';
-        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = '••••••••'; }
+        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'; }
         if (confirmPasswordInput) confirmPasswordInput.required = true;
         if (pwdRequiredStar) pwdRequiredStar.classList.remove('hidden');
         if (confPwdRequiredStar) confPwdRequiredStar.classList.remove('hidden');
@@ -397,7 +397,7 @@ export const initAssistantsManage = () => {
             email: g.email || '',
             phone: g.phone || '',
             status: g.status === 'online' ? 'Active' : 'Offline',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(g.full_name)}&background=random`
+            avatar: g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.full_name)}&background=random`
         }));
 
         renderTable();

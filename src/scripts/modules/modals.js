@@ -1,9 +1,10 @@
 /**
- * DOLE Portal — Centralized Modals System (Flowbite Integration)
+ * DOLE Portal â€” Centralized Modals System (Flowbite Integration)
  * Standardized image preview modal using Flowbite Modal and Tailwind CSS.
  */
 
 import { Modal } from 'flowbite';
+import { fetchCurrentProfile, updateCurrentProfile, uploadUserAvatar } from '@/backend/api/profile.api.js';
 
 let imageModalInstance = null;
 let currentPreviewUrl = '';
@@ -40,7 +41,7 @@ export function downloadImageFile(url, filename = 'attachment-image.png') {
 
 /**
  * Show a clean, borderless large image preview pop-up modal using Flowbite Modal.
- * @param {string} imageUrl — URL of the image to display
+ * @param {string} imageUrl â€” URL of the image to display
  */
 export function showImagePreviewModal(imageUrl) {
     if (!imageUrl) return;
@@ -102,3 +103,153 @@ export function showImagePreviewModal(imageUrl) {
 
     imageModalInstance.show();
 }
+
+/* START GLOBAL SETTINGS MODAL */
+let settingsModalInstance = null;
+let settingsProfile = null;
+let settingsAvatarFile = null;
+
+const escapeSettingsHtml = (value = '') => String(value)
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+
+const settingsAvatarFallback = (user = {}) => `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || user.username || 'User')}&background=DBEAFE&color=1D4ED8&bold=true`;
+
+const settingsField = (id, label, type = 'text', extra = '') => `
+    <div>
+        <label for="${id}" class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300">${label}</label>
+        <input id="${id}" name="${id}" type="${type}" ${extra} class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+    </div>`;
+
+const createSettingsModal = () => {
+    if (document.getElementById('global-settings-modal')) return document.getElementById('global-settings-modal');
+    const modal = document.createElement('div');
+    modal.id = 'global-settings-modal';
+    modal.tabIndex = -1;
+    modal.setAttribute('aria-hidden', 'true');
+    modal.className = 'fixed inset-0 z-50 hidden h-full w-full overflow-y-auto overflow-x-hidden p-4 md:inset-0';
+    modal.innerHTML = `
+        <div class="relative mx-auto my-4 w-full max-w-3xl md:my-8">
+            <div class="relative rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex items-center justify-between rounded-t-xl border-b border-gray-200 p-4 dark:border-gray-700 md:p-5">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-gray-900 dark:text-white">Settings</h2>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Manage your Portal profile and security settings.</p>
+                    </div>
+                    <button type="button" data-settings-modal-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white" aria-label="Close settings">
+                        <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6-6M7 7l6 6"/></svg>
+                    </button>
+                </div>
+                <form id="global-settings-form">
+                    <div class="grid gap-6 p-4 md:grid-cols-[180px_1fr] md:p-6">
+                        <div class="flex flex-col items-center gap-3">
+                            <img id="settings-avatar-preview" class="h-32 w-32 rounded-full border-4 border-blue-100 object-cover shadow-sm dark:border-blue-900" alt="Profile avatar" />
+                            <label for="settings-avatar-file" class="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Change avatar</label>
+                            <input id="settings-avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
+                            <p class="text-center text-[11px] text-gray-500 dark:text-gray-400">PNG, JPG, or WEBP<br />Maximum 3MB</p>
+                        </div>
+                        <div class="space-y-5">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                ${settingsField('full_name', 'Full name', 'text', 'autocomplete="name" required maxlength="160"')}
+                                ${settingsField('birthday', 'Birthday', 'date', 'autocomplete="bday"')}
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                ${settingsField('username', 'Username', 'text', 'autocomplete="username" required maxlength="80"')}
+                                ${settingsField('email', 'Email', 'email', 'autocomplete="email" required maxlength="180"')}
+                            </div>
+                            ${settingsField('phone', 'Phone number', 'tel', 'autocomplete="tel" maxlength="40"')}
+                            <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+                                <h3 class="text-sm font-extrabold text-amber-900 dark:text-amber-200">Change password</h3>
+                                <p class="mt-1 text-xs text-amber-800 dark:text-amber-300">Leave all four fields empty to keep your current password.</p>
+                                <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                                    ${settingsField('current_password', 'Current password', 'password', 'autocomplete="current-password" minlength="1"')}
+                                    ${settingsField('current_password_confirm', 'Confirm current password', 'password', 'autocomplete="current-password" minlength="1"')}
+                                    ${settingsField('new_password', 'New password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
+                                    ${settingsField('new_password_confirm', 'Confirm new password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
+                                </div>
+                            </div>
+                            <p id="settings-form-status" class="hidden rounded-lg p-3 text-sm font-semibold" role="alert"></p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col-reverse gap-3 rounded-b-xl border-t border-gray-200 p-4 dark:border-gray-700 sm:flex-row sm:justify-end md:p-6">
+                        <button type="button" data-settings-modal-close class="cursor-pointer rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
+                        <button id="settings-save-button" type="submit" class="cursor-pointer rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">Save settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    return modal;
+};
+
+const setSettingsStatus = (message = '', type = 'error') => {
+    const el = document.getElementById('settings-form-status');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.toggle('hidden', !message);
+    el.className = `${el.className.replace(/text-(red|emerald)-\d+|bg-(red|emerald)-\d+\/\d+|border-(red|emerald)-\d+/g, '')} ${type === 'success' ? 'border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200'}`;
+};
+
+const populateSettings = (user) => {
+    settingsProfile = user;
+    ['full_name', 'birthday', 'username', 'email', 'phone'].forEach((field) => {
+        const input = document.getElementById(`settings-${field}`);
+        if (input) input.value = user?.[field] || '';
+    });
+    const preview = document.getElementById('settings-avatar-preview');
+    if (preview) preview.src = user?.avatar_url || settingsAvatarFallback(user);
+};
+
+export const initSettingsModal = () => {
+    const triggers = document.querySelectorAll('[data-settings-modal-open]');
+    if (!triggers.length) return;
+    const modal = createSettingsModal();
+    if (!settingsModalInstance) {
+        settingsModalInstance = new Modal(modal, { placement: 'center', backdrop: 'dynamic', closable: true });
+        modal.querySelectorAll('[data-settings-modal-close]').forEach((button) => button.addEventListener('click', () => settingsModalInstance?.hide()));
+        document.getElementById('settings-avatar-file')?.addEventListener('change', (event) => {
+            settingsAvatarFile = event.target.files?.[0] || null;
+            if (settingsAvatarFile) document.getElementById('settings-avatar-preview').src = URL.createObjectURL(settingsAvatarFile);
+        });
+        document.getElementById('global-settings-form')?.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const saveButton = document.getElementById('settings-save-button');
+            const data = Object.fromEntries(new FormData(form).entries());
+            const passwordFields = ['current_password', 'current_password_confirm', 'new_password', 'new_password_confirm'];
+            const hasPasswordInput = passwordFields.some((field) => data[field]);
+            if (hasPasswordInput && data.current_password !== data.current_password_confirm) return setSettingsStatus('Current password and confirmation must match.');
+            if (hasPasswordInput && data.new_password !== data.new_password_confirm) return setSettingsStatus('New password and confirmation must match.');
+            if (hasPasswordInput && String(data.new_password || '').length < 12) return setSettingsStatus('The new password must be at least 12 characters long.');
+            saveButton.disabled = true;
+            setSettingsStatus('Saving your settings…', 'success');
+            if (settingsAvatarFile) {
+                const upload = await uploadUserAvatar(settingsAvatarFile, settingsProfile?.id);
+                if (upload.error) { saveButton.disabled = false; return setSettingsStatus(upload.error); }
+                data.avatar_url = upload.url;
+            } else {
+                data.avatar_url = settingsProfile?.avatar_url || null;
+            }
+            const result = await updateCurrentProfile(data);
+            saveButton.disabled = false;
+            if (result.error) return setSettingsStatus(result.error);
+            populateSettings(result.data);
+            settingsAvatarFile = null;
+            setSettingsStatus('Settings saved successfully.', 'success');
+            window.setTimeout(() => settingsModalInstance?.hide(), 700);
+        });
+    }
+    triggers.forEach((trigger) => trigger.addEventListener('click', async () => {
+        settingsAvatarFile = null;
+        setSettingsStatus('Loading your profile…', 'success');
+        settingsModalInstance.show();
+        const result = await fetchCurrentProfile();
+        if (result.error) return setSettingsStatus(result.error);
+        populateSettings(result.data);
+        setSettingsStatus('');
+    }));
+};
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSettingsModal);
+else initSettingsModal();
+/* END GLOBAL SETTINGS MODAL */

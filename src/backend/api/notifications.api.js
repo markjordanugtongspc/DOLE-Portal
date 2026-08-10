@@ -49,7 +49,7 @@ export async function fetchNotifications(recipientRole, filter = 'all') {
 
     const { data: users, error: usersError } = await supabase
         .from('users')
-        .select('id, full_name, username')
+        .select('id, full_name, username, avatar_url')
         .in('id', userIds);
 
     if (usersError) {

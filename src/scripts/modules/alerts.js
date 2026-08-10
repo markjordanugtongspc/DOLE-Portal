@@ -22,7 +22,7 @@ const esc = (value = '') => String(value ?? '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-const avatar = (person) => `https://ui-avatars.com/api/?name=${encodeURIComponent(person?.full_name || person?.username || 'DOLE Portal')}&background=DBEAFE&color=1D4ED8&bold=true`;
+const avatar = (person) => person?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(person?.full_name || person?.username || 'DOLE Portal')}&background=DBEAFE&color=1D4ED8&bold=true`;
 
 export const initAlerts = () => {
     const root = document.getElementById('alerts-page');

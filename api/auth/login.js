@@ -8,6 +8,7 @@ const identityColumnByMode = { username: 'username', email: 'email', phone: 'pho
 const safeUser = (user) => ({
     id: Number(user.id), role_id: Number(user.role_id), office_id: user.office_id === null ? null : Number(user.office_id),
     full_name: user.full_name, username: user.username, email: user.email, phone: user.phone,
+    birthday: user.birthday, avatar_url: user.avatar_url || null,
     approval_status: user.approval_status, status: 'online'
 });
 
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
         const admin = createPortalAdmin();
         const { data: user, error } = await admin
             .from('users')
-            .select('id, role_id, office_id, full_name, username, email, phone, approval_status, status, archived_at, password, pin')
+            .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at, password, pin')
             .eq(column, normalizedIdentity)
             .maybeSingle();
 
