@@ -104,6 +104,83 @@ export function showImagePreviewModal(imageUrl) {
     imageModalInstance.show();
 }
 
+/* START UNASSIGNED EXTERNAL SYSTEM MODAL */
+let unassignedSystemModalInstance = null;
+let unassignedSystemCountdownTimer = null;
+
+export const showUnassignedSystemModal = ({ systemName = 'This system', url = '', openInNewTab = false } = {}) => {
+    const targetUrl = String(url || '').trim();
+    const canOpenTarget = /^https?:\/\//i.test(targetUrl);
+    if (!canOpenTarget) {
+        window.DEBUG?.warn('EXTERNALS', 'System link is unavailable for an unassigned account.', { systemName });
+        return false;
+    }
+
+    let modal = document.getElementById('unassigned-system-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'unassigned-system-modal';
+        modal.tabIndex = -1;
+        modal.className = 'fixed inset-0 z-[90] hidden h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden p-4';
+        modal.innerHTML = `
+            <div class="relative w-full max-w-md">
+                <div class="relative rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+                    <div class="flex items-start justify-between border-b border-gray-200 p-5 dark:border-gray-700">
+                        <div>
+                            <h2 id="unassigned-system-modal-title" class="text-lg font-extrabold text-gray-900 dark:text-white">System account not assigned</h2>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">External system access notice</p>
+                        </div>
+                        <button type="button" data-unassigned-system-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white" aria-label="Close notice">
+                            <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1l6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="p-5">
+                        <p id="unassigned-system-modal-message" class="text-sm leading-relaxed text-gray-600 dark:text-gray-300"></p>
+                        <p id="unassigned-system-modal-countdown" class="mt-4 rounded-lg bg-blue-50 p-3 text-center text-sm font-bold text-blue-800 dark:bg-blue-950/30 dark:text-blue-200"></p>
+                    </div>
+                    <div class="flex flex-col-reverse gap-3 border-t border-gray-200 p-5 sm:flex-row sm:justify-end dark:border-gray-700">
+                        <button type="button" data-unassigned-system-close class="cursor-pointer rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
+                        <button type="button" data-unassigned-system-open class="cursor-pointer rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700">Open now</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        unassignedSystemModalInstance = new Modal(modal, { placement: 'center', backdrop: 'dynamic', closable: true });
+    }
+
+    const message = modal.querySelector('#unassigned-system-modal-message');
+    const countdown = modal.querySelector('#unassigned-system-modal-countdown');
+    const openButton = modal.querySelector('[data-unassigned-system-open]');
+    let remaining = 3;
+    let cancelled = false;
+    const openTarget = () => {
+        if (cancelled) return;
+        window.clearInterval(unassignedSystemCountdownTimer);
+        document.activeElement?.blur();
+        unassignedSystemModalInstance?.hide();
+        if (openInNewTab) window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        else window.location.href = targetUrl;
+    };
+    const closeModal = () => {
+        cancelled = true;
+        window.clearInterval(unassignedSystemCountdownTimer);
+        document.activeElement?.blur();
+        unassignedSystemModalInstance?.hide();
+    };
+
+    message.textContent = `${systemName} is not yet assigned to your Portal account. Please register in this system or contact an administrator to get assigned.`;
+    countdown.textContent = `Opening ${systemName} in ${remaining} seconds...`;
+    openButton.onclick = openTarget;
+    modal.querySelectorAll('[data-unassigned-system-close]').forEach((button) => { button.onclick = closeModal; });
+    unassignedSystemModalInstance?.show();
+    unassignedSystemCountdownTimer = window.setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) return openTarget();
+        countdown.textContent = `Opening ${systemName} in ${remaining} seconds...`;
+    }, 1000);
+    return true;
+};
+/* END UNASSIGNED EXTERNAL SYSTEM MODAL */
 /* START GLOBAL SETTINGS MODAL */
 let settingsModalInstance = null;
 let settingsProfile = null;

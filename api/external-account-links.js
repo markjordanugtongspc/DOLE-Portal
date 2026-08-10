@@ -7,7 +7,7 @@ const SYSTEM_KEYS = new Set(['SPES', 'GIP']);
 
 /* START EXTERNAL ACCOUNT LINK ASSIGNMENT API */
 export default async function handler(req, res) {
-    if (!allowMethods(req, res, ['POST', 'GET'])) return;
+    if (!allowMethods(req, res, ['POST', 'GET', 'DELETE'])) return;
     if (!requireSameOrigin(req, res)) return;
 
     try {
@@ -15,6 +15,23 @@ export default async function handler(req, res) {
         const administrator = await requirePortalAdmin(req, res, admin);
         if (!administrator) return;
 
+        // START EXTERNAL ACCOUNT LINK UNASSIGNMENT
+        if (req.method === 'DELETE') {
+            const body = getRequestBody(req);
+            const portalUserId = Number(body.portal_user_id);
+            const systemKey = String(body.system_key || '').toUpperCase();
+            if (!Number.isSafeInteger(portalUserId) || portalUserId < 1 || !SYSTEM_KEYS.has(systemKey)) {
+                return sendJson(res, 400, { error: 'A valid Portal user and external system are required.' });
+            }
+            const { error: deleteError } = await admin
+                .from('external_account_links')
+                .delete()
+                .eq('portal_user_id', portalUserId)
+                .eq('system_key', systemKey);
+            if (deleteError) return sendJson(res, 500, { error: 'Unable to unassign the external system account.' });
+            return sendJson(res, 200, { data: { portal_user_id: portalUserId, system_key: systemKey, unassigned: true } });
+        }
+        // END EXTERNAL ACCOUNT LINK UNASSIGNMENT
         if (req.method === 'GET') {
             const requestUrl = new URL(req.url || '/', 'http://localhost');
             const portalUserId = Number(requestUrl.searchParams.get('portal_user_id'));

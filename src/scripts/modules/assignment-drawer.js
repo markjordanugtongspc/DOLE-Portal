@@ -1,5 +1,5 @@
 import { fetchExternalUsers, getExternalSystemConfigs } from '@/backend/api/external-systems.api.js';
-import { fetchExternalAccountLinks } from '@/backend/api/external-links.api.js';
+import { fetchExternalAccountLinks, deleteExternalAccountLink } from '@/backend/api/external-links.api.js';
 
 /* START STAFF ACCOUNT ASSIGNMENT DRAWER */
 const initStaffAssignmentDrawer = () => {
@@ -58,7 +58,7 @@ const initStaffAssignmentDrawer = () => {
     const candidateMarkup = (candidate, index) => `<button type="button" data-system-candidate="${index}" class="cursor-pointer block w-full border border-gray-200 bg-white p-3 text-left transition-colors hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"><dl class="grid grid-cols-1 gap-4">${infoRows(candidate)}</dl><span class="mt-3 inline-flex text-xs font-bold text-blue-700 dark:text-blue-400">Select this account</span></button>`;
     
     const systemCard = (system, user, existingLink, index) => {
-        const hasLink = !!existingLink;
+        const hasLink = Boolean(existingLink?.external_user_id && String(existingLink.external_user_id).trim() && String(existingLink.external_user_id).toUpperCase() !== 'N/A');
         return `<section class="border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/70 sm:p-5" data-system-card="${index}" data-system-key="${system.key}">
         <div class="mb-4 flex items-center justify-between gap-3 border-b border-gray-100 pb-3 dark:border-gray-700"><div><p class="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-400">${system.label}</p><h4 class="mt-1 text-base font-extrabold text-gray-950 dark:text-white">${system.name}</h4></div><span class="bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-300">DETECTED</span></div>
         
@@ -68,7 +68,7 @@ const initStaffAssignmentDrawer = () => {
         <div data-system-assigned-info class="border-t border-gray-100 pt-3 dark:border-gray-700 mt-2">
             <div class="mb-2 flex items-center justify-between">
                 <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">ASSIGNED ACCOUNT</p>
-                <button type="button" data-system-user-reassign class="cursor-pointer text-[10px] font-bold text-blue-700 hover:underline dark:text-blue-400">Reassign</button>
+                <div class="flex items-center gap-3"><button type="button" data-system-user-reassign class="cursor-pointer text-[10px] font-bold text-blue-700 hover:underline dark:text-blue-400">Reassign</button><button type="button" data-system-user-unassign class="cursor-pointer text-[10px] font-bold text-red-600 hover:underline dark:text-red-400">Unassign</button></div>
             </div>
             <div class="bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/40 p-3 rounded-lg">
                 <dl class="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -121,6 +121,28 @@ const initStaffAssignmentDrawer = () => {
             const clear = card.querySelector('[data-system-user-clear]');
 
             const reassignBtn = card.querySelector('[data-system-user-reassign]');
+            const unassignBtn = card.querySelector('[data-system-user-unassign]');
+            unassignBtn?.addEventListener('click', async () => {
+                if (!activePortalUser) return;
+                unassignBtn.disabled = true;
+                unassignBtn.textContent = 'Unassigning...';
+                const response = await deleteExternalAccountLink(activePortalUser.id, systemKey);
+                if (response.error) {
+                    unassignBtn.disabled = false;
+                    unassignBtn.textContent = 'Unassign';
+                    empty.textContent = response.error;
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                matchedSystems.delete(index);
+                card.querySelector('[data-system-assigned-info]')?.remove();
+                form.classList.remove('hidden');
+                input.value = '';
+                empty.textContent = 'This account is now unassigned. Search for a new account or leave it unassigned.';
+                empty.classList.remove('hidden');
+                updateAssignState();
+                input.focus();
+            });
             reassignBtn?.addEventListener('click', () => {
                 const info = card.querySelector('[data-system-assigned-info]');
                 if (info) info.classList.add('hidden');

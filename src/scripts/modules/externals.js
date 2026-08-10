@@ -1,4 +1,5 @@
 import { createExternalAccountLinks, requestSystemSsoLaunch } from '@/backend/api/external-links.api.js';
+import { showUnassignedSystemModal } from '@/scripts/modules/modals.js';
 
 /* START EXTERNAL SYSTEMS OOP CONTROLLER */
 export class ExternalsController {
@@ -37,7 +38,7 @@ export class ExternalsController {
         return requestSystemSsoLaunch(systemKey);
     }
 
-    async launchSystem({ systemKey, url, openInNewTab = false } = {}) {
+    async launchSystem({ systemKey, url, system, openInNewTab = false } = {}) {
         if (!systemKey) return;
 
         let newTab = null;
@@ -60,6 +61,13 @@ export class ExternalsController {
             return;
         }
 
+        // START UNASSIGNED SYSTEM ACCESS VALIDATION
+        if (/not assigned to this system/i.test(String(result.error || ''))) {
+            const opened = showUnassignedSystemModal({ systemName: system?.title || systemKey, url, openInNewTab });
+            if (!opened) this.showNotice(`${systemKey} is not assigned and has no configured system link. Contact an administrator.`, 'danger');
+            return;
+        }
+        // END UNASSIGNED SYSTEM ACCESS VALIDATION
         window.DEBUG?.warn('EXTERNALS', 'SSO launch is not available; opening the normal system link.', result.error || 'Missing redirect URL.');
         if (result.error) {
             this.showNotice(result.error, 'danger');

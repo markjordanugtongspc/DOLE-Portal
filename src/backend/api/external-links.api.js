@@ -35,6 +35,11 @@ export const fetchExternalAccountLinks = (portalUserId) => requestJson(`/api/ext
     method: 'GET'
 });
 
+/** Remove one Portal-to-external account mapping. */
+export const deleteExternalAccountLink = (portalUserId, systemKey) => requestJson('/api/external-account-links', {
+    method: 'DELETE',
+    body: JSON.stringify({ portal_user_id: portalUserId, system_key: systemKey })
+});
 /** Ask the trusted Portal backend to issue a short-lived SSO redirect. */
 export const requestSystemSsoLaunch = (systemKey) => requestJson('/api/sso/authorize', {
     method: 'POST',
