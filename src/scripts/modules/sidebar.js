@@ -100,8 +100,12 @@ const setupDynamicSidebar = () => {
     const role = Number(sessionUser?.role_id) === 2 ? 'hr' : requestedRole === 'alerts' ? 'admin' : requestedRole;
     const activeItem = sidebarEl.getAttribute('data-active') || 'dashboard';
 
-    // Inject base template
-    sidebarEl.innerHTML = sidebarTemplate;
+    // Keep the shell rendered by main.js during module startup, but repair the
+    // mount if this module is loaded on a page without the early shell.
+    if (!sidebarEl.dataset.shellRendered) {
+        sidebarEl.innerHTML = sidebarTemplate;
+        sidebarEl.dataset.shellRendered = 'true';
+    }
 
     // Initialize Flowbite Drawer programmatically since it is dynamically injected
     const sidebarNode = document.getElementById('default-sidebar');
@@ -341,6 +345,8 @@ const setupDynamicSidebar = () => {
             }
         });
         listEl.innerHTML = listHTML;
+        listEl.removeAttribute('aria-busy');
+        listEl.removeAttribute('aria-label');
     }
 
     if (window.DEBUG) {

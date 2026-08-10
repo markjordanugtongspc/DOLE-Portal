@@ -81,6 +81,20 @@ if (document.readyState === 'loading') {
 
 import './style.css'
 import 'flowbite';
+import sidebarTemplate from '@/components/sidebar.html?raw';
+
+/* Render the shared sidebar shell before the async module queue starts. The
+ * role-specific links are intentionally still skeletons until sidebar.js has
+ * the authenticated user and can safely select the correct navigation. */
+const renderSidebarShell = () => {
+    const sidebarEl = document.getElementById('sidebar');
+    if (!sidebarEl || sidebarEl.dataset.shellRendered) return;
+
+    sidebarEl.innerHTML = sidebarTemplate;
+    sidebarEl.dataset.shellRendered = 'true';
+};
+
+renderSidebarShell();
 /* START APP MODULE BOOTSTRAP - Imports page modules after the debugger exists */
 const importModule = async (label, loader) => {
     window.DEBUG?.flow('IMPORT', `Loading ${label}...`);
@@ -100,12 +114,12 @@ const bootAppModules = async () => {
         window.DEBUG?.warn('IMPORT', 'Protected page boot halted by auth route guard.');
         return;
     }
+    await importModule('Sidebar module', () => import('@/scripts/modules/sidebar.js'));
     await importModule('Theme toggler module', () => import('@/scripts/modules/theme-toggler.js'));
     await importModule('Slider module', () => import('@/scripts/modules/slider.js'));
     await importModule('Drawer/systems module', () => import('@/scripts/modules/drawer.js'));
     await importModule('Staff assignment drawer module', () => import('@/scripts/modules/assignment-drawer.js'));
     await importModule('External systems controller', () => import('@/scripts/modules/externals.js'));
-    await importModule('Sidebar module', () => import('@/scripts/modules/sidebar.js'));
     await importModule('Charts module', () => import('@/scripts/modules/charts.js'));
     await importModule('Dashboard module', () => import('@/scripts/modules/dashboard.js'));
     await importModule('Staffs management module', () => import('@/scripts/modules/staffs-manage.js'));
