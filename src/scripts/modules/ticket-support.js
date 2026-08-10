@@ -121,6 +121,13 @@ const timeAgo = (iso) => {
     } catch { return iso; }
 };
 
+/* START TICKET CATEGORY URL STATE */
+const TICKET_CATEGORY_PARAM = 'category';
+const TICKET_CATEGORIES = ['All', 'Support Requests', 'Bug Report', 'Feature Request', 'Closed Tickets'];
+const normalizeTicketCategory = (category) => TICKET_CATEGORIES.includes(category) ? category : 'All';
+const getTicketCategoryFromUrl = () => normalizeTicketCategory(new URLSearchParams(window.location.search).get(TICKET_CATEGORY_PARAM));
+/* END TICKET CATEGORY URL STATE */
+
 const renderConversationSkeleton = () => `
     <div class="space-y-4 p-4 animate-pulse">
         <div class="flex items-start gap-3 justify-start">
@@ -221,7 +228,7 @@ class TicketSupportApp {
 
         // App state
         this.tickets = [];
-        this.selectedCategory = 'All';
+        this.selectedCategory = getTicketCategoryFromUrl();
         this.searchQuery = '';
         this.priorityFilter = 'All';
         this.dateFilter = 'All';
@@ -252,6 +259,13 @@ class TicketSupportApp {
     async init() {
         this.drawer.init();
         this.table.init();
+
+        /* START TICKET CATEGORY URL SYNC */
+        window.addEventListener('popstate', () => {
+            const category = getTicketCategoryFromUrl();
+            if (category !== this.selectedCategory) this.setCategory(category, 'url', { persist: false });
+        });
+        /* END TICKET CATEGORY URL SYNC */
         this.bindChatViewEvents();
         this.initCreateTicketDrawer();
 
@@ -311,6 +325,7 @@ class TicketSupportApp {
 
     /* START loadTickets */
     async loadTickets() {
+        this.table.setLoading(true);
         try {
             let result;
             if (this.isAdmin) {
@@ -322,6 +337,8 @@ class TicketSupportApp {
                 if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to load tickets', result.error);
                 // Keep the last known list visible when the network briefly drops.
                 // Clearing it here incorrectly shows the "no tickets" state.
+                this.table.setLoading(false);
+                this.table.render();
                 return;
             } else {
                 this.tickets = (result.data || []).map(normalizeTicket);
@@ -355,6 +372,7 @@ class TicketSupportApp {
                     });
                 }
             }
+            this.table.setLoading(false);
             this.table.render();
             this.renderChatSidebar();
             await this._updateBadgeCountsFromApi();
@@ -365,6 +383,8 @@ class TicketSupportApp {
                 this.syncStaffComposerState();
             }
         } catch (err) {
+            this.table.setLoading(false);
+            this.table.render();
             if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'loadTickets exception', err);
         }
     }
@@ -670,6 +690,9 @@ class TicketSupportApp {
                     opt.textContent = cat.name;
                     typeSelect.appendChild(opt);
                 });
+                if (Array.from(typeSelect.options).some(option => option.value === this.selectedCategory)) {
+                    typeSelect.value = this.selectedCategory;
+                }
             }
 
             const prioritySelect = document.getElementById('filter-priority');
@@ -714,16 +737,32 @@ class TicketSupportApp {
     }
     /* END updateBadgeCounts */
 
-    /* START setCategory */
-    setCategory(category, origin = 'drawer') {
-        this.selectedCategory = category;
+    /* START TICKET CATEGORY URL STATE */
+    updateCategoryUrl(category) {
+        const normalizedCategory = normalizeTicketCategory(category);
+        const params = new URLSearchParams(window.location.search);
+        if (normalizedCategory === 'All') params.delete(TICKET_CATEGORY_PARAM);
+        else params.set(TICKET_CATEGORY_PARAM, normalizedCategory);
 
-        if (origin === 'drawer') {
-            const typeSelect = document.getElementById('filter-type');
-            if (typeSelect && typeSelect.value !== category) typeSelect.value = category;
-        } else if (origin === 'dropdown') {
-            this.drawer.setActiveCategoryUI(category);
+        const query = params.toString();
+        const nextUrl = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
+        if (nextUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+            window.history.pushState({ ...window.history.state, category: normalizedCategory }, '', nextUrl);
         }
+    }
+    /* END TICKET CATEGORY URL STATE */
+
+    /* START setCategory */
+    setCategory(category, origin = 'drawer', { persist = true } = {}) {
+        const normalizedCategory = normalizeTicketCategory(category);
+        this.selectedCategory = normalizedCategory;
+
+        const typeSelect = document.getElementById('filter-type');
+        if (typeSelect && Array.from(typeSelect.options).some(option => option.value === normalizedCategory)) {
+            typeSelect.value = normalizedCategory;
+        }
+        this.drawer.setActiveCategoryUI(normalizedCategory);
+        if (persist) this.updateCategoryUrl(normalizedCategory);
 
         this.table.render();
     }
@@ -888,7 +927,10 @@ class TicketSupportApp {
         this.selectedTicketId = ticketId;
         this.activeView = 'chat';
 
-        window.history.pushState({ ticketId }, '', `${window.location.pathname}?ticket=${ticketId}`);
+        const ticketParams = new URLSearchParams(window.location.search);
+        ticketParams.delete('id');
+        ticketParams.set('ticket', ticketId);
+        window.history.pushState({ ...window.history.state, ticketId, category: this.selectedCategory }, '', `${window.location.pathname}?${ticketParams.toString()}`);
 
         this.showChatView();
 
@@ -1407,7 +1449,11 @@ class TicketSupportApp {
             this._messagesChannel = null;
         }
 
-        window.history.pushState({}, '', window.location.pathname);
+        const categoryParams = new URLSearchParams(window.location.search);
+        categoryParams.delete('ticket');
+        categoryParams.delete('id');
+        const categoryQuery = categoryParams.toString();
+        window.history.pushState({ ...window.history.state, category: this.selectedCategory }, '', `${window.location.pathname}${categoryQuery ? `?${categoryQuery}` : ''}`);
         localStorage.removeItem('active-ticket-id');
         document.getElementById('kb-article-popover')?.classList.add('hidden');
 
@@ -2306,7 +2352,7 @@ class CategoryDrawer {
                 this.app.setCategory(category, 'drawer');
             });
         });
-        this.setActiveCategoryUI('All');
+        this.setActiveCategoryUI(this.app.selectedCategory);
     }
 
     toggle() {
@@ -2364,6 +2410,7 @@ class TicketTable {
         this.sortHeaders = document.querySelectorAll('th[data-sort]');
         this.currentSortColumn = 'id';
         this.currentSortDirection = 'asc';
+        this.isLoading = true;
     }
 
     init() {
@@ -2377,8 +2424,32 @@ class TicketTable {
             th.classList.add('cursor-pointer', 'select-none', 'group');
             th.addEventListener('click', () => this.handleSort(th.getAttribute('data-sort'), true));
         });
-        this.render();
+        // The initial tbody contains the table-shaped Flowbite skeleton.
+        // loadTickets() swaps it for real rows after the backend responds.
     }
+
+    /* START TICKET LIST SKELETON */
+    setLoading(isLoading) {
+        this.isLoading = isLoading;
+        if (!this.tbodyEl) return;
+        this.tbodyEl.setAttribute('aria-busy', String(isLoading));
+        if (!isLoading) return;
+
+        const widths = [
+            ['w-16', 'w-44', 'w-16', 'w-28', 'w-24', 'w-20'],
+            ['w-20', 'w-52', 'w-16', 'w-32', 'w-20', 'w-24'],
+            ['w-16', 'w-40', 'w-16', 'w-28', 'w-24', 'w-20'],
+            ['w-20', 'w-48', 'w-16', 'w-32', 'w-20', 'w-24'],
+            ['w-16', 'w-56', 'w-16', 'w-28', 'w-24', 'w-20'],
+            ['w-20', 'w-44', 'w-16', 'w-32', 'w-20', 'w-24'],
+        ];
+        this.tbodyEl.innerHTML = widths.map((row) => `
+            <tr class="animate-pulse border-b border-gray-100 dark:border-gray-800/50" aria-hidden="true">
+                ${row.map((width, index) => `<td class="px-6 py-4"><div class="${index === 2 ? 'h-6 rounded-md' : 'h-3 rounded-full'} ${width} bg-gray-200 dark:bg-gray-800"></div></td>`).join('')}
+            </tr>
+        `).join('') + '<tr><td colspan="6" class="px-6 py-2"><span class="sr-only">Loading tickets...</span></td></tr>';
+    }
+    /* END TICKET LIST SKELETON */
 
     handleSort(column, toggle = true) {
         if (toggle && this.currentSortColumn === column) {
@@ -2424,7 +2495,7 @@ class TicketTable {
     }
 
     render() {
-        if (!this.tbodyEl) return;
+        if (!this.tbodyEl || this.isLoading) return;
 
         // Update Table Header Text dynamically based on active category
         const isClosedView = this.app.selectedCategory === 'Closed Tickets';

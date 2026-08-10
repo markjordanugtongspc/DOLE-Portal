@@ -284,9 +284,53 @@
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody id="tickets-table-body">
-                                    <!-- Populated Dynamically via ticket-support.js -->
+                                <!-- START TICKET LIST SKELETON -->
+                                <tbody id="tickets-table-body" aria-busy="true">
+                                    <tr class="animate-pulse border-b border-gray-100 dark:border-gray-800/50" aria-hidden="true">
+                                        <td class="px-6 py-4"><div class="h-3 w-16 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-44 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-28 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-24 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                    </tr>
+                                    <tr class="animate-pulse border-b border-gray-100 dark:border-gray-800/50" aria-hidden="true">
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-52 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-32 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-24 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                    </tr>
+                                    <tr class="animate-pulse border-b border-gray-100 dark:border-gray-800/50" aria-hidden="true">
+                                        <td class="px-6 py-4"><div class="h-3 w-16 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-40 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-28 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-24 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                    </tr>
+                                    <tr class="animate-pulse border-b border-gray-100 dark:border-gray-800/50" aria-hidden="true">
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-48 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-32 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-24 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                    </tr>
+                                    <tr class="animate-pulse" aria-hidden="true">
+                                        <td class="px-6 py-4"><div class="h-3 w-16 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-56 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-28 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-24 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                        <td class="px-6 py-4"><div class="h-3 w-20 rounded-full bg-gray-200 dark:bg-gray-800"></div></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-2"><span class="sr-only">Loading tickets...</span></td>
+                                    </tr>
                                 </tbody>
+                                <!-- END TICKET LIST SKELETON -->
                             </table>
                         </div>
                     </div>
