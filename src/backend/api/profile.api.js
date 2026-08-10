@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js';
-import { saveSession } from './auth.api.js';
+import { getCachedCurrentUser, saveSession } from './auth.api.js';
+import { fetchUserById } from './users.api.js';
 
 const profileRequest = async (method = 'GET', body = null) => {
     try {
@@ -17,7 +18,20 @@ const profileRequest = async (method = 'GET', body = null) => {
     }
 };
 
-export const fetchCurrentProfile = () => profileRequest('GET');
+export const fetchCurrentProfile = async () => {
+    const serverResult = await profileRequest('GET');
+    if (!serverResult.error && serverResult.data) return serverResult;
+
+    // START CURRENT USER TABLE FALLBACK
+    // Profile reads use the existing users API when the server profile route is unavailable.
+    const currentUser = getCachedCurrentUser();
+    if (currentUser?.id) {
+        const userResult = await fetchUserById(currentUser.id);
+        if (!userResult.error && userResult.data) return { data: userResult.data, error: null };
+    }
+    // END CURRENT USER TABLE FALLBACK
+    return serverResult;
+};
 
 export const updateCurrentProfile = async (updates) => {
     const result = await profileRequest('PUT', updates);

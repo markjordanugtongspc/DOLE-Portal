@@ -48,6 +48,8 @@ const USER_SELECT_WITH_APPROVAL = `
 `;
 
 const hasMissingApprovalStatusColumn = (error) => /approval_status/i.test(error?.message || '') && /column/i.test(error?.message || '');
+const hasMissingAvatarColumn = (error) => /avatar_url/i.test(error?.message || '') && /column/i.test(error?.message || '');
+const withoutAvatarColumn = (selectClause) => selectClause.replace(/\s+avatar_url,/, '');
 const stripApprovalStatus = (payload) => {
     const nextPayload = { ...payload };
     delete nextPayload.approval_status;
@@ -55,9 +57,17 @@ const stripApprovalStatus = (payload) => {
 };
 
 const selectUsers = async (buildQuery) => {
-    let result = await buildQuery(USER_SELECT_WITH_APPROVAL);
+    let selectClause = USER_SELECT_WITH_APPROVAL;
+    let result = await buildQuery(selectClause);
     if (result.error && hasMissingApprovalStatusColumn(result.error)) {
-        result = await buildQuery(USER_SELECT_BASE);
+        selectClause = USER_SELECT_BASE;
+        result = await buildQuery(selectClause);
+    }
+    if (result.error && hasMissingAvatarColumn(result.error)) {
+        result = await buildQuery(withoutAvatarColumn(selectClause));
+    }
+    if (result.error && hasMissingApprovalStatusColumn(result.error)) {
+        result = await buildQuery(withoutAvatarColumn(USER_SELECT_BASE));
     }
     return result;
 };

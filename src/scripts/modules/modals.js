@@ -113,12 +113,15 @@ const escapeSettingsHtml = (value = '') => String(value)
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
-const settingsAvatarFallback = (user = {}) => `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || user.username || 'User')}&background=DBEAFE&color=1D4ED8&bold=true`;
+const settingsAvatarFallback = (user = {}) => {
+    const profile = user || {};
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.username || 'User')}&background=DBEAFE&color=1D4ED8&bold=true`;
+};
 
 const settingsField = (id, label, type = 'text', extra = '') => `
     <div>
         <label for="${id}" class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-700 dark:text-gray-300">${label}</label>
-        <input id="${id}" name="${id}" type="${type}" ${extra} class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+        <input id="${id}" name="${id}" type="${type}" placeholder="Enter ${label.toLowerCase()}" ${extra} class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
     </div>`;
 
 const createSettingsModal = () => {
@@ -137,7 +140,7 @@ const createSettingsModal = () => {
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Manage your Portal profile and security settings.</p>
                     </div>
                     <button type="button" data-settings-modal-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white" aria-label="Close settings">
-                        <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6-6M7 7l6 6"/></svg>
+                        <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1l6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
                     </button>
                 </div>
                 <form id="global-settings-form">
@@ -193,7 +196,7 @@ const setSettingsStatus = (message = '', type = 'error') => {
 const populateSettings = (user) => {
     settingsProfile = user;
     ['full_name', 'birthday', 'username', 'email', 'phone'].forEach((field) => {
-        const input = document.getElementById(`settings-${field}`);
+        const input = document.getElementById(field) || document.getElementById(`settings-${field}`);
         if (input) input.value = user?.[field] || '';
     });
     const preview = document.getElementById('settings-avatar-preview');
@@ -201,55 +204,70 @@ const populateSettings = (user) => {
 };
 
 export const initSettingsModal = () => {
-    const triggers = document.querySelectorAll('[data-settings-modal-open]');
-    if (!triggers.length) return;
+    // START SETTINGS MODAL TRIGGER WIRING
+    // The sidebar is injected asynchronously, so delegated handling is required.
+    if (document.documentElement.dataset.settingsModalWired === 'true') return;
+    document.documentElement.dataset.settingsModalWired = 'true';
+
     const modal = createSettingsModal();
-    if (!settingsModalInstance) {
-        settingsModalInstance = new Modal(modal, { placement: 'center', backdrop: 'dynamic', closable: true });
-        modal.querySelectorAll('[data-settings-modal-close]').forEach((button) => button.addEventListener('click', () => settingsModalInstance?.hide()));
-        document.getElementById('settings-avatar-file')?.addEventListener('change', (event) => {
-            settingsAvatarFile = event.target.files?.[0] || null;
-            if (settingsAvatarFile) document.getElementById('settings-avatar-preview').src = URL.createObjectURL(settingsAvatarFile);
+    settingsModalInstance = new Modal(modal, { placement: 'center', backdrop: 'dynamic', closable: true });
+    modal.querySelectorAll('[data-settings-modal-close]').forEach((button) => {
+        button.addEventListener('click', () => {
+            document.activeElement?.blur();
+            settingsModalInstance?.hide();
         });
-        document.getElementById('global-settings-form')?.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const saveButton = document.getElementById('settings-save-button');
-            const data = Object.fromEntries(new FormData(form).entries());
-            const passwordFields = ['current_password', 'current_password_confirm', 'new_password', 'new_password_confirm'];
-            const hasPasswordInput = passwordFields.some((field) => data[field]);
-            if (hasPasswordInput && data.current_password !== data.current_password_confirm) return setSettingsStatus('Current password and confirmation must match.');
-            if (hasPasswordInput && data.new_password !== data.new_password_confirm) return setSettingsStatus('New password and confirmation must match.');
-            if (hasPasswordInput && String(data.new_password || '').length < 12) return setSettingsStatus('The new password must be at least 12 characters long.');
-            saveButton.disabled = true;
-            setSettingsStatus('Saving your settings…', 'success');
-            if (settingsAvatarFile) {
-                const upload = await uploadUserAvatar(settingsAvatarFile, settingsProfile?.id);
-                if (upload.error) { saveButton.disabled = false; return setSettingsStatus(upload.error); }
-                data.avatar_url = upload.url;
-            } else {
-                data.avatar_url = settingsProfile?.avatar_url || null;
-            }
-            const result = await updateCurrentProfile(data);
-            saveButton.disabled = false;
-            if (result.error) return setSettingsStatus(result.error);
-            populateSettings(result.data);
-            settingsAvatarFile = null;
-            setSettingsStatus('Settings saved successfully.', 'success');
-            window.setTimeout(() => settingsModalInstance?.hide(), 700);
-        });
-    }
-    triggers.forEach((trigger) => trigger.addEventListener('click', async () => {
-        settingsAvatarFile = null;
-        setSettingsStatus('Loading your profile…', 'success');
-        settingsModalInstance.show();
-        const result = await fetchCurrentProfile();
+    });
+    document.getElementById('settings-avatar-file')?.addEventListener('change', (event) => {
+        settingsAvatarFile = event.target.files?.[0] || null;
+        if (settingsAvatarFile) document.getElementById('settings-avatar-preview').src = URL.createObjectURL(settingsAvatarFile);
+    });
+    document.getElementById('global-settings-form')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const saveButton = document.getElementById('settings-save-button');
+        const data = Object.fromEntries(new FormData(form).entries());
+        const passwordFields = ['current_password', 'current_password_confirm', 'new_password', 'new_password_confirm'];
+        const hasPasswordInput = passwordFields.some((field) => data[field]);
+        if (hasPasswordInput && data.current_password !== data.current_password_confirm) return setSettingsStatus('Current password and confirmation must match.');
+        if (hasPasswordInput && data.new_password !== data.new_password_confirm) return setSettingsStatus('New password and confirmation must match.');
+        if (hasPasswordInput && String(data.new_password || '').length < 12) return setSettingsStatus('The new password must be at least 12 characters long.');
+        saveButton.disabled = true;
+        setSettingsStatus('Saving your settings...', 'success');
+        if (settingsAvatarFile) {
+            const upload = await uploadUserAvatar(settingsAvatarFile, settingsProfile?.id);
+            if (upload.error) { saveButton.disabled = false; return setSettingsStatus(upload.error); }
+            data.avatar_url = upload.url;
+        } else {
+            data.avatar_url = settingsProfile?.avatar_url || null;
+        }
+        const result = await updateCurrentProfile(data);
+        saveButton.disabled = false;
         if (result.error) return setSettingsStatus(result.error);
         populateSettings(result.data);
-        setSettingsStatus('');
-    }));
-};
+        settingsAvatarFile = null;
+        setSettingsStatus('Settings saved successfully.', 'success');
+        window.setTimeout(() => {
+            document.activeElement?.blur();
+            settingsModalInstance?.hide();
+        }, 700);
+    });
 
+    document.addEventListener('click', async (event) => {
+        const trigger = event.target.closest('[data-settings-modal-open], #sidebar-profile-settings-btn');
+        if (!trigger) return;
+        event.preventDefault();
+        trigger.blur();
+        window.DEBUG?.event('SETTINGS', 'Settings modal trigger clicked', { id: trigger.id || null });
+        settingsAvatarFile = null;
+        setSettingsStatus('Loading your profile...', 'success');
+        settingsModalInstance.show();
+        const result = await fetchCurrentProfile();
+        if (result.error || !result.data) return setSettingsStatus(result.error || 'Unable to load your profile.');
+        populateSettings(result.data);
+        setSettingsStatus('');
+    }, true);
+    // END SETTINGS MODAL TRIGGER WIRING
+};
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSettingsModal);
 else initSettingsModal();
 /* END GLOBAL SETTINGS MODAL */
