@@ -35,7 +35,13 @@
           </div>
         </div>
         <p id="alerts-error" class="hidden m-4 border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"></p>
-        <div id="alerts-list" class="space-y-3 p-3 sm:p-4"></div>
+        <!-- START ALERTS LOADING STATE -->
+        <div id="alerts-loading" class="flex min-h-48 flex-col items-center justify-center gap-4 p-6 text-center" role="status" aria-live="polite">
+          <span class="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 dark:border-blue-950 dark:border-t-blue-400" aria-hidden="true"></span>
+          <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">Loading alerts...</span>
+        </div>
+        <!-- END ALERTS LOADING STATE -->
+        <div id="alerts-list" class="hidden space-y-3 p-3 sm:p-4"></div>
         <div id="alerts-empty" class="hidden p-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">No notifications in this view.</div>
       </section>
     </main>
