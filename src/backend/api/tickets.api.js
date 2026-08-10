@@ -10,6 +10,7 @@
  */
 
 import { supabase } from './supabase.js';
+import { recordAuditLog } from './audit-logs.api.js';
 
 /**
  * Fetch all active tickets with category join.
@@ -106,6 +107,11 @@ export async function createTicket(payload) {
         return { data: null, error: error.message };
     }
     if (window.DEBUG) window.DEBUG.success('TICKETS-API', `Ticket created: ${data.ticket_number}`);
+    void recordAuditLog({
+        eventType: 'ticket', action: 'created', entityType: 'ticket', entityId: data.id,
+        targetUserId: payload.created_by, message: `Ticket ${data.ticket_number || data.id} created.`,
+        metadata: { subject: data.subject, priority: data.priority, category_id: data.category_id }
+    });
     return { data, error: null };
 }
 
@@ -126,6 +132,7 @@ export async function openTicket(ticketId) {
         .eq('id', ticketId);
 
     if (error) return { error: error.message };
+    void recordAuditLog({ eventType: 'ticket', action: 'opened', entityType: 'ticket', entityId: ticketId, message: 'Ticket opened.' });
     return { error: null };
 }
 
@@ -154,6 +161,7 @@ export async function updateTicket(ticketId, updates) {
         return { data: null, error: error.message };
     }
     if (isClosing) void markCompletedTicketMessagesRead(ticketId);
+    void recordAuditLog({ eventType: 'ticket', action: updates.status === 'Closed' ? 'closed' : 'updated', entityType: 'ticket', entityId: ticketId, message: 'Ticket changed.', metadata: { changed_fields: Object.keys(updates || {}) } });
     return { data, error: null };
 }
 
@@ -170,6 +178,7 @@ export async function closeTicket(ticketId) {
 
     if (error) return { error: error.message };
     void markCompletedTicketMessagesRead(ticketId);
+    void recordAuditLog({ eventType: 'ticket', action: 'closed', entityType: 'ticket', entityId: ticketId, message: 'Ticket closed.' });
     return { error: null };
 }
 
@@ -186,6 +195,7 @@ export async function archiveTicket(ticketId) {
 
     if (error) return { error: error.message };
     void markCompletedTicketMessagesRead(ticketId);
+    void recordAuditLog({ eventType: 'ticket', action: 'archived', entityType: 'ticket', entityId: ticketId, message: 'Ticket archived.' });
     return { error: null };
 }
 

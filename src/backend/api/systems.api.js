@@ -10,6 +10,7 @@
  */
 
 import { supabase } from './supabase.js';
+import { recordAuditLog } from './audit-logs.api.js';
 
 const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'system-images';
 
@@ -75,6 +76,10 @@ export async function createSystem(payload) {
         return { data: null, error: error.message };
     }
     if (window.DEBUG) window.DEBUG.success('SYSTEMS-API', `System created: "${payload.title}"`);
+    void recordAuditLog({
+        eventType: 'system', action: 'created', entityType: 'system', entityId: data.id,
+        message: `System "${payload.title}" created.`, metadata: { changed_fields: ['system'] }
+    });
     return { data, error: null };
 }
 
@@ -96,6 +101,10 @@ export async function updateSystem(systemId, updates) {
         if (window.DEBUG) window.DEBUG.error('SYSTEMS-API', `Update system ${systemId} failed`, error.message);
         return { data: null, error: error.message };
     }
+    void recordAuditLog({
+        eventType: 'system', action: 'updated', entityType: 'system', entityId: systemId,
+        message: 'System configuration changed.', metadata: { changed_fields: Object.keys(updates || {}) }
+    });
     return { data, error: null };
 }
 
@@ -111,6 +120,7 @@ export async function archiveSystem(systemId) {
         .eq('id', systemId);
 
     if (error) return { error: error.message };
+    void recordAuditLog({ eventType: 'system', action: 'archived', entityType: 'system', entityId: systemId, message: 'System archived.' });
     return { error: null };
 }
 
@@ -126,6 +136,7 @@ export async function restoreSystem(systemId) {
         .eq('id', systemId);
 
     if (error) return { error: error.message };
+    void recordAuditLog({ eventType: 'system', action: 'restored', entityType: 'system', entityId: systemId, message: 'System restored.' });
     return { error: null };
 }
 

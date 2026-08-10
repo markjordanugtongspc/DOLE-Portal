@@ -1,4 +1,5 @@
 import { createPortalAdmin } from '../_lib/supabase-admin.js';
+import { writeAuditLog } from '../_lib/audit.js';
 import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from '../_lib/http.js';
 import { hashCredential, verifyCredential } from '../_lib/security.js';
 import { createSessionCookie, issuePortalSession } from '../_lib/session.js';
@@ -10,6 +11,35 @@ const safeUser = (user) => ({
     approval_status: user.approval_status, status: 'online'
 });
 
+const maskIdentity = (identity) => {
+    const value = String(identity || '').trim();
+    if (!value) return null;
+    if (value.includes('@')) {
+        const [local, domain] = value.split('@');
+        return `${local.slice(0, 1)}***@${domain}`;
+    }
+    return `${value.slice(0, 2)}***${value.slice(-2)}`;
+};
+
+const recordLoginAudit = async (req, details) => {
+    try {
+        await writeAuditLog(createPortalAdmin(), req, {
+            eventType: 'auth',
+            action: details.success ? 'login_succeeded' : 'login_failed',
+            entityType: 'session',
+            entityId: details.userId,
+            targetUserId: details.userId,
+            message: details.success ? 'User logged in.' : 'Failed login attempt.',
+            metadata: {
+                mode: details.mode,
+                reason: details.reason,
+                identity_hint: maskIdentity(details.identity),
+            },
+        });
+    } catch (error) {
+        console.error('[PORTAL AUDIT] Login audit failed:', error.message);
+    }
+};
 /* START PORTAL BACKEND LOGIN API */
 export default async function handler(req, res) {
     if (!allowMethods(req, res, ['POST'])) return;
@@ -24,6 +54,7 @@ export default async function handler(req, res) {
     const normalizedIdentity = mode === 'phone' && /^9\d{9}$/.test(identity) ? `+63${identity}` : identity;
 
     if (!column || !identity || !credential || credential.length > 1024) {
+        await recordLoginAudit(req, { mode, identity, reason: 'invalid_input' });
         return sendJson(res, 400, { error: 'A valid login identity and credential are required.', field: 'credential' });
     }
 
@@ -36,11 +67,13 @@ export default async function handler(req, res) {
             .maybeSingle();
 
         if (error || !user || user.archived_at) {
+            await recordLoginAudit(req, { mode, identity, reason: 'credential_invalid', userId: user?.id });
             return sendJson(res, 401, { error: 'Invalid login credentials.', code: 'credential_invalid', field: 'credential' });
         }
 
         const verification = await verifyCredential(user[credentialColumn], credential);
         if (!verification.valid) {
+            await recordLoginAudit(req, { mode, identity, reason: 'credential_invalid', userId: user.id });
             return sendJson(res, 401, { error: 'Invalid login credentials.', code: 'credential_invalid', field: 'credential' });
         }
 
@@ -49,6 +82,7 @@ export default async function handler(req, res) {
             const errorMessage = approvalStatus === 'DECLINED'
                 ? 'Your registration request was declined. Please contact your HR office or Portal administrator.'
                 : 'Your registration is still pending approval.';
+            await recordLoginAudit(req, { mode, identity, reason: `approval_${approvalStatus.toLowerCase()}`, userId: user.id });
             return sendJson(res, 403, { error: errorMessage, code: `approval_${approvalStatus.toLowerCase()}`, field: 'identity' });
         }
 
@@ -59,6 +93,7 @@ export default async function handler(req, res) {
 
         const session = await issuePortalSession(admin, user.id, Boolean(body.remember));
         res.setHeader('Set-Cookie', createSessionCookie(session.token, session.maxAge, req));
+        await recordLoginAudit(req, { mode, identity, reason: 'authenticated', success: true, userId: user.id });
         return sendJson(res, 200, { data: safeUser(user) });
     } catch (error) {
         console.error('[PORTAL AUTH] Login failed:', error.message);

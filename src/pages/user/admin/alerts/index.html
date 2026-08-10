@@ -44,6 +44,21 @@
         <div id="alerts-list" class="hidden space-y-3 p-3 sm:p-4"></div>
         <div id="alerts-empty" class="hidden p-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">No notifications in this view.</div>
       </section>
+      <!-- START AUDIT LOGS PANEL -->
+      <section class="overflow-hidden border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div class="border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+          <h2 class="text-lg font-extrabold text-gray-900 dark:text-white">Audit Logs</h2>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Security, account, system, and ticket activity recorded by the Portal.</p>
+        </div>
+        <p id="audit-logs-error" class="hidden m-4 border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"></p>
+        <div id="audit-logs-loading" class="flex min-h-40 flex-col items-center justify-center gap-3 p-6 text-center" role="status" aria-live="polite">
+          <span class="h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 dark:border-blue-950 dark:border-t-blue-400" aria-hidden="true"></span>
+          <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">Loading audit logs...</span>
+        </div>
+        <div id="audit-logs-list" class="hidden divide-y divide-gray-200 dark:divide-gray-800"></div>
+        <div id="audit-logs-empty" class="hidden p-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">No audit logs recorded yet.</div>
+      </section>
+      <!-- END AUDIT LOGS PANEL -->
     </main>
   </div>
   <script type="module" src="/src/main.js"></script>

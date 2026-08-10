@@ -29,6 +29,7 @@ export async function fetchNotifications(recipientRole, filter = 'all') {
         .from('notifications')
         .select('*')
         .contains('recipient_roles', [role])
+        .neq('type', 'audit')
         .order('created_at', { ascending: false });
 
     if (filter === 'unread') query = query.eq('is_read', false);
@@ -74,6 +75,7 @@ export async function countUnreadNotifications(recipientRole) {
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .contains('recipient_roles', [role])
+        .neq('type', 'audit')
         .eq('is_read', false);
 
     return { count: error ? 0 : (count || 0), error: error?.message || null };
@@ -86,7 +88,8 @@ export async function markNotificationsRead(ids) {
     const { error } = await supabase
         .from('notifications')
         .update({ is_read: true, read_at: new Date().toISOString() })
-        .in('id', notificationIds);
+        .in('id', notificationIds)
+        .neq('type', 'audit');
 
     return { error: error?.message || null };
 }
@@ -98,7 +101,8 @@ export async function deleteNotifications(ids) {
     const { error } = await supabase
         .from('notifications')
         .delete()
-        .in('id', notificationIds);
+        .in('id', notificationIds)
+        .neq('type', 'audit');
 
     return { error: error?.message || null };
 }

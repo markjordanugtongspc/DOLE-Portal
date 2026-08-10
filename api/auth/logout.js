@@ -1,4 +1,5 @@
 import { createPortalAdmin } from '../_lib/supabase-admin.js';
+import { writeAuditLog } from '../_lib/audit.js';
 import { allowMethods, requireSameOrigin, sendJson } from '../_lib/http.js';
 import { clearSessionCookie, getPortalSession, revokePortalSession } from '../_lib/session.js';
 
@@ -10,6 +11,14 @@ export default async function handler(req, res) {
         const admin = createPortalAdmin();
         const session = await getPortalSession(req, admin);
         if (session) {
+            await writeAuditLog(admin, req, {
+                actorId: session.user.id,
+                targetUserId: session.user.id,
+                eventType: 'session',
+                action: 'logout',
+                entityType: 'session',
+                message: 'User logged out.',
+            });
             await Promise.all([
                 revokePortalSession(admin, session.sessionId),
                 admin.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', session.user.id)

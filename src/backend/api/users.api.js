@@ -6,6 +6,7 @@
 
 import { supabase } from './supabase.js';
 import { hashCredential } from './auth.api.js';
+import { recordAuditLog } from './audit-logs.api.js';
 
 const USER_SELECT_BASE = `
     id,
@@ -164,6 +165,11 @@ export async function createUser(payload) {
         return { data: null, error: result.error.message };
     }
     if (window.DEBUG) window.DEBUG.success('USERS-API', `User created: ${payload.username}`);
+    void recordAuditLog({
+        eventType: 'account', action: 'created', entityType: 'user', entityId: result.data.id,
+        targetUserId: result.data.id, message: 'User account created.',
+        metadata: { changed_fields: ['account'], role_id: payload.role_id, office_id: payload.office_id }
+    });
     return { data: result.data, error: null };
 }
 
@@ -206,6 +212,12 @@ export async function updateUser(userId, updates) {
         return { data: null, error: result.error.message };
     }
     if (window.DEBUG) window.DEBUG.success('USERS-API', `User ${userId} updated.`);
+    const changedFields = Object.keys(updates || {}).map((field) => field === 'password' ? 'password' : field === 'pin' ? 'PIN' : field);
+    void recordAuditLog({
+        eventType: 'account', action: changedFields.includes('password') ? 'password_changed' : changedFields.includes('username') ? 'username_changed' : 'updated',
+        entityType: 'user', entityId: userId, targetUserId: userId, message: `User ${changedFields.includes('password') ? 'password' : changedFields.includes('username') ? 'username' : 'account'} changed.`,
+        metadata: { changed_fields: changedFields }
+    });
     return { data: result.data, error: null };
 }
 
@@ -226,6 +238,10 @@ export async function archiveUser(userId) {
         return { error: error.message };
     }
     if (window.DEBUG) window.DEBUG.success('USERS-API', `User ${userId} archived.`);
+    void recordAuditLog({
+        eventType: 'account', action: 'archived', entityType: 'user', entityId: userId,
+        targetUserId: userId, message: 'User account archived.'
+    });
     return { error: null };
 }
 
