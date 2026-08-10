@@ -65,7 +65,10 @@ const setupSidebarLogout = () => {
         cancelBtn.disabled = true;
         confirmBtn.classList.add('opacity-70', 'pointer-events-none');
         cancelBtn.classList.add('opacity-70', 'pointer-events-none');
-        confirmBtn.textContent = 'Logging out...';
+        /* START LOGOUT DOTS LOADING ANIMATION */
+        confirmBtn.setAttribute('aria-label', 'Logging out');
+        confirmBtn.innerHTML = `Logging out<span aria-hidden="true" class="ms-0.5 inline-flex items-end gap-0.5 leading-none"><span class="animate-bounce [animation-delay:-300ms]">.</span><span class="animate-bounce [animation-delay:-150ms]">.</span><span class="animate-bounce">.</span></span>`;
+        /* END LOGOUT DOTS LOADING ANIMATION */
         try {
             await logout();
         } catch (error) {
