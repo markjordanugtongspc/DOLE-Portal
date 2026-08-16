@@ -61,6 +61,126 @@
       <!-- END AUDIT LOGS PANEL -->
     </main>
   </div>
+
+  <!-- START USER REGISTRATION DETAILS MODAL -->
+  <div id="alertUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+      <!-- Modal content -->
+      <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
+        <!-- Modal header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h3 id="alert-modal-title" class="text-lg font-extrabold text-emerald-800 dark:text-emerald-400">
+              Registration Details Screen
+            </h3>
+          </div>
+          <button type="button" class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition-colors" data-alert-modal-close aria-label="Close modal">
+            <svg class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+            </svg>
+            <span class="sr-only">Close modal</span>
+          </button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="p-4 sm:p-5 space-y-5 max-h-[calc(100vh-14rem)] overflow-y-auto text-left">
+          
+          <!-- Profile Summary -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5">Profile Summary</h4>
+            <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/70 rounded-xl p-4 sm:p-5 shadow-xs">
+              <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5">
+                <!-- Avatar -->
+                <div class="relative shrink-0">
+                  <img id="alert-view-avatar" class="w-20 h-20 rounded-full object-cover ring-4 ring-white dark:ring-gray-800 shadow-md" src="https://ui-avatars.com/api/?name=User&background=random" alt="Avatar">
+                  <div id="alert-view-online-dot" class="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-[3.5px] border-white dark:border-gray-800 rounded-full"></div>
+                </div>
+                
+                <!-- Profile Grid -->
+                <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6 text-center sm:text-left">
+                  <div class="space-y-0.5">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Full Name:</p>
+                    <span id="alert-view-name" class="text-sm font-bold text-gray-900 dark:text-white leading-tight">--</span>
+                  </div>
+                  <div class="space-y-0.5">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Role / Position:</p>
+                    <span id="alert-view-position" class="text-sm font-bold text-gray-900 dark:text-white leading-tight">--</span>
+                  </div>
+                  <div class="space-y-0.5">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Email Address:</p>
+                    <span id="alert-view-email" class="text-sm font-semibold text-gray-900 dark:text-white break-all leading-tight">--</span>
+                  </div>
+                  <div class="space-y-0.5">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Status:</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap mt-0.5">
+                      <div id="alert-view-status" class="inline-flex"></div>
+                      <div id="alert-view-approval-status" class="inline-flex"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Account Info -->
+          <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5">Account Details</h4>
+            <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700/70 rounded-xl p-4 sm:p-5 shadow-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6">
+                <div class="space-y-0.5">
+                  <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Username:</p>
+                  <span id="alert-view-username" class="text-sm font-semibold text-gray-900 dark:text-white">--</span>
+                </div>
+                <div class="space-y-0.5">
+                  <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Office / Location:</p>
+                  <span id="alert-view-office" class="text-sm font-semibold text-gray-900 dark:text-white">--</span>
+                </div>
+                <div class="space-y-0.5">
+                  <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Phone Number:</p>
+                  <span id="alert-view-phone" class="text-sm font-semibold text-gray-900 dark:text-white">--</span>
+                </div>
+                <div class="space-y-0.5">
+                  <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Birthday:</p>
+                  <span id="alert-view-birthday" class="text-sm font-semibold text-gray-900 dark:text-white">--</span>
+                </div>
+                <div class="col-span-1 sm:col-span-2 space-y-0.5">
+                  <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold">Registration Date:</p>
+                  <span id="alert-view-date" class="text-sm font-semibold text-gray-900 dark:text-white">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Linked GIP Implementors -->
+          <div id="alert-view-gips-section">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5">Linked GIP Implementors</h4>
+            <div id="alert-view-gips-container" class="space-y-2">
+              <!-- Loaded Dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="grid grid-cols-2 gap-3 p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-900/40">
+          <button id="alert-modal-btn-accept" type="button" class="cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-300 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:focus:ring-emerald-800 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-60">
+            <svg class="w-4 h-4 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+            </svg>
+            <span id="alert-modal-btn-accept-text">ACCEPT</span>
+          </button>
+          <button id="alert-modal-btn-reject" type="button" class="cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-700 focus:ring-4 focus:outline-none focus:ring-rose-300 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors dark:bg-rose-600 dark:hover:bg-rose-700 dark:focus:ring-rose-800 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-60">
+            <svg class="w-4 h-4 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span id="alert-modal-btn-reject-text">REJECT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END USER REGISTRATION DETAILS MODAL -->
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

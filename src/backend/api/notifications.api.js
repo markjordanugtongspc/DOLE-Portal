@@ -47,14 +47,18 @@ export async function fetchNotifications(recipientRole, filter = 'all') {
 
     if (!userIds.length) return { data: notifications, error: null };
 
-    const { data: users, error: usersError } = await supabase
+    let { data: users, error: usersError } = await supabase
         .from('users')
-        .select('id, full_name, username, avatar_url')
+        .select('id, full_name, birthday, username, email, phone, avatar_url, status, approval_status, last_seen, created_at, role_id, office_id, roles(name), offices(name)')
         .in('id', userIds);
 
     if (usersError) {
-        window.DEBUG?.warn('NOTIFICATIONS-API', 'Unable to load notification avatars.', usersError.message);
-        return { data: notifications, error: null };
+        window.DEBUG?.warn('NOTIFICATIONS-API', 'Fallback loading basic notification users.', usersError.message);
+        const fallback = await supabase
+            .from('users')
+            .select('id, full_name, username, avatar_url')
+            .in('id', userIds);
+        users = fallback.data || [];
     }
 
     const userById = new Map((users || []).map((user) => [Number(user.id), user]));
@@ -62,6 +66,7 @@ export async function fetchNotifications(recipientRole, filter = 'all') {
         data: notifications.map((notification) => ({
             ...notification,
             actor: userById.get(Number(notification.actor_id)) || userById.get(Number(notification.subject_user_id)) || null,
+            subject_user: userById.get(Number(notification.subject_user_id)) || userById.get(Number(notification.actor_id)) || null,
         })),
         error: null
     };
