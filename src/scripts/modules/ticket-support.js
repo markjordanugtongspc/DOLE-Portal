@@ -25,35 +25,47 @@ import { ticketCacheStorage } from '@/scripts/modules/storage.js';
 import { Modal } from 'flowbite';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
 
-// Knowledge Base Articles (static content ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â not from DB)
-const MOCK_KB_ARTICLES = {
-    'kb-art-1': {
-        title: 'Account Creation and Management',
-        category: 'Tutorial',
-        readTime: '4 Minutes read',
-        summary: 'Instructions on establishing new user directories, allocating staff credentials, and managing security parameters for GIP payroll and portal accounts.',
-        suggestText: 'For GIP account creation, please head to the Systems Roster tab, choose "Add Staff", and configure their access group details.'
-    },
-    'kb-art-2': {
-        title: 'Adding Systems & Services',
-        category: 'User Guide',
-        readTime: '6 Minutes read',
-        summary: 'Detailed instructions on linking separate district portals, web applications, and database indexes directly into the DOLE unified portal administration console.',
-        suggestText: 'To add a new service portal, register its host domain inside the Systems module, copy the credentials token, and add it to theme-toggler config.'
-    },
-    'kb-art-3': {
-        title: 'Troubleshooting Login Errors',
-        category: 'Troubleshooting',
-        readTime: '5 Minutes read',
-        summary: 'Guide to diagnosing user access tokens, fixing Active Directory syncs, and repairing session failures.',
-        suggestText: 'I\'ll need to check the Active Directory sync logs for your session. Can you please wait a moment while I pull up the audit trail?'
-    },
-    'kb-art-4': {
-        title: 'Password Recovery Methods',
-        category: 'Tutorial',
-        readTime: '3 Minutes read',
-        summary: 'Procedures for managing passwords, handling Email OTPs, and executing admin overrides for locked out credentials.',
-        suggestText: 'Password reset has been completed through the approved secure reset workflow. Please ask the staff to change it immediately after login via Email OTP.'
+import { fetchArticles } from '@/backend/api/articles.api.js';
+
+// Category theme styling helper for articles
+const getArticleCategoryTheme = (category = '') => {
+    const cat = String(category).toLowerCase().trim();
+    if (cat === 'tutorial') {
+        return {
+            badgeClass: 'text-[9px] bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 font-bold px-1.5 py-0.5 rounded uppercase',
+            iconBg: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600',
+            bannerBg: 'bg-pink-50 dark:bg-pink-950',
+            bannerOverlay: 'bg-pink-100/50 dark:bg-pink-900/20',
+            iconColor: 'text-pink-600 dark:text-pink-400',
+            iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>'
+        };
+    } else if (cat === 'user guide' || cat === 'guide') {
+        return {
+            badgeClass: 'text-[9px] bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded uppercase',
+            iconBg: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600',
+            bannerBg: 'bg-amber-50 dark:bg-amber-950',
+            bannerOverlay: 'bg-amber-100/50 dark:bg-amber-900/20',
+            iconColor: 'text-amber-600 dark:text-amber-400',
+            iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>'
+        };
+    } else if (cat === 'troubleshooting') {
+        return {
+            badgeClass: 'text-[9px] bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 font-bold px-1.5 py-0.5 rounded uppercase',
+            iconBg: 'bg-red-100 dark:bg-red-900/30 text-red-600',
+            bannerBg: 'bg-red-50 dark:bg-red-950',
+            bannerOverlay: 'bg-red-100/50 dark:bg-red-900/20',
+            iconColor: 'text-red-600 dark:text-red-400',
+            iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
+        };
+    } else {
+        return {
+            badgeClass: 'text-[9px] bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 font-bold px-1.5 py-0.5 rounded uppercase',
+            iconBg: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600',
+            bannerBg: 'bg-blue-50 dark:bg-blue-950',
+            bannerOverlay: 'bg-blue-100/50 dark:bg-blue-900/20',
+            iconColor: 'text-blue-600 dark:text-blue-400',
+            iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>'
+        };
     }
 };
 
@@ -247,6 +259,11 @@ class TicketSupportApp {
         this.chatSortDirection = 'newest';
         this.activeDetailsTab = 'details';
 
+        // Knowledge base articles state (loaded from backend DB)
+        this.articles = [];
+        this.articlesSearchQuery = '';
+        this.activeKbArticle = null;
+
         // Realtime channels
         this._ticketsChannel = null;
         this._messagesChannel = null;
@@ -272,6 +289,8 @@ class TicketSupportApp {
         /* END TICKET CATEGORY URL SYNC */
         this.bindChatViewEvents();
         this.initCreateTicketDrawer();
+        this.initKbSearch();
+        void this.loadArticles();
 
         // Initialize Flowbite Modal for Close Ticket Confirmation
         const modalEl = document.getElementById('close-ticket-modal');
@@ -1042,6 +1061,16 @@ class TicketSupportApp {
         const details = document.getElementById('chat-details-panel');
         if (!list || !conversation || !details) return;
 
+        if (window.innerWidth >= 1024) {
+            list.classList.remove('hidden');
+            list.classList.add('flex');
+            conversation.classList.remove('hidden');
+            conversation.classList.add('flex');
+            details.classList.remove('hidden');
+            details.classList.add('flex');
+            return;
+        }
+
         const show = (element) => {
             element.classList.remove('hidden');
             element.classList.add('flex');
@@ -1069,7 +1098,7 @@ class TicketSupportApp {
     handleChatBack() {
         if (this.mobileChatMode === 'details') {
             this.setMobileChatMode('conversation');
-        } else if (this.mobileChatMode === 'conversation' && this.selectedTicketId) {
+        } else if (!this.isAdmin && this.mobileChatMode === 'conversation' && this.selectedTicketId) {
             this.showChatTicketList();
         } else {
             this.closeTicket();
@@ -1533,6 +1562,11 @@ class TicketSupportApp {
         const categoryParams = new URLSearchParams(window.location.search);
         categoryParams.delete('ticket');
         categoryParams.delete('id');
+        if (this.selectedCategory && this.selectedCategory !== 'All') {
+            categoryParams.set('category', this.selectedCategory);
+        } else {
+            categoryParams.delete('category');
+        }
         const categoryQuery = categoryParams.toString();
         window.history.pushState({ ...window.history.state, category: this.selectedCategory }, '', `${window.location.pathname}${categoryQuery ? `?${categoryQuery}` : ''}`);
         localStorage.removeItem('active-ticket-id');
@@ -1838,32 +1872,147 @@ class TicketSupportApp {
         if (tab === 'details') {
             detailsContent.classList.remove('hidden');
             kbContent.classList.add('hidden');
-            tabBtnDetails.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all bg-blue-600 text-white dark:bg-blue-600 dark:text-white';
-            tabBtnKb.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
+            tabBtnDetails.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-blue-600 text-white dark:bg-blue-600 dark:text-white shadow-xs';
+            tabBtnKb.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
         } else if (tab === 'kb') {
             detailsContent.classList.add('hidden');
             kbContent.classList.remove('hidden');
-            tabBtnKb.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all bg-blue-600 text-white dark:bg-blue-600 dark:text-white';
-            tabBtnDetails.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
+            tabBtnKb.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-blue-600 text-white dark:bg-blue-600 dark:text-white shadow-xs';
+            tabBtnDetails.className = 'tab-icon-btn cursor-pointer w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800';
         }
     }
     /* END switchDetailsTab */
 
+    /* START loadArticles */
+    async loadArticles() {
+        try {
+            const { data, error } = await fetchArticles();
+            if (error) {
+                if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'Failed to fetch KB articles', error);
+                this.renderArticlesList([]);
+                return;
+            }
+            this.articles = Array.isArray(data) ? data : [];
+            this.renderArticlesList();
+        } catch (err) {
+            if (window.DEBUG) window.DEBUG.error('TICKET-SUPPORT', 'loadArticles exception', err);
+            this.renderArticlesList([]);
+        }
+    }
+    /* END loadArticles */
+
+    /* START initKbSearch */
+    initKbSearch() {
+        const searchInput = document.getElementById('kb-search');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (e) => {
+            this.articlesSearchQuery = e.target.value.toLowerCase().trim();
+            this.renderArticlesList();
+        });
+    }
+    /* END initKbSearch */
+
+    /* START getArticleUrl */
+    getArticleUrl(articleId) {
+        return `https://dole-portal.vercel.app/src/pages/user/staff/articles/view.html?id=${articleId}`;
+    }
+    /* END getArticleUrl */
+
+    /* START renderArticlesList */
+    renderArticlesList() {
+        const listContainer = document.getElementById('kb-articles-list');
+        if (!listContainer) return;
+
+        let filtered = this.articles;
+        if (this.articlesSearchQuery) {
+            filtered = this.articles.filter(art => {
+                const title = String(art.title || '').toLowerCase();
+                const summary = String(art.summary || '').toLowerCase();
+                const category = String(art.category || '').toLowerCase();
+                return title.includes(this.articlesSearchQuery) || summary.includes(this.articlesSearchQuery) || category.includes(this.articlesSearchQuery);
+            });
+        }
+
+        if (filtered.length === 0) {
+            listContainer.innerHTML = `
+                <div class="rounded-lg border border-dashed border-gray-200 dark:border-gray-800 px-4 py-8 text-center text-xs text-gray-500 dark:text-gray-400">
+                    ${this.articlesSearchQuery ? 'No articles match your search query.' : 'No knowledge base articles available.'}
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(art => {
+            const theme = getArticleCategoryTheme(art.category);
+            const dateStr = art.created_at ? fmtDate(art.created_at) : 'N/A';
+            const cleanSummary = String(art.summary || '').replace(/<[^>]*>?/gm, '').trim();
+
+            html += `
+                <div data-kb-id="${esc(String(art.id))}" class="flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-colors">
+                    <div class="w-8 h-8 rounded-lg ${theme.iconBg} flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            ${theme.iconSvg}
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">${esc(art.title || 'Untitled Article')}</h4>
+                        <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">${esc(cleanSummary || 'No summary provided.')}</p>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="${theme.badgeClass}">${esc(art.category || 'Article')}</span>
+                            <span class="text-[8px] text-gray-400 dark:text-gray-500">${esc(dateStr)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+
+        listContainer.querySelectorAll('[data-kb-id]').forEach(card => {
+            card.addEventListener('click', () => {
+                const articleId = card.getAttribute('data-kb-id');
+                this.showKBArticlePopover(articleId, card);
+            });
+        });
+    }
+    /* END renderArticlesList */
+
     /* START showKBArticlePopover */
     showKBArticlePopover(kbId, element) {
-        const article = MOCK_KB_ARTICLES[kbId];
+        const article = this.articles.find(a => String(a.id) === String(kbId));
         if (!article) return;
 
+        this.activeKbArticle = article;
         const popover = document.getElementById('kb-article-popover');
         if (!popover) return;
 
-        document.getElementById('popover-badge').textContent = article.category;
-        document.getElementById('popover-readtime').textContent = article.readTime;
-        document.getElementById('popover-title').textContent = article.title;
-        document.getElementById('popover-summary').textContent = article.summary;
+        const theme = getArticleCategoryTheme(article.category);
+        const cleanSummary = String(article.summary || '').replace(/<[^>]*>?/gm, '').trim();
+
+        document.getElementById('popover-badge').textContent = article.category || 'General';
+        document.getElementById('popover-readtime').textContent = article.read_time || '3 Minutes read';
+        document.getElementById('popover-title').textContent = article.title || 'Article';
+        document.getElementById('popover-summary').textContent = cleanSummary || 'No article summary provided.';
+
+        const banner = document.getElementById('popover-banner');
+        const overlay = document.getElementById('popover-banner-overlay');
+        const iconSvg = document.getElementById('popover-banner-icon');
+
+        if (banner) {
+            banner.className = `h-28 ${theme.bannerBg} flex items-center justify-center relative overflow-hidden transition-colors`;
+        }
+        if (overlay) {
+            overlay.className = `absolute inset-0 ${theme.bannerOverlay} flex items-center justify-center transition-colors`;
+        }
+        if (iconSvg) {
+            iconSvg.setAttribute('class', `w-12 h-12 ${theme.iconColor} transition-colors`);
+            iconSvg.innerHTML = theme.iconSvg;
+        }
 
         document.querySelectorAll('[data-kb-id]').forEach(card => {
-            card.className = card.getAttribute('data-kb-id') === kbId
+            card.className = card.getAttribute('data-kb-id') === String(kbId)
                 ? 'flex gap-2.5 p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 cursor-pointer border border-blue-200 dark:border-blue-800 transition-all duration-200 shadow-xs'
                 : 'flex gap-2.5 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/55 cursor-pointer border border-transparent hover:border-gray-200 dark:hover:border-gray-800 transition-all duration-200';
         });
@@ -1882,11 +2031,12 @@ class TicketSupportApp {
         newSuggestBtn.addEventListener('click', () => {
             const editor = document.getElementById('chat-editor');
             if (editor) {
-                const linkUrl = `https://portal.dole.gov.ph/kb/${kbId}`;
-                editor.value = `${article.suggestText}\n\nRead more: ${linkUrl}`;
+                const linkUrl = this.getArticleUrl(article.id);
+                const suggestText = article.suggest_text || `Please refer to our knowledge base guide "${article.title}":`;
+                editor.value = `${suggestText}\n\nRead more: ${linkUrl}`;
                 editor.setAttribute('data-embed-url', linkUrl);
-                editor.setAttribute('data-embed-title', article.title);
-                editor.setAttribute('data-embed-domain', 'portal.dole.gov.ph');
+                editor.setAttribute('data-embed-title', article.title || 'Knowledge Base Article');
+                editor.setAttribute('data-embed-domain', 'dole-portal.vercel.app');
                 editor.focus();
             }
             popover.classList.add('hidden');
@@ -1896,17 +2046,22 @@ class TicketSupportApp {
         });
 
         newEditBtn.addEventListener('click', () => {
-            if (window.Swal) {
-                window.Swal.fire({
-                    title: 'Access Restricted',
-                    text: `Editing article "${article.title}" requires higher credentials than standard portal admin access.`,
-                    icon: 'warning',
-                    confirmButtonText: 'Acknowledge',
-                    confirmButtonColor: '#3b82f6',
-                    customClass: { confirmButton: 'cursor-pointer text-white bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-lg font-bold text-sm shadow-xs border-0 select-none' }
-                });
+            if (this.isAdmin) {
+                // Navigate admin to the article view/edit page
+                window.location.href = `/src/pages/user/admin/articles/view.html?id=${article.id}`;
             } else {
-                alert('Access Restricted. High admin credentials required.');
+                if (window.Swal) {
+                    window.Swal.fire({
+                        title: 'Access Restricted',
+                        text: `Editing article "${article.title}" requires higher credentials than standard portal admin access.`,
+                        icon: 'warning',
+                        confirmButtonText: 'Acknowledge',
+                        confirmButtonColor: '#3b82f6',
+                        customClass: { confirmButton: 'cursor-pointer text-white bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-lg font-bold text-sm shadow-xs border-0 select-none' }
+                    });
+                } else {
+                    alert('Access Restricted. High admin credentials required.');
+                }
             }
         });
 
