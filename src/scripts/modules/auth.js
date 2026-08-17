@@ -45,9 +45,11 @@ const getRoleGroup = (roleId) => {
     return null;
 };
 
-const getDashboardRoute = (user) => ROLE_ROUTES[getRoleGroup(user?.role_id)] || '/';
-const isProtectedPage = () => /\/src\/pages\/user\/(admin|staff)\//.test(window.location.pathname);
-const getRequiredRole = () => window.location.pathname.match(/\/src\/pages\/user\/(admin|staff)\//)?.[1] || null;
+const isProtectedPage = () => /\/src\/pages\/(user\/(admin|staff)|tools)\//.test(window.location.pathname);
+const getRequiredRole = () => {
+    if (/\/src\/pages\/tools\//.test(window.location.pathname)) return 'tools';
+    return window.location.pathname.match(/\/src\/pages\/user\/(admin|staff)\//)?.[1] || null;
+};
 const getFormByPrefix = (prefix) => document.getElementById(`${prefix}-username`)?.closest('form') || null;
 const getCurrentMode = (prefix) => getFormByPrefix(prefix)?.dataset.authMode || 'username';
 /* START GET CREDENTIAL INPUT - Returns the active password or PIN input for a login form */
@@ -199,11 +201,13 @@ const setupRouteGuard = async () => {
         return;
     }
 
+    const isToolsRoute = /\/src\/pages\/tools\//.test(window.location.pathname);
     const requiredRole = getRequiredRole();
     const userRole = getRoleGroup(user.role_id);
     const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
     const hasAlertsAccess = isAlertsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2);
-    if (requiredRole && !hasAlertsAccess && userRole !== requiredRole) {
+    const hasToolsAccess = isToolsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2 || Number(user.role_id) === 3);
+    if (requiredRole && !hasAlertsAccess && !hasToolsAccess && userRole !== requiredRole) {
         const redirectRoute = getDashboardRoute(user);
         blockProtectedPageRender();
         showAuthNotice({

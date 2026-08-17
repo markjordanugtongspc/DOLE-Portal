@@ -193,9 +193,13 @@ export default defineConfig({
       }
     })
   ],
+  worker: {
+    format: 'es'
+  },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@scribe.js/canvas': fileURLToPath(new URL('./src/scripts/modules/mock-canvas.js', import.meta.url))
     }
   },
   // Read .env from src/backend/config/ — all Supabase credentials are stored there

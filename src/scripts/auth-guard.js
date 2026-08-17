@@ -1,6 +1,8 @@
 /* START SERVER SESSION PAGE GUARD */
 try { localStorage.removeItem('dole_session'); } catch {}
-const routeMatch = window.location.pathname.match(/\/src\/pages\/user\/(admin|staff)\//);
+const userRouteMatch = window.location.pathname.match(/\/src\/pages\/user\/(admin|staff)\//);
+const isToolsRoute = /\/src\/pages\/tools\//.test(window.location.pathname);
+const routeMatch = isToolsRoute ? ['/src/pages/tools/', 'tools'] : userRouteMatch;
 
 const redirectToLogin = () => window.location.replace('/?auth=login_required');
 const dashboardFor = (roleId) => Number(roleId) === 1
@@ -19,7 +21,9 @@ if (routeMatch && cachedSessionUser) {
     const roleId = Number(cachedSessionUser.role_id);
     const requiredRole = routeMatch[1];
     const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
-    const allowed = isAlertsRoute
+    const allowed = isToolsRoute
+        ? roleId === 1 || roleId === 2 || roleId === 3
+        : isAlertsRoute
         ? roleId === 1 || roleId === 2
         : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
     if (allowed) {
@@ -87,7 +91,9 @@ const validateProtectedRoute = async () => {
         const roleId = Number(user.role_id);
         const requiredRole = routeMatch[1];
         const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
-        const allowed = isAlertsRoute
+        const allowed = isToolsRoute
+            ? roleId === 1 || roleId === 2 || roleId === 3
+            : isAlertsRoute
             ? roleId === 1 || roleId === 2
             : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
 

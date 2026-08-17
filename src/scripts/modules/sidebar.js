@@ -100,7 +100,8 @@ const setupDynamicSidebar = () => {
 
     const requestedRole = sidebarEl.getAttribute('data-role') || 'staff';
     const sessionUser = getCachedCurrentUser();
-    const role = Number(sessionUser?.role_id) === 2 ? 'hr' : requestedRole === 'alerts' ? 'admin' : requestedRole;
+    const sessionRoleId = Number(sessionUser?.role_id);
+    const role = sessionRoleId === 1 ? 'admin' : sessionRoleId === 2 ? 'hr' : sessionRoleId === 3 ? 'staff' : (requestedRole === 'alerts' ? 'admin' : requestedRole);
     const activeItem = sidebarEl.getAttribute('data-active') || 'dashboard';
 
     // Keep the shell rendered by main.js during module startup, but repair the
@@ -210,6 +211,14 @@ const setupDynamicSidebar = () => {
   <path fill-rule="evenodd" d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2 2h12a2 2 0 0 0 2-2 2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2V4a2 2 0 0 0-2-2h-7Zm1.018 8.828a2.34 2.34 0 0 0-2.373 2.13v.008a2.32 2.32 0 0 0 2.06 2.497l.535.059a.993.993 0 0 0 .136.006.272.272 0 0 1 .263.367l-.008.02a.377.377 0 0 1-.018.044.49.49 0 0 1-.078.02 1.689 1.689 0 0 1-.297.021h-1.13a1 1 0 1 0 0 2h1.13c.417 0 .892-.05 1.324-.279.47-.248.78-.648.953-1.134a2.272 2.272 0 0 0-2.115-3.06l-.478-.052a.32.32 0 0 1-.285-.341.34.34 0 0 1 .344-.306l.94.02a1 1 0 1 0 .043-2l-.943-.02h-.003Zm7.933 1.482a1 1 0 1 0-1.902-.62l-.57 1.747-.522-1.726a1 1 0 0 0-1.914.578l1.443 4.773a1 1 0 0 0 1.908.021l1.557-4.773Zm-13.762.88a.647.647 0 0 1 .458-.19h1.018a1 1 0 1 0 0-2H6.647A2.647 2.647 0 0 0 4 13.647v1.706A2.647 2.647 0 0 0 6.647 18h1.018a1 1 0 1 0 0-2H6.647A.647.647 0 0 1 6 15.353v-1.706c0-.172.068-.336.19-.457Z" clip-rule="evenodd"/>
 </svg>`;
 
+    const SVG_OCR_CONVERTER = `
+<svg class="w-4 h-4 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7V5a2 2 0 0 1 2-2h2m10 0h2a2 2 0 0 1 2 2v2m0 10v2a2 2 0 0 1-2 2h-2m-10 0H5a2 2 0 0 1-2-2v-2m4-5h10m-8 4h6m-4-8h2"/>
+</svg>
+<svg class="w-4 h-4 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path fill-rule="evenodd" d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4Zm4 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H9Z" clip-rule="evenodd"/>
+</svg>`;
+
     const navConfigurations = {
         admin: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
@@ -226,7 +235,16 @@ const setupDynamicSidebar = () => {
                     { id: 'articles', label: 'Manage Articles', url: '/src/pages/user/admin/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
             },
-            { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
+            {
+                id: 'tools',
+                label: 'Tools',
+                url: '#',
+                svg: SVG_TOOLS,
+                dropdown: [
+                    { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
+                    { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
+                ]
+            }
         ],
         hr: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
@@ -242,7 +260,16 @@ const setupDynamicSidebar = () => {
                     { id: 'articles', label: 'Browse Articles', url: '/src/pages/user/staff/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
             },
-            { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
+            {
+                id: 'tools',
+                label: 'Tools',
+                url: '#',
+                svg: SVG_TOOLS,
+                dropdown: [
+                    { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
+                    { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
+                ]
+            }
         ],
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
@@ -257,7 +284,16 @@ const setupDynamicSidebar = () => {
                     { id: 'articles', label: 'Browse Articles', url: '/src/pages/user/staff/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
             },
-            { id: 'tools', label: 'Tools', url: '#', svg: SVG_TOOLS, dropdown: [{ id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER }] }
+            {
+                id: 'tools',
+                label: 'Tools',
+                url: '#',
+                svg: SVG_TOOLS,
+                dropdown: [
+                    { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
+                    { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
+                ]
+            }
         ]
     };
 
@@ -303,7 +339,8 @@ const setupDynamicSidebar = () => {
                     </div>
                     <ul id="dropdown-${item.id}" class="${(isChildActive || isActive) ? '' : 'hidden'} py-1 space-y-1 mt-1 ml-7">
                 `;
-                item.dropdown.forEach(child => {
+                item.dropdown.forEach((child, index) => {
+                    const isLast = index === item.dropdown.length - 1;
                     const isSubActive = child.id === activeItem;
                     const subLinkClass = isSubActive
                         ? 'cursor-pointer flex items-center px-2 py-1.5 text-blue-700 dark:text-blue-500 font-bold bg-blue-50 dark:bg-blue-950/30 rounded-lg group transition-colors'
@@ -316,10 +353,16 @@ const setupDynamicSidebar = () => {
                         childSvg = childSvg.replace(/text-gray-800 dark:text-white/g, 'text-blue-700 dark:text-blue-500');
                     }
 
+                    // Connected vertical stem line for non-last items, with smooth L-hooks
+                    const stemLine = !isLast
+                        ? `<div class="absolute -left-3 top-0 bottom-[-6px] border-l-2 border-gray-200 dark:border-gray-700 pointer-events-none"></div>`
+                        : '';
+
                     listHTML += `
                         <li class="relative">
+                            ${stemLine}
                             <!-- L-shaped tree branch bend -->
-                            <div class="absolute -left-3 top-0 w-3 h-1/2 border-l-2 border-b-2 border-gray-200 dark:border-gray-700 rounded-bl-lg"></div>
+                            <div class="absolute -left-3 top-0 w-3 h-1/2 border-l-2 border-b-2 border-gray-200 dark:border-gray-700 rounded-bl-lg pointer-events-none"></div>
                             <a href="${child.url}" class="${subLinkClass}">
                                 ${childSvg}
                                 <span class="flex-1 ms-3 text-sm">${child.label}</span>

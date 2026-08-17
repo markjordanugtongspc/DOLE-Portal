@@ -128,6 +128,7 @@ const bootAppModules = async () => {
     await importModule('Assistants management module', () => import('@/scripts/modules/assistants-manage.js'));
     await importModule('Articles browse/view module', () => import('@/scripts/modules/articles-manage.js'));
     await importModule('Alerts module', () => import('@/scripts/modules/alerts.js'));
+    await importModule('OCR Converter module', () => import('@/scripts/modules/ocr-converter.js'));
 };
 
 bootAppModules();

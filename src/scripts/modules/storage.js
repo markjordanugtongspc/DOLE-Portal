@@ -270,13 +270,150 @@ export const ticketCacheStorage = {
     }
 };
 
+/* START OCR IMAGE INDEXEDDB STORAGE */
+const OCR_DB_NAME = 'dole_ocr_db';
+const OCR_DB_VERSION = 1;
+const OCR_STORE_NAME = 'ocr_images';
+
+const openOcrDatabase = () => {
+    return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) {
+            return reject(new Error('IndexedDB is not supported in this browser.'));
+        }
+
+        const request = indexedDB.open(OCR_DB_NAME, OCR_DB_VERSION);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(OCR_STORE_NAME)) {
+                const store = db.createObjectStore(OCR_STORE_NAME, { keyPath: 'id' });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+                store.createIndex('status', 'status', { unique: false });
+            }
+        };
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            reject(event.target.error || new Error('Failed to open OCR IndexedDB'));
+        };
+    });
+};
+
+export const ocrImageStorage = {
+    async saveImage(item) {
+        if (!item || !item.id) throw new Error('Invalid image item with missing id.');
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            const req = store.put(item);
+            req.onsuccess = () => resolve(item);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async saveImages(items = []) {
+        if (!Array.isArray(items) || items.length === 0) return [];
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            items.forEach(item => {
+                store.put(item);
+            });
+            tx.oncomplete = () => resolve(items);
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async getAllImages() {
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readonly');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            const req = store.getAll();
+            req.onsuccess = () => {
+                const results = req.result || [];
+                results.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                resolve(results);
+            };
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async getImageById(id) {
+        if (!id) return null;
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readonly');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            const req = store.get(id);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async updateImageOcr(id, updates = {}) {
+        if (!id) return null;
+        const existing = await this.getImageById(id);
+        if (!existing) return null;
+
+        const updated = {
+            ...existing,
+            ...updates,
+            updatedAt: Date.now()
+        };
+
+        return await this.saveImage(updated);
+    },
+
+    async deleteImage(id) {
+        if (!id) return;
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            const req = store.delete(id);
+            req.onsuccess = () => resolve(true);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async countImages() {
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readonly');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            const req = store.count();
+            req.onsuccess = () => resolve(req.result || 0);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    },
+
+    async clearAllImages() {
+        const db = await openOcrDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OCR_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(OCR_STORE_NAME);
+            const req = store.clear();
+            req.onsuccess = () => resolve(true);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    }
+};
+/* END OCR IMAGE INDEXEDDB STORAGE */
+
 export const appStorage = {
     auth: authStorage,
     preferences: preferencesStorage,
     articleDraft: articleDraftStorage,
     staffAddDraft: staffAddDraftStorage,
     assistantAddDraft: assistantAddDraftStorage,
-    ticketCache: ticketCacheStorage
+    ticketCache: ticketCacheStorage,
+    ocrImages: ocrImageStorage
 };
 
 export const setPreference = (...args) => preferencesStorage.set(...args);
