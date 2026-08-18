@@ -24,6 +24,8 @@ const apiHandlers = {
     '/api/auth/login': () => import(`../api/auth/login.js?update=${Date.now()}`),
     '/api/auth/me': () => import(`../api/auth/me.js?update=${Date.now()}`),
     '/api/auth/logout': () => import(`../api/auth/logout.js?update=${Date.now()}`),
+    '/api/profile': () => import(`../api/profile.js?update=${Date.now()}`),
+    '/api/audit-logs': () => import(`../api/audit-logs.js?update=${Date.now()}`),
     '/api/external-account-links': () => import(`../api/external-account-links.js?update=${Date.now()}`),
     '/api/external-system-directory': () => import(`../api/external-system-directory.js?update=${Date.now()}`),
     '/api/sso/authorize': () => import(`../api/sso/authorize.js?update=${Date.now()}`),

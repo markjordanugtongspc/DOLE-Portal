@@ -67,7 +67,12 @@ export default async function handler(req, res) {
             .eq(column, normalizedIdentity)
             .maybeSingle();
 
-        if (error || !user || user.archived_at) {
+        if (error) {
+            console.error('[PORTAL AUTH] Supabase query error:', error.message);
+            return sendJson(res, 500, { error: 'Database query failed during authentication.' });
+        }
+
+        if (!user || user.archived_at) {
             await recordLoginAudit(req, { mode, identity, reason: 'credential_invalid', userId: user?.id });
             return sendJson(res, 401, { error: 'Invalid login credentials.', code: 'credential_invalid', field: 'credential' });
         }

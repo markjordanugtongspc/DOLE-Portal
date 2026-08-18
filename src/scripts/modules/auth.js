@@ -38,12 +38,21 @@ let registrationRoleId = 3;
 const registerStepState = { desktop: 0, mobile: 0 };
 const registerOfficeDropdowns = {};
 
+/* START GET ROLE GROUP - Categorizes numerical role ID into admin or staff */
 const getRoleGroup = (roleId) => {
     const numericRoleId = Number(roleId);
     if (ROLE_GROUPS.admin.includes(numericRoleId)) return 'admin';
     if (ROLE_GROUPS.staff.includes(numericRoleId)) return 'staff';
     return null;
 };
+/* END GET ROLE GROUP */
+
+/* START GET DASHBOARD ROUTE - Resolves target dashboard route based on user role */
+const getDashboardRoute = (user) => {
+    const roleGroup = getRoleGroup(user?.role_id);
+    return ROLE_ROUTES[roleGroup] || ROLE_ROUTES.staff;
+};
+/* END GET DASHBOARD ROUTE */
 
 const isProtectedPage = () => /\/src\/pages\/(user\/(admin|staff)|tools)\//.test(window.location.pathname);
 const getRequiredRole = () => {
