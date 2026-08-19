@@ -219,6 +219,14 @@ const setupDynamicSidebar = () => {
   <path fill-rule="evenodd" d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4Zm4 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm0 4a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H9Z" clip-rule="evenodd"/>
 </svg>`;
 
+    const SVG_ABOUT_DEV = `
+<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+</svg>
+<svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+  <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7.2 6.6L12.6 12l-5.4 5.4a1 1 0 1 0 1.4 1.4l6.1-6.1a1 1 0 0 0 0-1.4L8.6 5.2Zm6.8 0a1 1 0 0 0-1.4 1.4l5.4 5.4-5.4 5.4a1 1 0 0 0 1.4 1.4l6.1-6.1a1 1 0 0 0 0-1.4l-6.1-6.1Z" clip-rule="evenodd"/>
+</svg>`;
+
     const navConfigurations = {
         admin: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/admin/dashboard/', svg: SVG_DASHBOARD },
@@ -244,7 +252,8 @@ const setupDynamicSidebar = () => {
                     { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
                     { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
                 ]
-            }
+            },
+            { id: 'about-developer', label: 'About Developer', url: '#', svg: SVG_ABOUT_DEV, hasSeparator: true }
         ],
         hr: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
@@ -269,7 +278,8 @@ const setupDynamicSidebar = () => {
                     { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
                     { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
                 ]
-            }
+            },
+            { id: 'about-developer', label: 'About Developer', url: '#', svg: SVG_ABOUT_DEV, hasSeparator: true }
         ],
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
@@ -293,7 +303,8 @@ const setupDynamicSidebar = () => {
                     { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
                     { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
                 ]
-            }
+            },
+            { id: 'about-developer', label: 'About Developer', url: '#', svg: SVG_ABOUT_DEV, hasSeparator: true }
         ]
     };
 
@@ -319,13 +330,15 @@ const setupDynamicSidebar = () => {
                 svgContent = svgContent.replace(/text-gray-800 dark:text-white/g, 'text-blue-700 dark:text-blue-500');
             }
 
+            const itemWrapperClass = item.hasSeparator ? 'pt-2 mt-2 border-t border-gray-200 dark:border-gray-800' : '';
+
             if (item.dropdown) {
                 const dynamicBadge = item.id === 'tickets' || item.id === 'alerts'
                     ? `<span id="sidebar-badge-${item.id}" class="hidden items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-md shadow-sm mr-1"></span>`
                     : '';
 
                 listHTML += `
-                <li>
+                <li class="${itemWrapperClass}">
                     <div class="w-full relative flex items-center">
                         <a href="${item.url}" class="${linkClass} flex-1 flex items-center">
                             ${svgContent}
@@ -380,7 +393,7 @@ const setupDynamicSidebar = () => {
                     : '';
 
                 listHTML += `
-                <li>
+                <li class="${itemWrapperClass}">
                     <a href="${item.url}" class="${linkClass}">
                         ${svgContent}
                         <span class="flex-1 ms-3">${item.label}</span>
