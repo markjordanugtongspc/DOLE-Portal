@@ -20,6 +20,7 @@ const STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'system-i
  * @param {{ activeOnly?: boolean, includeArchived?: boolean }} options
  * @returns {{ data: Array, error: string|null }}
  */
+/* START fetchSystems FUNCTIONALITY - Fetch active or all systems with archive filtering */
 export async function fetchSystems({ activeOnly = true, includeArchived = false } = {}) {
     let query = supabase
         .from('systems')
@@ -42,12 +43,9 @@ export async function fetchSystems({ activeOnly = true, includeArchived = false 
     }
     return { data: data || [], error: null };
 }
+/* END fetchSystems FUNCTIONALITY */
 
-/**
- * Fetch a single system by ID.
- * @param {number} systemId
- * @returns {{ data: object|null, error: string|null }}
- */
+/* START fetchSystemById FUNCTIONALITY - Fetch a single system record by its ID */
 export async function fetchSystemById(systemId) {
     const { data, error } = await supabase
         .from('systems')
@@ -58,12 +56,9 @@ export async function fetchSystemById(systemId) {
     if (error) return { data: null, error: error.message };
     return { data, error: null };
 }
+/* END fetchSystemById FUNCTIONALITY */
 
-/**
- * Create a new system entry.
- * @param {object} payload  — { title, description, system_url, image_url, color }
- * @returns {{ data: object|null, error: string|null }}
- */
+/* START createSystem FUNCTIONALITY - Insert a new system into the systems table and record audit log */
 export async function createSystem(payload) {
     const { data, error } = await supabase
         .from('systems')
@@ -82,13 +77,9 @@ export async function createSystem(payload) {
     });
     return { data, error: null };
 }
+/* END createSystem FUNCTIONALITY */
 
-/**
- * Update a system entry.
- * @param {number} systemId
- * @param {object} updates
- * @returns {{ data: object|null, error: string|null }}
- */
+/* START updateSystem FUNCTIONALITY - Update an existing system and record audit log */
 export async function updateSystem(systemId, updates) {
     const { data, error } = await supabase
         .from('systems')
@@ -107,12 +98,9 @@ export async function updateSystem(systemId, updates) {
     });
     return { data, error: null };
 }
+/* END updateSystem FUNCTIONALITY */
 
-/**
- * Archive (soft-delete) a system.
- * @param {number} systemId
- * @returns {{ error: string|null }}
- */
+/* START archiveSystem FUNCTIONALITY - Soft-delete a system by setting archived_at and is_active false */
 export async function archiveSystem(systemId) {
     const { error } = await supabase
         .from('systems')
@@ -123,12 +111,9 @@ export async function archiveSystem(systemId) {
     void recordAuditLog({ eventType: 'system', action: 'archived', entityType: 'system', entityId: systemId, message: 'System archived.' });
     return { error: null };
 }
+/* END archiveSystem FUNCTIONALITY */
 
-/**
- * Restore an archived (soft-deleted) system.
- * @param {number} systemId
- * @returns {{ error: string|null }}
- */
+/* START restoreSystem FUNCTIONALITY - Restore an archived system by clearing archived_at and setting is_active true */
 export async function restoreSystem(systemId) {
     const { error } = await supabase
         .from('systems')
@@ -139,15 +124,9 @@ export async function restoreSystem(systemId) {
     void recordAuditLog({ eventType: 'system', action: 'restored', entityType: 'system', entityId: systemId, message: 'System restored.' });
     return { error: null };
 }
+/* END restoreSystem FUNCTIONALITY */
 
-/**
- * Upload a system image to Supabase Storage and return the public URL.
- * Only called when admin uploads a NEW image — existing local paths are preserved.
- *
- * @param {File} file           — The File object from an <input type="file">
- * @param {number} systemId     — Used as the storage file name for uniqueness
- * @returns {{ url: string|null, error: string|null }}
- */
+/* START uploadSystemImage FUNCTIONALITY - Upload system preview image to Supabase Storage and return public URL */
 export async function uploadSystemImage(file, systemId) {
     const ext      = file.name.split('.').pop().toLowerCase();
     const filePath = `system-${systemId}-${Date.now()}.${ext}`;
@@ -172,3 +151,4 @@ export async function uploadSystemImage(file, systemId) {
     if (window.DEBUG) window.DEBUG.success('SYSTEMS-API', `Image uploaded: ${data.publicUrl}`);
     return { url: data.publicUrl, error: null };
 }
+/* END uploadSystemImage FUNCTIONALITY */
