@@ -175,6 +175,11 @@ const blockProtectedPageRender = () => {
 
 /* START SETUP ROUTE GUARD - Blocks anonymous users and wrong roles from protected pages */
 const setupRouteGuard = async () => {
+    if (/\/src\/pages\/about\//.test(window.location.pathname)) {
+        // Global accessible page: do not redirect away
+        return;
+    }
+
     if (!isProtectedPage()) {
         const params = new URLSearchParams(window.location.search);
         if (params.get('auth') === 'login_required') {

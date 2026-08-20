@@ -220,11 +220,8 @@ const setupDynamicSidebar = () => {
 </svg>`;
 
     const SVG_ABOUT_DEV = `
-<svg class="w-5 h-5 transition duration-75 group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+<svg class="w-5 h-5 transition duration-150 ease-in-out group-hover:text-blue-600 dark:group-hover:text-blue-500 group-hover:stroke-[2.5]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-</svg>
-<svg class="w-5 h-5 transition duration-75 hidden group-hover:block text-blue-600 dark:text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-  <path fill-rule="evenodd" d="M8.6 5.2A1 1 0 0 0 7.2 6.6L12.6 12l-5.4 5.4a1 1 0 1 0 1.4 1.4l6.1-6.1a1 1 0 0 0 0-1.4L8.6 5.2Zm6.8 0a1 1 0 0 0-1.4 1.4l5.4 5.4-5.4 5.4a1 1 0 0 0 1.4 1.4l6.1-6.1a1 1 0 0 0 0-1.4l-6.1-6.1Z" clip-rule="evenodd"/>
 </svg>`;
 
     const navConfigurations = {
@@ -253,7 +250,7 @@ const setupDynamicSidebar = () => {
                     { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
                 ]
             },
-            { id: 'about-developer', label: 'About Developer', url: '#', svg: SVG_ABOUT_DEV, hasSeparator: true }
+            { id: 'about-developer', label: 'About Developer', url: '/src/pages/about/', svg: SVG_ABOUT_DEV, hasSeparator: true }
         ],
         hr: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
@@ -279,7 +276,7 @@ const setupDynamicSidebar = () => {
                     { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
                 ]
             },
-            { id: 'about-developer', label: 'About Developer', url: '#', svg: SVG_ABOUT_DEV, hasSeparator: true }
+            { id: 'about-developer', label: 'About Developer', url: '/src/pages/about/', svg: SVG_ABOUT_DEV, hasSeparator: true }
         ],
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
@@ -304,7 +301,7 @@ const setupDynamicSidebar = () => {
                     { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
                 ]
             },
-            { id: 'about-developer', label: 'About Developer', url: '#', svg: SVG_ABOUT_DEV, hasSeparator: true }
+            { id: 'about-developer', label: 'About Developer', url: '/src/pages/about/', svg: SVG_ABOUT_DEV, hasSeparator: true }
         ]
     };
 
@@ -394,7 +391,7 @@ const setupDynamicSidebar = () => {
 
                 listHTML += `
                 <li class="${itemWrapperClass}">
-                    <a href="${item.url}" class="${linkClass}">
+                    <a href="${item.url}" data-nav-id="${item.id}" class="${linkClass}">
                         ${svgContent}
                         <span class="flex-1 ms-3">${item.label}</span>
                         ${dynamicBadge}

@@ -533,6 +533,17 @@ class StaffDashboardController {
 
         bindRefresh('btn-refresh-recent-staff');
         bindRefresh('mobile-btn-refresh-recent-staff');
+
+        // Intruder Modal Close Action
+        const intruderModalEl = document.getElementById('intruder-modal');
+        if (intruderModalEl) {
+            intruderModalEl.querySelectorAll('[data-intruder-modal-close]').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.intruderModal?.hide();
+                });
+            });
+        }
     }
 
     getFilteredCount() {
