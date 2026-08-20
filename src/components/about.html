@@ -17,15 +17,23 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
     
     <!-- Card 1: Mark Jordan Ugtong -->
-    <div class="relative overflow-hidden rounded-2xl group shadow-xl bg-gray-950 border border-gray-200/80 dark:border-gray-800 h-[480px] sm:h-[520px] lg:h-[540px] flex flex-col justify-end cursor-pointer">
-      <!-- Background Portrait Image with Zoom Effect -->
-      <img class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-105" src="/src/assets/images/abouts/mark.jpg" alt="Mark Jordan Ugtong" />
+    <div data-about-card="true" class="relative overflow-hidden rounded-2xl group shadow-xl bg-gray-950 border border-gray-200/80 dark:border-gray-800 h-[480px] sm:h-[520px] lg:h-[540px] flex flex-col justify-end cursor-pointer select-none transition-all duration-300 [&.is-photo-focused]:ring-2 [&.is-photo-focused]:ring-blue-500">
       
-      <!-- High-Contrast Dark Gradient Vignette Overlay for Readability (softens on hover for image visibility) -->
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent pointer-events-none transition-opacity duration-500 group-hover:opacity-40"></div>
+      <!-- Mobile Tap Badge Indicator -->
+      <div class="absolute top-3 right-3 z-20 md:hidden bg-gray-950/70 backdrop-blur-xs text-white/90 text-[10px] font-semibold px-2.5 py-1 rounded-full pointer-events-none flex items-center gap-1 border border-white/10 shadow-xs transition-opacity duration-300 group-[.is-photo-focused]:bg-blue-600/90 group-[.is-photo-focused]:text-white">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <span class="group-[.is-photo-focused]:hidden">Tap for photo</span>
+        <span class="hidden group-[.is-photo-focused]:inline">Tap for info</span>
+      </div>
 
-      <!-- Content Overlay at the bottom: Lowers opacity when hovering image, fully restored when hovering text -->
-      <div class="relative z-10 p-5 sm:p-6 text-left transition-all duration-500 group-hover:opacity-25 hover:!opacity-100">
+      <!-- Background Portrait Image with Zoom Effect -->
+      <img class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-105 group-[.is-photo-focused]:scale-105 group-[.is-photo-focused]:brightness-105" src="/src/assets/images/abouts/mark.jpg" alt="Mark Jordan Ugtong" />
+      
+      <!-- High-Contrast Dark Gradient Vignette Overlay for Readability (softens on hover/photo-focus for full image visibility) -->
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent pointer-events-none transition-opacity duration-500 group-hover:opacity-40 group-[.is-photo-focused]:opacity-0"></div>
+
+      <!-- Content Overlay at the bottom: Lowers opacity when hovering image or when tapped on mobile, fully restored when hovering text -->
+      <div class="relative z-10 p-5 sm:p-6 text-left transition-all duration-500 group-hover:opacity-25 hover:!opacity-100 group-[.is-photo-focused]:opacity-0 group-[.is-photo-focused]:translate-y-4 group-[.is-photo-focused]:pointer-events-none">
         <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white drop-shadow-md">
           Mark Jordan Ugtong
         </h3>
@@ -64,15 +72,23 @@
     </div>
 
     <!-- Card 2: Lace Arellano -->
-    <div class="relative overflow-hidden rounded-2xl group shadow-xl bg-gray-950 border border-gray-200/80 dark:border-gray-800 h-[480px] sm:h-[520px] lg:h-[540px] flex flex-col justify-end cursor-pointer">
-      <!-- Background Portrait Image with Zoom Effect -->
-      <img class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-105" src="/src/assets/images/abouts/lace.jpg" alt="Lace Arellano" />
+    <div data-about-card="true" class="relative overflow-hidden rounded-2xl group shadow-xl bg-gray-950 border border-gray-200/80 dark:border-gray-800 h-[480px] sm:h-[520px] lg:h-[540px] flex flex-col justify-end cursor-pointer select-none transition-all duration-300 [&.is-photo-focused]:ring-2 [&.is-photo-focused]:ring-blue-500">
       
-      <!-- High-Contrast Dark Gradient Vignette Overlay for Readability (softens on hover for image visibility) -->
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent pointer-events-none transition-opacity duration-500 group-hover:opacity-40"></div>
+      <!-- Mobile Tap Badge Indicator -->
+      <div class="absolute top-3 right-3 z-20 md:hidden bg-gray-950/70 backdrop-blur-xs text-white/90 text-[10px] font-semibold px-2.5 py-1 rounded-full pointer-events-none flex items-center gap-1 border border-white/10 shadow-xs transition-opacity duration-300 group-[.is-photo-focused]:bg-blue-600/90 group-[.is-photo-focused]:text-white">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <span class="group-[.is-photo-focused]:hidden">Tap for photo</span>
+        <span class="hidden group-[.is-photo-focused]:inline">Tap for info</span>
+      </div>
 
-      <!-- Content Overlay at the bottom: Lowers opacity when hovering image, fully restored when hovering text -->
-      <div class="relative z-10 p-5 sm:p-6 text-left transition-all duration-500 group-hover:opacity-25 hover:!opacity-100">
+      <!-- Background Portrait Image with Zoom Effect -->
+      <img class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-105 group-[.is-photo-focused]:scale-105 group-[.is-photo-focused]:brightness-105" src="/src/assets/images/abouts/lace.jpg" alt="Lace Arellano" />
+      
+      <!-- High-Contrast Dark Gradient Vignette Overlay for Readability (softens on hover/photo-focus for full image visibility) -->
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent pointer-events-none transition-opacity duration-500 group-hover:opacity-40 group-[.is-photo-focused]:opacity-0"></div>
+
+      <!-- Content Overlay at the bottom: Lowers opacity when hovering image or when tapped on mobile, fully restored when hovering text -->
+      <div class="relative z-10 p-5 sm:p-6 text-left transition-all duration-500 group-hover:opacity-25 hover:!opacity-100 group-[.is-photo-focused]:opacity-0 group-[.is-photo-focused]:translate-y-4 group-[.is-photo-focused]:pointer-events-none">
         <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white drop-shadow-md">
           Lace Arellano
         </h3>
@@ -105,15 +121,23 @@
     </div>
 
     <!-- Card 3: Franzelle Vie B. Jaicten -->
-    <div class="relative overflow-hidden rounded-2xl group shadow-xl bg-gray-950 border border-gray-200/80 dark:border-gray-800 h-[480px] sm:h-[520px] lg:h-[540px] flex flex-col justify-end cursor-pointer">
-      <!-- Background Portrait Image with Zoom Effect -->
-      <img class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-105" src="/src/assets/images/abouts/franzelle.jpg" alt="Franzelle Vie B. Jaicten" />
+    <div data-about-card="true" class="relative overflow-hidden rounded-2xl group shadow-xl bg-gray-950 border border-gray-200/80 dark:border-gray-800 h-[480px] sm:h-[520px] lg:h-[540px] flex flex-col justify-end cursor-pointer select-none transition-all duration-300 [&.is-photo-focused]:ring-2 [&.is-photo-focused]:ring-blue-500">
       
-      <!-- High-Contrast Dark Gradient Vignette Overlay for Readability (softens on hover for image visibility) -->
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent pointer-events-none transition-opacity duration-500 group-hover:opacity-40"></div>
+      <!-- Mobile Tap Badge Indicator -->
+      <div class="absolute top-3 right-3 z-20 md:hidden bg-gray-950/70 backdrop-blur-xs text-white/90 text-[10px] font-semibold px-2.5 py-1 rounded-full pointer-events-none flex items-center gap-1 border border-white/10 shadow-xs transition-opacity duration-300 group-[.is-photo-focused]:bg-blue-600/90 group-[.is-photo-focused]:text-white">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <span class="group-[.is-photo-focused]:hidden">Tap for photo</span>
+        <span class="hidden group-[.is-photo-focused]:inline">Tap for info</span>
+      </div>
 
-      <!-- Content Overlay at the bottom: Lowers opacity when hovering image, fully restored when hovering text -->
-      <div class="relative z-10 p-5 sm:p-6 text-left transition-all duration-500 group-hover:opacity-25 hover:!opacity-100">
+      <!-- Background Portrait Image with Zoom Effect -->
+      <img class="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105 group-hover:brightness-105 group-[.is-photo-focused]:scale-105 group-[.is-photo-focused]:brightness-105" src="/src/assets/images/abouts/franzelle.jpg" alt="Franzelle Vie B. Jaicten" />
+      
+      <!-- High-Contrast Dark Gradient Vignette Overlay for Readability (softens on hover/photo-focus for full image visibility) -->
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/80 to-transparent pointer-events-none transition-opacity duration-500 group-hover:opacity-40 group-[.is-photo-focused]:opacity-0"></div>
+
+      <!-- Content Overlay at the bottom: Lowers opacity when hovering image or when tapped on mobile, fully restored when hovering text -->
+      <div class="relative z-10 p-5 sm:p-6 text-left transition-all duration-500 group-hover:opacity-25 hover:!opacity-100 group-[.is-photo-focused]:opacity-0 group-[.is-photo-focused]:translate-y-4 group-[.is-photo-focused]:pointer-events-none">
         <h3 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white drop-shadow-md">
           Franzelle Vie B. Jaicten
         </h3>

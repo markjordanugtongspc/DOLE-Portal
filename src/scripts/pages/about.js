@@ -1,6 +1,7 @@
 /**
  * DOLE Portal — About Page Loader Module
- * Injects the shared about.html component into the standalone About page.
+ * Injects the shared about.html component into the standalone About page
+ * and binds touch/tap toggle functionality for mobile screens.
  */
 
 import aboutTemplate from '@/components/about.html?raw';
@@ -16,6 +17,25 @@ export const initAboutPage = () => {
         window.DEBUG.success('ABOUT', 'About page component rendered.');
     }
     /* END INJECT ABOUT COMPONENT */
+
+    /* START BIND MOBILE CARD PHOTO FOCUS TOGGLE */
+    const cards = slot.querySelectorAll('[data-about-card="true"]');
+    cards.forEach((card) => {
+        card.addEventListener('click', (e) => {
+            // Allow default link behavior when clicking social icons or interactive buttons
+            if (e.target.closest('a') || e.target.closest('button')) return;
+
+            const isFocused = card.classList.contains('is-photo-focused');
+            if (isFocused) {
+                card.classList.remove('is-photo-focused');
+            } else {
+                // Focus this card and collapse others
+                cards.forEach((c) => c.classList.remove('is-photo-focused'));
+                card.classList.add('is-photo-focused');
+            }
+        });
+    });
+    /* END BIND MOBILE CARD PHOTO FOCUS TOGGLE */
 };
 
 if (document.readyState === 'loading') {
