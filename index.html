@@ -141,7 +141,7 @@
           <div id="desktop-username-wrapper">
             <label for="desktop-username"
               class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Username</label>
-            <input type="text" id="desktop-username"
+            <input type="text" id="desktop-username" tabindex="1"
               class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
               placeholder="Enter your username" required>
           </div>
@@ -150,15 +150,15 @@
             <div class="flex justify-between items-center mb-1.5">
               <label for="desktop-password"
                 class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Password</label>
-              <a href="#"
+              <a href="#" tabindex="-1"
                 class="text-xs font-bold text-blue-700 hover:underline dark:text-blue-500 cursor-pointer transition-colors">Forgot
                 password?</a>
             </div>
             <div class="relative">
-              <input type="password" id="desktop-password"
+              <input type="password" id="desktop-password" tabindex="2"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
                 placeholder="Enter your password" required>
-              <button id="desktop-password-toggle" type="button"
+              <button id="desktop-password-toggle" type="button" tabindex="-1"
                 class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
                 <!-- Slashed Eye (closed) by default -->
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
@@ -171,13 +171,13 @@
           </div>
 
           <div class="flex items-center pt-0.5 pl-1">
-            <input id="desktop-remember" type="checkbox" value=""
+            <input id="desktop-remember" type="checkbox" value="" tabindex="-1"
               class="size-[18px] shrink-0 rounded-md border border-gray-300 bg-gray-50 text-blue-700 focus:ring-2 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 cursor-pointer">
             <label for="desktop-remember"
               class="ml-2 text-xs font-semibold text-gray-900 dark:text-gray-300 cursor-pointer">Remember me</label>
           </div>
 
-          <button type="submit"
+          <button type="submit" tabindex="3"
             class="cursor-pointer w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md tracking-wide mt-2">
             SIGN IN
           </button>
@@ -255,7 +255,7 @@
         <div id="mobile-username-wrapper">
           <label for="mobile-username"
             class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Username</label>
-          <input type="text" id="mobile-username"
+          <input type="text" id="mobile-username" tabindex="1"
             class="bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
             placeholder="Enter your username" required>
         </div>
@@ -264,15 +264,15 @@
           <div class="flex justify-between items-center mb-1.5">
             <label for="mobile-password"
               class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Password</label>
-            <a href="#"
+            <a href="#" tabindex="-1"
               class="text-xs font-bold text-blue-700 hover:underline dark:text-blue-500 cursor-pointer transition-colors">Forgot
               password?</a>
           </div>
           <div class="relative">
-            <input type="password" id="mobile-password"
+            <input type="password" id="mobile-password" tabindex="2"
               class="bg-gray-50 border border-gray-300 text-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors"
               placeholder="Enter your password" required>
-            <button id="mobile-password-toggle" type="button"
+            <button id="mobile-password-toggle" type="button" tabindex="-1"
               class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none">
               <!-- Slashed Eye (closed) by default -->
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
@@ -285,14 +285,14 @@
         </div>
 
         <div class="flex items-center pt-1 pl-1">
-          <input id="mobile-remember" type="checkbox" value=""
+          <input id="mobile-remember" type="checkbox" value="" tabindex="-1"
             class="size-[18px] shrink-0 rounded-md border border-gray-300 bg-gray-50 text-blue-700 focus:ring-2 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 cursor-pointer">
           <label for="mobile-remember"
             class="ml-2 text-xs font-semibold text-gray-900 dark:text-gray-300 cursor-pointer">Remember me</label>
         </div>
 
         <!-- SIGN IN Button (Rectangle, blue) -->
-        <button type="submit"
+        <button type="submit" tabindex="3"
           class="cursor-pointer w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-xl text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md tracking-wide mt-2">
           SIGN IN
         </button>

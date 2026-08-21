@@ -450,7 +450,7 @@ const buildRegisterPanel = (prefix) => {
     const rounded = prefix === 'mobile' ? 'rounded-xl' : 'rounded-lg';
     const headingClass = prefix === 'mobile' ? 'text-3xl text-center' : 'text-4xl';
     return `
-        <section class="w-1/2 shrink-0 ${prefix === 'mobile' ? '' : 'pl-8'}">
+        <section id="${prefix}-register-panel" class="w-1/2 shrink-0 ${prefix === 'mobile' ? '' : 'pl-8'}">
             <div class="mb-5 flex items-start justify-between gap-3">
                 <div>
                     <p class="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-500">Registration Request</p>
@@ -518,6 +518,30 @@ const setAuthViewMode = (mode) => {
     document.querySelectorAll('[id$="-auth-track"]').forEach((track) => {
         track.style.transform = authViewMode === 'register' ? 'translateX(-50%)' : 'translateX(0)';
     });
+
+    ['desktop', 'mobile'].forEach((prefix) => {
+        const regPanel = document.getElementById(`${prefix}-register-panel`);
+        const loginForm = document.getElementById(`${prefix}-username`)?.closest('form');
+        if (regPanel) {
+            if (authViewMode === 'register') {
+                regPanel.removeAttribute('inert');
+                regPanel.removeAttribute('aria-hidden');
+            } else {
+                regPanel.setAttribute('inert', '');
+                regPanel.setAttribute('aria-hidden', 'true');
+            }
+        }
+        if (loginForm) {
+            if (authViewMode === 'register') {
+                loginForm.setAttribute('inert', '');
+                loginForm.setAttribute('aria-hidden', 'true');
+            } else {
+                loginForm.removeAttribute('inert');
+                loginForm.removeAttribute('aria-hidden');
+            }
+        }
+    });
+
     const heroBtn = document.getElementById('hero-register-btn');
     if (heroBtn) heroBtn.textContent = authViewMode === 'register' ? 'Login' : 'Register';
     syncDesktopPanelMotion();
@@ -782,6 +806,38 @@ const setupLoginForms = () => {
                 setFieldError(credentialWrapper, 'Login failed. Please check your connection and try again.');
             } finally {
                 setLoading(form, false);
+            }
+        });
+        // Keyboard TAB sequence: Username/Identity -> Password/PIN -> SIGN IN button
+        form?.addEventListener('keydown', (e) => {
+            if (e.key !== 'Tab') return;
+
+            const identity = form.querySelector('[id$="-username"]');
+            const credential = form.querySelector('[id$="-password"]') || form.querySelector('[id$="-pin"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
+
+            if (!e.shiftKey) {
+                // Forward Tab
+                if (document.activeElement === identity && credential) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    credential.focus();
+                } else if (document.activeElement === credential && submitBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submitBtn.focus();
+                }
+            } else {
+                // Shift + Tab (Backward)
+                if (document.activeElement === submitBtn && credential) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    credential.focus();
+                } else if (document.activeElement === credential && identity) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    identity.focus();
+                }
             }
         });
     };
