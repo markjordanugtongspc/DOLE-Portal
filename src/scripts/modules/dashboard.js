@@ -1,6 +1,6 @@
 import { getPreference, setPreference } from './storage.js';
 import ApexCharts from 'apexcharts';
-import { Modal } from 'flowbite';
+import { Modal, initTooltips } from 'flowbite';
 import { DashboardCarousel } from './slider.js';
 import { fetchUserDashboardCounts, fetchUsers } from '@/backend/api/users.api.js';
 import { fetchSystems } from '@/backend/api/systems.api.js';
@@ -379,7 +379,8 @@ class StaffDashboardController {
         this.renderOfficeStatus();
         this.renderActiveAssistantsMetric();
         this.renderActiveStaffsMetric();
-        this.renderRecentActiveStaff();
+        // TEMPORARILY DISABLED: this.renderRecentActiveStaff();
+        this.initPHHolidayCalendar();
     }
 
     async loadSystems() {
@@ -515,24 +516,23 @@ class StaffDashboardController {
             });
         }
 
-        // Refresh Recent Active Staff Action (Real-time Supabase Refetch)
-        const bindRefresh = (btnId) => {
-            const btn = document.getElementById(btnId);
-            if (!btn) return;
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const svg = btn.querySelector('svg');
-                if (svg) svg.classList.add('animate-spin');
-                await this.renderRecentActiveStaff();
-                await this.renderActiveStaffsMetric();
-                if (svg) {
-                    setTimeout(() => svg.classList.remove('animate-spin'), 500);
-                }
-            });
-        };
-
-        bindRefresh('btn-refresh-recent-staff');
-        bindRefresh('mobile-btn-refresh-recent-staff');
+        // TEMPORARILY DISABLED: Refresh Recent Active Staff Action (Real-time Supabase Refetch)
+        // const bindRefresh = (btnId) => {
+        //     const btn = document.getElementById(btnId);
+        //     if (!btn) return;
+        //     btn.addEventListener('click', async (e) => {
+        //         e.preventDefault();
+        //         const svg = btn.querySelector('svg');
+        //         if (svg) svg.classList.add('animate-spin');
+        //         await this.renderRecentActiveStaff();
+        //         await this.renderActiveStaffsMetric();
+        //         if (svg) {
+        //             setTimeout(() => svg.classList.remove('animate-spin'), 500);
+        //         }
+        //     });
+        // };
+        // bindRefresh('btn-refresh-recent-staff');
+        // bindRefresh('mobile-btn-refresh-recent-staff');
 
         // Intruder Modal Close Action
         const intruderModalEl = document.getElementById('intruder-modal');
@@ -1174,7 +1174,7 @@ class StaffDashboardController {
         });
     }
 
-    /* START RECENT ACTIVE STAFF SYSTEM */
+    /* TEMPORARILY DISABLED: START RECENT ACTIVE STAFF SYSTEM
     async renderRecentActiveStaff() {
         const desktopContainer = document.getElementById('staff-recent-active-list');
         const mobileContainer = document.getElementById('mobile-recent-active-list');
@@ -1282,7 +1282,445 @@ class StaffDashboardController {
         if (desktopContainer) desktopContainer.innerHTML = desktopHtml;
         if (mobileContainer) mobileContainer.innerHTML = mobileHtml;
     }
-    /* END RECENT ACTIVE STAFF SYSTEM */
+    END TEMPORARILY DISABLED: RECENT ACTIVE STAFF SYSTEM */
+
+    /* START PH HOLIDAY CALENDAR & DIRECTORY SYSTEM */
+    getPHHolidayWorkStatus(holiday) {
+        const name = String(holiday?.name || '').toLowerCase();
+        const localName = String(holiday?.localName || '').toLowerCase();
+
+        // 1. Regular National Holidays (Mandatory No Work in Gov/Private + Classes Suspended)
+        const regularHolidays = [
+            "new year's day", "maundy thursday", "good friday", "day of valor", "araw ng kagitingan",
+            "labour day", "labor day", "independence day", "national heroes day", "bonifacio day",
+            "christmas day", "rizal day", "eidul fitr", "eid'l fitr", "eid al-fitr", "eid al-adha", "eidul adha"
+        ];
+
+        // 2. Special Working Days / Half-Day / Observances
+        const specialWorkingHolidays = [
+            "all saints' day eve", "christmas eve", "last day of the year", "edsa people power"
+        ];
+
+        const isRegular = regularHolidays.some(k => name.includes(k) || localName.includes(k));
+        const isSpecialWorking = specialWorkingHolidays.some(k => name.includes(k) || localName.includes(k));
+
+        if (isRegular) {
+            return {
+                category: 'Regular Holiday',
+                workStatus: 'No Work (Classes & Gov Suspended)',
+                typeKey: 'no-work',
+                bgClass: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300',
+                badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-900/70 dark:text-rose-300 border-rose-300 dark:border-rose-700',
+                dotClass: 'bg-rose-500',
+                statusBadge: 'bg-red-600 text-white font-black'
+            };
+        } else if (isSpecialWorking) {
+            return {
+                category: 'Special Working / Eve Observance',
+                workStatus: 'Regular / Half-Day Operations',
+                typeKey: 'special',
+                bgClass: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300',
+                badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-300 border-blue-300 dark:border-blue-700',
+                dotClass: 'bg-blue-500',
+                statusBadge: 'bg-blue-600 text-white font-bold'
+            };
+        } else {
+            // Special Non-Working Day (e.g., Chinese New Year, Ninoy Aquino Day, All Saints Day, Immaculate Conception, Holy Saturday)
+            return {
+                category: 'Special Non-Working Holiday',
+                workStatus: 'No Work (No Class / Non-Working)',
+                typeKey: 'no-work',
+                bgClass: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 text-amber-800 dark:text-amber-300',
+                badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-300 border-amber-300 dark:border-amber-700',
+                dotClass: 'bg-amber-500',
+                statusBadge: 'bg-amber-600 text-white font-bold'
+            };
+        }
+    }
+
+    async fetchPHHolidays(year) {
+        const cacheKey = `ph_holidays_v3_${year}`;
+        try {
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        } catch (e) {
+            // ignore storage errors
+        }
+
+        try {
+            const res = await fetch(`https://date.nager.at/Api/v3/PublicHolidays/${year}/PH`);
+            if (!res.ok) {
+                throw new Error(`PH Holidays API HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+                } catch (e) {}
+                window.DEBUG?.success('HOLIDAYS', `Fetched ${data.length} PH holidays for ${year}.`);
+                return data;
+            }
+            return [];
+        } catch (err) {
+            window.DEBUG?.warn('HOLIDAYS', `Failed to fetch PH holidays for ${year}`, err);
+            return [];
+        }
+    }
+
+    initPHHolidayCalendar() {
+        const desktopPanel = document.getElementById('ph-holiday-calendar-panel');
+        const mobileCard = document.getElementById('ph-holiday-mobile-card');
+        const directoryPanel = document.getElementById('ph-holidays-directory-panel');
+        if (!desktopPanel && !mobileCard && !directoryPanel) return;
+
+        const now = new Date();
+        this.phCalMonth = now.getMonth();
+        this.phCalYear = now.getFullYear();
+        this.phActiveFilter = 'all';
+
+        const bindNav = (prevId, nextId) => {
+            const prevBtn = document.getElementById(prevId);
+            const nextBtn = document.getElementById(nextId);
+
+            prevBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const oldYear = this.phCalYear;
+                this.phCalMonth--;
+                if (this.phCalMonth < 0) {
+                    this.phCalMonth = 11;
+                    this.phCalYear--;
+                }
+                this.renderPHHolidayCalendar();
+                if (oldYear !== this.phCalYear) {
+                    this.renderPHHolidaysDirectory();
+                }
+            });
+
+            nextBtn?.addEventListener('click', (e) => {
+                e.preventDefault();
+                const oldYear = this.phCalYear;
+                this.phCalMonth++;
+                if (this.phCalMonth > 11) {
+                    this.phCalMonth = 0;
+                    this.phCalYear++;
+                }
+                this.renderPHHolidayCalendar();
+                if (oldYear !== this.phCalYear) {
+                    this.renderPHHolidaysDirectory();
+                }
+            });
+        };
+
+        bindNav('ph-cal-prev-btn', 'ph-cal-next-btn');
+        bindNav('mobile-ph-cal-prev-btn', 'mobile-ph-cal-next-btn');
+
+        // Filter button clicks (Desktop Directory)
+        const filterBtns = document.querySelectorAll('.holiday-filter-btn[data-holiday-filter]');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.phActiveFilter = btn.dataset.holidayFilter || 'all';
+
+                filterBtns.forEach(b => {
+                    const isActive = b.dataset.holidayFilter === this.phActiveFilter;
+                    if (isActive) {
+                        b.className = 'cursor-pointer holiday-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-xs transition-colors';
+                    } else {
+                        b.className = 'cursor-pointer holiday-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors';
+                    }
+                });
+
+                this.renderPHHolidaysDirectory();
+            });
+        });
+
+        // Filter button clicks (Mobile Drawer)
+        const mobileFilterBtns = document.querySelectorAll('.mobile-drawer-filter-btn[data-mobile-filter]');
+        mobileFilterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.phActiveFilter = btn.dataset.mobileFilter || 'all';
+
+                mobileFilterBtns.forEach(b => {
+                    const isActive = b.dataset.mobileFilter === this.phActiveFilter;
+                    if (isActive) {
+                        b.className = 'cursor-pointer mobile-drawer-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-xs transition-colors';
+                    } else {
+                        b.className = 'cursor-pointer mobile-drawer-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors';
+                    }
+                });
+
+                this.renderPHHolidaysDirectory();
+            });
+        });
+
+        this.renderPHHolidayCalendar();
+        this.renderPHHolidaysDirectory();
+    }
+
+    async renderPHHolidaysDirectory() {
+        const listContainer = document.getElementById('ph-holidays-full-list');
+        const mobileDrawerContainer = document.getElementById('mobile-holidays-drawer-list');
+        const yearBadge = document.getElementById('ph-holiday-list-year-badge');
+        const mobileDrawerYearBadge = document.getElementById('mobile-drawer-year-badge');
+
+        if (yearBadge) yearBadge.textContent = String(this.phCalYear);
+        if (mobileDrawerYearBadge) mobileDrawerYearBadge.textContent = String(this.phCalYear);
+
+        if (!listContainer && !mobileDrawerContainer) return;
+
+        const holidays = await this.fetchPHHolidays(this.phCalYear);
+        if (!Array.isArray(holidays) || holidays.length === 0) {
+            const emptyHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 py-6 text-center">No holiday schedules found for this year.</p>';
+            if (listContainer) listContainer.innerHTML = emptyHtml;
+            if (mobileDrawerContainer) mobileDrawerContainer.innerHTML = emptyHtml;
+            return;
+        }
+
+        let noWorkCount = 0;
+        let specialCount = 0;
+
+        holidays.forEach(h => {
+            const status = this.getPHHolidayWorkStatus(h);
+            if (status.typeKey === 'no-work') noWorkCount++;
+            else specialCount++;
+        });
+
+        // Update Desktop & Mobile Drawer Counts
+        const countMap = {
+            'count-filter-all': holidays.length,
+            'count-filter-nowork': noWorkCount,
+            'count-filter-special': specialCount,
+            'mobile-drawer-count-all': holidays.length,
+            'mobile-drawer-count-nowork': noWorkCount,
+            'mobile-drawer-count-special': specialCount
+        };
+
+        Object.entries(countMap).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        });
+
+        const filteredHolidays = holidays.filter(h => {
+            if (this.phActiveFilter === 'all') return true;
+            const status = this.getPHHolidayWorkStatus(h);
+            return status.typeKey === this.phActiveFilter;
+        });
+
+        if (!filteredHolidays.length) {
+            const noMatchHtml = '<p class="text-xs text-gray-500 dark:text-gray-400 py-6 text-center">No holidays match the selected filter.</p>';
+            if (listContainer) listContainer.innerHTML = noMatchHtml;
+            if (mobileDrawerContainer) mobileDrawerContainer.innerHTML = noMatchHtml;
+            return;
+        }
+
+        const monthShortNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        const html = filteredHolidays.map((holiday) => {
+            const status = this.getPHHolidayWorkStatus(holiday);
+            const dateObj = new Date(holiday.date);
+            const monthStr = monthShortNames[dateObj.getMonth()] || '';
+            const dayNum = dateObj.getDate() || '';
+            const dayOfWeek = dayNames[dateObj.getDay()] || '';
+
+            const localNameHtml = holiday.localName && holiday.localName !== holiday.name
+                ? `<span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 break-words"> • 🇵🇭 ${this.escapeHtml(holiday.localName)}</span>`
+                : '';
+
+            return `
+                <div class="group p-3 rounded-lg border transition-all duration-200 hover:shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${status.bgClass}">
+                  <div class="flex items-start sm:items-center gap-3">
+                    <!-- Date badge -->
+                    <div class="flex flex-col items-center justify-center min-w-[48px] py-1 px-1.5 rounded-md bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 shadow-xs shrink-0 text-center">
+                      <span class="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400 leading-tight">${monthStr}</span>
+                      <span class="text-base font-black text-gray-900 dark:text-white leading-none">${dayNum}</span>
+                    </div>
+
+                    <!-- Holiday Information with responsive text wrapping -->
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-baseline gap-1.5 flex-wrap">
+                        <h4 class="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white leading-snug break-words text-wrap">
+                          ${this.escapeHtml(holiday.name)}
+                        </h4>
+                        ${localNameHtml}
+                      </div>
+                      <div class="flex items-center gap-2 mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-medium flex-wrap">
+                        <span>${dayOfWeek}</span>
+                        <span>•</span>
+                        <span class="inline-flex items-center gap-1 font-semibold ${status.typeKey === 'no-work' ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}">
+                          <span class="w-1.5 h-1.5 rounded-full ${status.dotClass}"></span>
+                          ${status.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Work / School Status Tag -->
+                  <div class="shrink-0 flex items-center gap-2 mt-1 sm:mt-0">
+                    <span class="inline-flex items-center text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full shadow-xs text-wrap leading-tight text-center ${status.statusBadge}">
+                      ${status.workStatus}
+                    </span>
+                  </div>
+                </div>
+            `;
+        }).join('');
+
+        if (listContainer) listContainer.innerHTML = html;
+        if (mobileDrawerContainer) mobileDrawerContainer.innerHTML = html;
+    }
+
+    async renderPHHolidayCalendar() {
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        const monthLabel = `${monthNames[this.phCalMonth]} ${this.phCalYear}`;
+        const desktopLabelEl = document.getElementById('ph-cal-month-label');
+        const mobileLabelEl = document.getElementById('mobile-ph-cal-month-label');
+        if (desktopLabelEl) desktopLabelEl.textContent = monthLabel;
+        if (mobileLabelEl) mobileLabelEl.textContent = monthLabel;
+
+        const desktopDaysEl = document.getElementById('ph-cal-days-grid');
+        const mobileDaysEl = document.getElementById('mobile-ph-cal-days-grid');
+        const tooltipsContainer = document.getElementById('ph-cal-tooltips-container');
+
+        const holidays = await this.fetchPHHolidays(this.phCalYear);
+
+        // Map holidays for current month by day number
+        const currentMonthPrefix = `${this.phCalYear}-${String(this.phCalMonth + 1).padStart(2, '0')}`;
+        const holidaysByDay = {};
+        const monthHolidays = [];
+
+        holidays.forEach(h => {
+            if (typeof h?.date === 'string' && h.date.startsWith(currentMonthPrefix)) {
+                const dayNum = parseInt(h.date.split('-')[2], 10);
+                if (!isNaN(dayNum)) {
+                    holidaysByDay[dayNum] = h;
+                    monthHolidays.push(h);
+                }
+            }
+        });
+
+        const holidayCountText = `${monthHolidays.length} holiday${monthHolidays.length === 1 ? '' : 's'}`;
+        const countEl = document.getElementById('ph-cal-holiday-count');
+        const mobileCountEl = document.getElementById('mobile-ph-cal-holiday-count');
+        if (countEl) countEl.textContent = holidayCountText;
+        if (mobileCountEl) mobileCountEl.textContent = holidayCountText;
+
+        // Date math
+        const firstDayOfWeek = new Date(this.phCalYear, this.phCalMonth, 1).getDay(); // 0 = Sun, 1 = Mon ...
+        const totalDaysInMonth = new Date(this.phCalYear, this.phCalMonth + 1, 0).getDate();
+
+        const today = new Date();
+        const isCurrentMonthNow = today.getFullYear() === this.phCalYear && today.getMonth() === this.phCalMonth;
+        const currentTodayDate = today.getDate();
+
+        let daysHtml = '';
+        let tooltipsHtml = '';
+
+        // Empty offset cells
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            daysHtml += '<div class="h-8 flex items-center justify-center text-transparent select-none"></div>';
+        }
+
+        // Days
+        for (let day = 1; day <= totalDaysInMonth; day++) {
+            const holiday = holidaysByDay[day];
+            const isToday = isCurrentMonthNow && day === currentTodayDate;
+            const tooltipId = `tooltip-ph-${this.phCalYear}-${this.phCalMonth}-${day}`;
+            const todayTooltipId = `tooltip-today-${this.phCalYear}-${this.phCalMonth}-${day}`;
+
+            if (holiday) {
+                const status = this.getPHHolidayWorkStatus(holiday);
+                const tooltipTitle = `${holiday.name}${holiday.localName && holiday.localName !== holiday.name ? ` (${holiday.localName})` : ''} - ${status.category}`;
+                
+                daysHtml += `
+                    <div class="relative h-9 w-full flex flex-col items-center justify-center rounded-lg font-black text-rose-700 dark:text-rose-300 bg-rose-50/95 dark:bg-rose-950/50 border border-rose-300/80 dark:border-rose-800/80 hover:bg-rose-100 dark:hover:bg-rose-900/70 hover:scale-105 transition-all select-none cursor-pointer group shadow-xs"
+                         data-tooltip-target="${tooltipId}"
+                         data-tooltip-placement="top"
+                         title="${this.escapeHtml(tooltipTitle)}"
+                         role="button"
+                         tabindex="0"
+                         aria-label="${this.escapeHtml(holiday.name)}">
+                      <span class="text-xs leading-none">${day}</span>
+                      <span class="w-1.5 h-1.5 rounded-full ${status.dotClass} mt-1 ring-2 ring-rose-200 dark:ring-rose-900"></span>
+                    </div>
+                `;
+
+                const localNameHtml = holiday.localName && holiday.localName !== holiday.name
+                    ? `<div class="text-[11px] text-amber-300 font-semibold mt-0.5">🇵🇭 ${this.escapeHtml(holiday.localName)}</div>`
+                    : '';
+
+                tooltipsHtml += `
+                    <div id="${tooltipId}" role="tooltip" class="absolute z-50 invisible inline-block px-3.5 py-2.5 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900/95 dark:bg-gray-800/95 backdrop-blur-xs rounded-lg shadow-xl opacity-0 tooltip border border-gray-700/80 max-w-[260px] text-left pointer-events-none">
+                      <div class="font-black text-white text-xs flex items-center gap-1.5 leading-snug">
+                        <span class="w-2 h-2 rounded-full ${status.dotClass} inline-block shrink-0"></span>
+                        <span>${this.escapeHtml(holiday.name)}</span>
+                      </div>
+                      ${localNameHtml}
+                      <div class="mt-2 pt-1.5 border-t border-gray-700/60 flex flex-col gap-1 text-[10px] text-gray-300">
+                        <div class="flex items-center justify-between gap-1">
+                          <span class="font-bold text-rose-300 uppercase">${status.category}</span>
+                          <span class="font-mono text-gray-400">${this.escapeHtml(holiday.date)}</span>
+                        </div>
+                        <div class="text-[9px] font-black uppercase text-amber-400 bg-black/40 px-1.5 py-0.5 rounded text-center">
+                          ${status.workStatus}
+                        </div>
+                      </div>
+                      <div class="tooltip-arrow" data-popper-arrow></div>
+                    </div>
+                `;
+            } else if (isToday) {
+                const todayFormatted = `${monthNames[this.phCalMonth]} ${day}, ${this.phCalYear}`;
+                daysHtml += `
+                    <div class="relative h-9 w-full flex flex-col items-center justify-center rounded-lg font-black text-blue-700 dark:text-blue-300 bg-blue-50/90 dark:bg-blue-950/60 ring-2 ring-blue-500 dark:ring-blue-400 shadow-xs hover:scale-105 transition-all select-none cursor-pointer"
+                         data-tooltip-target="${todayTooltipId}"
+                         data-tooltip-placement="top"
+                         title="Today - ${todayFormatted}"
+                         role="button"
+                         tabindex="0">
+                      <span class="text-xs leading-none font-black">${day}</span>
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-1 animate-ping"></span>
+                    </div>
+                `;
+
+                tooltipsHtml += `
+                    <div id="${todayTooltipId}" role="tooltip" class="absolute z-50 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900/95 dark:bg-gray-800/95 backdrop-blur-xs rounded-lg shadow-xl opacity-0 tooltip border border-gray-700 max-w-[200px] text-left pointer-events-none">
+                      <div class="font-extrabold text-blue-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                        <span>Today</span>
+                      </div>
+                      <div class="text-[11px] text-gray-300 mt-0.5 font-medium">${todayFormatted}</div>
+                      <div class="tooltip-arrow" data-popper-arrow></div>
+                    </div>
+                `;
+            } else {
+                daysHtml += `
+                    <div class="h-9 w-full flex items-center justify-center rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/80 transition-colors select-none cursor-default">
+                      <span class="text-xs">${day}</span>
+                    </div>
+                `;
+            }
+        }
+
+        if (desktopDaysEl) desktopDaysEl.innerHTML = daysHtml;
+        if (mobileDaysEl) mobileDaysEl.innerHTML = daysHtml;
+        if (tooltipsContainer) {
+            tooltipsContainer.innerHTML = tooltipsHtml;
+        }
+
+        // Re-initialize Flowbite tooltips dynamically
+        try {
+            initTooltips();
+        } catch (e) {
+            window.DEBUG?.warn('FLOWBITE', 'Tooltip auto-init skipped', e);
+        }
+    }
+    /* END PH HOLIDAY CALENDAR & DIRECTORY SYSTEM */
 
     async renderActiveStaffsMetric() {
         const valEls = document.querySelectorAll('[data-staff-active-staffs-value], #staff-active-staffs-value, #mobile-active-staffs-value');

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" class="w-5 h-3.5 rounded-[2px] shadow-xs shrink-0 object-cover overflow-hidden" aria-hidden="true">
+  <!-- Top Blue Stripe -->
+  <rect width="1000" height="250" fill="#0038A8"/>
+  <!-- Bottom Red Stripe -->
+  <rect y="250" width="1000" height="250" fill="#CE1126"/>
+  <!-- White Triangle -->
+  <polygon points="0,0 433.013,250 0,500" fill="#FFFFFF"/>
+  <!-- Sun and Stars Group -->
+  <g transform="translate(144.338, 250)" fill="#FCD116">
+    <!-- Center Sun -->
+    <circle r="45"/>
+    <!-- 8 Sun Rays (each with 3 prongs) -->
+    <!-- 0 deg -->
+    <g id="sun-ray">
+      <polygon points="0,-85 -7,-50 7,-50"/>
+      <polygon points="-8,-80 -13,-48 -2,-48"/>
+      <polygon points="8,-80 2,-48 13,-48"/>
+    </g>
+    <use href="#sun-ray" transform="rotate(45)"/>
+    <use href="#sun-ray" transform="rotate(90)"/>
+    <use href="#sun-ray" transform="rotate(135)"/>
+    <use href="#sun-ray" transform="rotate(180)"/>
+    <use href="#sun-ray" transform="rotate(225)"/>
+    <use href="#sun-ray" transform="rotate(270)"/>
+    <use href="#sun-ray" transform="rotate(315)"/>
+  </g>
+  <!-- 3 Golden Stars -->
+  <!-- Top Left Star -->
+  <polygon points="45,45 49,60 65,60 52,69 57,84 45,74 33,84 38,69 25,60 41,60" fill="#FCD116" transform="translate(10, 10) scale(0.7)"/>
+  <!-- Bottom Left Star -->
+  <polygon points="45,45 49,60 65,60 52,69 57,84 45,74 33,84 38,69 25,60 41,60" fill="#FCD116" transform="translate(10, 395) scale(0.7)"/>
+  <!-- Right Vertex Star -->
+  <polygon points="45,45 49,60 65,60 52,69 57,84 45,74 33,84 38,69 25,60 41,60" fill="#FCD116" transform="translate(330, 203) scale(0.7)"/>
+</svg>

@@ -615,6 +615,40 @@ export const initAlerts = () => {
         }
     });
 
+    // View Toggler (Notifications vs Audit Logs)
+    const btnToggleNotifs = document.getElementById('view-toggle-notifications');
+    const btnToggleAudit = document.getElementById('view-toggle-audit');
+    const notifsContainer = document.getElementById('notifications-view-container');
+    const auditContainer = document.getElementById('audit-logs-view-container');
+    const refreshAuditBtn = document.getElementById('btn-refresh-audit-logs');
+
+    const setActiveView = (view) => {
+        const isNotifs = view === 'notifications';
+        if (notifsContainer) notifsContainer.classList.toggle('hidden', !isNotifs);
+        if (auditContainer) auditContainer.classList.toggle('hidden', isNotifs);
+
+        if (btnToggleNotifs) {
+            if (isNotifs) {
+                btnToggleNotifs.className = 'cursor-pointer inline-flex items-center gap-2 rounded-md bg-white px-3.5 py-1.5 text-xs font-bold text-gray-900 shadow-xs transition-all dark:bg-gray-800 dark:text-white';
+            } else {
+                btnToggleNotifs.className = 'cursor-pointer inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-900 transition-all dark:text-gray-400 dark:hover:text-white';
+            }
+        }
+
+        if (btnToggleAudit) {
+            if (!isNotifs) {
+                btnToggleAudit.className = 'cursor-pointer inline-flex items-center gap-2 rounded-md bg-white px-3.5 py-1.5 text-xs font-bold text-gray-900 shadow-xs transition-all dark:bg-gray-800 dark:text-white';
+                void loadAuditLogs();
+            } else {
+                btnToggleAudit.className = 'cursor-pointer inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-900 transition-all dark:text-gray-400 dark:hover:text-white';
+            }
+        }
+    };
+
+    btnToggleNotifs?.addEventListener('click', () => setActiveView('notifications'));
+    btnToggleAudit?.addEventListener('click', () => setActiveView('audit'));
+    refreshAuditBtn?.addEventListener('click', () => void loadAuditLogs());
+
     channel = supabase.channel(`alerts-${recipientRole}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => { void load(); void loadAuditLogs(); })
         .subscribe((status) => window.DEBUG?.flow('ALERTS', `Notifications channel: ${status}`));

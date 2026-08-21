@@ -28,7 +28,27 @@ export async function fetchGipsByStaff(createdBy) {
 }
 
 /**
- * Fetch all GIPs (admin view â€” all assistants).
+ * Fetch a single GIP assistant by ID.
+ * @param {number|string} gipId
+ * @returns {{ data: object|null, error: string|null }}
+ */
+export async function fetchGipById(gipId) {
+    const { data, error } = await supabase
+        .from('gips')
+        .select('id, full_name, username, email, phone, avatar_url, status, created_at, created_by')
+        .eq('id', gipId)
+        .is('archived_at', null)
+        .single();
+
+    if (error) {
+        if (window.DEBUG) window.DEBUG.error('GIPS-API', `Failed to fetch GIP #${gipId}`, error.message);
+        return { data: null, error: error.message };
+    }
+    return { data: data || null, error: null };
+}
+
+/**
+ * Fetch all GIPs (admin view — all assistants).
  * @returns {{ data: Array, error: string|null }}
  */
 export async function fetchAllGips() {

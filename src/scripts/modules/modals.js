@@ -104,6 +104,108 @@ export function showImagePreviewModal(imageUrl) {
     imageModalInstance.show();
 }
 
+/* START ASSISTANT DETAILS VIEW MODAL */
+let assistantDetailsModalInstance = null;
+
+export function showAssistantDetailsModal(assistant = {}) {
+    if (!assistant) return;
+
+    let modalEl = document.getElementById('viewAssistantModal');
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'viewAssistantModal';
+        modalEl.tabIndex = -1;
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.className = 'hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full';
+        modalEl.innerHTML = `
+            <div class="relative p-4 w-full max-w-md max-h-full">
+                <div class="relative bg-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl dark:bg-gray-800 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-700 to-indigo-800 dark:from-blue-900 dark:to-indigo-950 p-6 flex flex-col items-center relative text-white">
+                        <button type="button" class="absolute top-4 right-4 cursor-pointer text-white/80 hover:text-white bg-transparent hover:bg-white/10 rounded-lg text-sm w-8 h-8 flex justify-center items-center" data-modal-hide="viewAssistantModal">
+                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
+                            <span class="sr-only">Close modal</span>
+                        </button>
+                        <div class="relative mt-2">
+                            <img id="view-avatar" class="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-800 shadow-md bg-white" src="${assistant.avatar || ''}" alt="Avatar">
+                            <span id="view-online-dot" class="absolute -bottom-1 -right-1 w-5 h-5 ${assistant.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} border-[3px] border-white dark:border-gray-800 rounded-full"></span>
+                        </div>
+                        <h3 id="view-name" class="text-lg font-extrabold mt-3 truncate max-w-full text-center">${assistant.name || ''}</h3>
+                        <p id="view-email" class="text-xs text-blue-200 mt-0.5 truncate max-w-full text-center">${assistant.email || ''}</p>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Access Level</span>
+                            <span class="inline-flex items-center bg-gradient-to-r from-blue-800 to-blue-950 text-white dark:from-blue-500 dark:via-blue-600 dark:to-blue-400 font-semibold px-2 py-0.5 rounded text-[10px] select-none border-none">GIP Assistant</span>
+                        </div>
+                        <hr class="border-gray-100 dark:border-gray-700">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Username</span>
+                                <span id="view-username" class="text-sm font-semibold text-gray-900 dark:text-white">${assistant.username || ''}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phone</span>
+                                <span id="view-phone" class="text-sm font-semibold text-gray-900 dark:text-white">${assistant.phone || 'None'}</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</span>
+                                <span id="view-status" class="inline-flex items-center ${assistant.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800/40'} font-semibold px-2 py-0.5 rounded text-xs border mt-1 select-none">
+                                    <span class="w-1.5 h-1.5 ${assistant.status === 'Active' ? 'bg-emerald-500 rounded-full animate-pulse' : 'bg-rose-500 rounded-full'} mr-1"></span>${assistant.status || 'Offline'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end px-6 py-4 border-t border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20">
+                        <button data-modal-hide="viewAssistantModal" type="button" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 font-bold rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-sm">
+                            Close Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalEl);
+    } else {
+        const viewAvatar = modalEl.querySelector('#view-avatar');
+        const viewOnlineDot = modalEl.querySelector('#view-online-dot');
+        const viewName = modalEl.querySelector('#view-name');
+        const viewEmail = modalEl.querySelector('#view-email');
+        const viewUsername = modalEl.querySelector('#view-username');
+        const viewPhone = modalEl.querySelector('#view-phone');
+        const viewStatus = modalEl.querySelector('#view-status');
+
+        if (viewAvatar) viewAvatar.src = assistant.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assistant.name || 'GIP')}&background=random`;
+        if (viewName) viewName.textContent = assistant.name || '';
+        if (viewEmail) viewEmail.textContent = assistant.email || '';
+        if (viewUsername) viewUsername.textContent = assistant.username || '';
+        if (viewPhone) viewPhone.textContent = assistant.phone || 'None';
+
+        if (viewOnlineDot) {
+            viewOnlineDot.className = `absolute -bottom-1 -right-1 w-5 h-5 ${assistant.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} border-[3px] border-white dark:border-gray-800 rounded-full`;
+        }
+        if (viewStatus) {
+            const badgeColor = assistant.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/40' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800/40';
+            const dotColor = assistant.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500';
+            viewStatus.className = `inline-flex items-center ${badgeColor} border font-semibold px-2 py-0.5 rounded text-xs mt-1 select-none`;
+            viewStatus.innerHTML = `<span class="w-1.5 h-1.5 ${dotColor} rounded-full mr-1"></span>${assistant.status || 'Offline'}`;
+        }
+    }
+
+    if (!assistantDetailsModalInstance) {
+        assistantDetailsModalInstance = new Modal(modalEl, {
+            placement: 'center',
+            backdrop: 'dynamic',
+            closable: true
+        });
+
+        modalEl.querySelectorAll('[data-modal-hide="viewAssistantModal"]').forEach(btn => {
+            btn.addEventListener('click', () => assistantDetailsModalInstance.hide());
+        });
+    }
+
+    assistantDetailsModalInstance.show();
+}
+/* END ASSISTANT DETAILS VIEW MODAL */
+
 /* START UNASSIGNED EXTERNAL SYSTEM MODAL */
 let unassignedSystemModalInstance = null;
 let unassignedSystemCountdownTimer = null;

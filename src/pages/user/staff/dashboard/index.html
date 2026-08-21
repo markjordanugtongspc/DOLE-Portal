@@ -14,8 +14,12 @@
     }
   </script>
 
-    <style>html.portal-auth-checking body { visibility: hidden; }</style>
-    <script type="module" src="/src/scripts/auth-guard.js"></script>
+  <style>
+    html.portal-auth-checking body {
+      visibility: hidden;
+    }
+  </style>
+  <script type="module" src="/src/scripts/auth-guard.js"></script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-300">
@@ -28,20 +32,27 @@
 
     <!-- Main Content -->
     <main id="main-content" class="flex-1 p-6 md:p-8 space-y-6 transition-all duration-300">
-      
+
       <!-- Top Header Row -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+      <div
+        class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
         <div>
           <h1 class="text-2xl font-extrabold text-gray-900 dark:text-white">User Dashboard</h1>
-          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Access unified portal sub-systems and monitor network performance</p>
+          <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Access unified portal sub-systems and
+            monitor network performance</p>
         </div>
         <nav class="flex" aria-label="Breadcrumb">
           <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
             <li class="inline-flex items-center">
-              <a href="/" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
+              <a href="/"
+                class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">
                 <svg class="w-4 h-4 me-1.5" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                   <g transform="matrix(0.77 0 0 0.77 12 12)">
-                    <path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;" transform="translate(-16, -16)" d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z" stroke-linecap="round" />
+                    <path
+                      style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: currentColor; fill-rule: nonzero; opacity: 1;"
+                      transform="translate(-16, -16)"
+                      d="M 20 3 C 15.054688 3 11 7.054688 11 12 C 11 12.519531 11.085938 12.976563 11.15625 13.4375 L 3.28125 21.28125 L 3 21.59375 L 3 29 L 10 29 L 10 26 L 13 26 L 13 23 L 16 23 L 16 20.03125 C 17.179688 20.609375 18.554688 21 20 21 C 24.945313 21 29 16.945313 29 12 C 29 7.054688 24.945313 3 20 3 Z M 20 5 C 23.855469 5 27 8.144531 27 12 C 27 15.855469 23.855469 19 20 19 C 18.789063 19 17.542969 18.644531 16.59375 18.125 L 16.34375 18 L 14 18 L 14 21 L 11 21 L 11 24 L 8 24 L 8 27 L 5 27 L 5 22.4375 L 12.90625 14.5 L 13.28125 14.15625 L 13.1875 13.625 C 13.085938 13.023438 13 12.488281 13 12 C 13 8.144531 16.144531 5 20 5 Z M 22 8 C 20.894531 8 20 8.894531 20 10 C 20 11.105469 20.894531 12 22 12 C 23.105469 12 24 11.105469 24 10 C 24 8.894531 23.105469 8 22 8 Z"
+                      stroke-linecap="round" />
                   </g>
                 </svg>
                 Login
@@ -49,14 +60,24 @@
             </li>
             <li>
               <div class="flex items-center space-x-1.5">
-                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
-                <a href="#" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Dashboard</a>
+                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="m9 5 7 7-7 7" />
+                </svg>
+                <a href="#"
+                  class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500 transition-colors cursor-pointer">Dashboard</a>
               </div>
             </li>
             <li aria-current="page">
               <div class="flex items-center space-x-1.5">
-                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
-                <span class="inline-flex items-center text-sm font-medium text-gray-400 dark:text-gray-500 select-none">User</span>
+                <svg class="w-3.5 h-3.5 rtl:rotate-180 text-gray-400 dark:text-gray-600" aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="m9 5 7 7-7 7" />
+                </svg>
+                <span
+                  class="inline-flex items-center text-sm font-medium text-gray-400 dark:text-gray-500 select-none">User</span>
               </div>
             </li>
           </ol>
@@ -66,62 +87,93 @@
       <!-- Network Performance & Portal Stats Cards Grid (Desktop View) -->
       <div class="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Card 1: Office Hours / Status -->
-        <div class="group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+        <div
+          class="group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OFFICE STATUS</h3>
-            <p id="staff-office-status-value" data-staff-office-status-value class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">OPEN</p>
-            <span id="staff-office-status-subtext" data-staff-office-status-subtext class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Mon - Fri (8:00 AM - 5:00 PM)</span>
+            <p id="staff-office-status-value" data-staff-office-status-value
+              class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block">
+              OPEN</p>
+            <span id="staff-office-status-subtext" data-staff-office-status-subtext
+              class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Mon - Fri (8:00 AM -
+              5:00 PM)</span>
           </div>
-          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
-            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          <div
+            class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           </div>
         </div>
 
         <!-- Card 2: Active Assistants -->
-        <div class="group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+        <div
+          class="group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE ASSISTANTS</h3>
-            <p id="staff-active-assistants-value" data-staff-active-assistants-value class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block" role="status" aria-live="polite">
-              <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+            <p id="staff-active-assistants-value" data-staff-active-assistants-value
+              class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block"
+              role="status" aria-live="polite">
+              <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span
+                  class="sr-only">Loading...</span></span>
             </p>
-            <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● GIP Assistants</span>
+            <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● GIP
+              Assistants</span>
           </div>
-          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
-            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+          <div
+            class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
             </svg>
           </div>
         </div>
 
         <!-- Card 3: Active Staffs -->
-        <div class="group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+        <div
+          class="group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE STAFFS</h3>
-            <p id="staff-active-staffs-value" data-staff-active-staffs-value class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block" role="status" aria-live="polite">
-              <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+            <p id="staff-active-staffs-value" data-staff-active-staffs-value
+              class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block"
+              role="status" aria-live="polite">
+              <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span
+                  class="sr-only">Loading...</span></span>
             </p>
             <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Online Count</span>
           </div>
-          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
-            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          <div
+            class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
         </div>
 
         <!-- Card 4: System Status -->
-        <div class="group bg-gradient-to-br from-slate-900 via-stone-900 to-black p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+        <div
+          class="group bg-gradient-to-br from-slate-900 via-stone-900 to-black p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
           <div>
             <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">SYSTEM STATUS</h3>
-            <p id="staff-vercel-status-percentage" data-vercel-status-percentage class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block" role="status" aria-live="polite">
-              <span class="inline-block h-7 w-20 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading System status...</span></span>
+            <p id="staff-vercel-status-percentage" data-vercel-status-percentage
+              class="text-2xl font-extrabold mt-1 tracking-tight transition-all duration-300 ease-out group-hover:scale-115 origin-left inline-block"
+              role="status" aria-live="polite">
+              <span class="inline-block h-7 w-20 rounded-full bg-white/20 animate-pulse align-middle"><span
+                  class="sr-only">Loading System status...</span></span>
             </p>
-            <span id="staff-vercel-status-description" data-vercel-status-description class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems Normal</span>
+            <span id="staff-vercel-status-description" data-vercel-status-description
+              class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems
+              Normal</span>
           </div>
-          <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
-            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 116 100">
+          <div
+            class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+              viewBox="0 0 116 100">
               <path d="M57.5 0L115 100H0L57.5 0z" />
             </svg>
           </div>
@@ -133,65 +185,89 @@
         <div class="relative h-28 overflow-hidden">
           <!-- Item 1 -->
           <div class="hidden duration-700 ease-in-out" data-carousel-item="active">
-            <div class="group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
+            <div
+              class="group bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
                 <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">OFFICE STATUS</h3>
-                <p id="mobile-office-status-value" data-staff-office-status-value class="text-2xl font-extrabold mt-1 tracking-tight">OPEN</p>
-                <span id="mobile-office-status-subtext" data-staff-office-status-subtext class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Mon - Fri (8:00 AM - 5:00 PM)</span>
+                <p id="mobile-office-status-value" data-staff-office-status-value
+                  class="text-2xl font-extrabold mt-1 tracking-tight">OPEN</p>
+                <span id="mobile-office-status-subtext" data-staff-office-status-subtext
+                  class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● Mon - Fri (8:00 AM -
+                  5:00 PM)</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
               </div>
             </div>
           </div>
           <!-- Item 2 -->
           <div class="hidden duration-700 ease-in-out" data-carousel-item>
-            <div class="group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
+            <div
+              class="group bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
                 <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE ASSISTANTS</h3>
-                <p id="mobile-active-assistants-value" data-staff-active-assistants-value class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
-                  <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+                <p id="mobile-active-assistants-value" data-staff-active-assistants-value
+                  class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
+                  <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span
+                      class="sr-only">Loading...</span></span>
                 </p>
-                <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● GIP Assistants</span>
+                <span class="block text-[9px] font-bold text-green-400 mt-1 uppercase tracking-wider">● GIP
+                  Assistants</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                 </svg>
               </div>
             </div>
           </div>
           <!-- Item 3 -->
           <div class="hidden duration-700 ease-in-out" data-carousel-item>
-            <div class="group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
+            <div
+              class="group bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
                 <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">ACTIVE STAFFS</h3>
-                <p id="mobile-active-staffs-value" data-staff-active-staffs-value class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
-                  <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading...</span></span>
+                <p id="mobile-active-staffs-value" data-staff-active-staffs-value
+                  class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
+                  <span class="inline-block h-7 w-12 rounded-full bg-white/20 animate-pulse align-middle"><span
+                      class="sr-only">Loading...</span></span>
                 </p>
-                <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Online Count</span>
+                <span class="block text-[9px] font-bold text-purple-300 mt-1 uppercase tracking-wider">● Online
+                  Count</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               </div>
             </div>
           </div>
           <!-- Item 4 -->
           <div class="hidden duration-700 ease-in-out" data-carousel-item>
-            <div class="group bg-gradient-to-br from-slate-900 via-stone-900 to-black p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
+            <div
+              class="group bg-gradient-to-br from-slate-900 via-stone-900 to-black p-4 rounded-none border border-transparent shadow-sm flex items-center justify-between text-white select-none h-24 mx-2">
               <div>
                 <h3 class="text-xs font-bold text-white/80 uppercase tracking-wider">SYSTEM STATUS</h3>
-                <p id="mobile-vercel-status-percentage" data-vercel-status-percentage class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
-                  <span class="inline-block h-7 w-20 rounded-full bg-white/20 animate-pulse align-middle"><span class="sr-only">Loading System status...</span></span>
+                <p id="mobile-vercel-status-percentage" data-vercel-status-percentage
+                  class="text-2xl font-extrabold mt-1 tracking-tight" role="status" aria-live="polite">
+                  <span class="inline-block h-7 w-20 rounded-full bg-white/20 animate-pulse align-middle"><span
+                      class="sr-only">Loading System status...</span></span>
                 </p>
-                <span id="mobile-vercel-status-description" data-vercel-status-description class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems Normal</span>
+                <span id="mobile-vercel-status-description" data-vercel-status-description
+                  class="block text-[9px] font-bold text-emerald-400 mt-1 uppercase tracking-wider">● All Systems
+                  Normal</span>
               </div>
               <div class="bg-white/10 p-2 rounded-lg flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 116 100">
+                <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor" viewBox="0 0 116 100">
                   <path d="M57.5 0L115 100H0L57.5 0z" />
                 </svg>
               </div>
@@ -201,27 +277,37 @@
 
         <!-- Slider indicators (Muted dots at bottom) -->
         <div class="absolute z-30 flex -translate-x-1/2 bottom-0 left-1/2 space-x-2 rtl:space-x-reverse">
-          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer" aria-current="true" aria-label="Slide 1" data-carousel-slide-to="0"></button>
-          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer" aria-current="false" aria-label="Slide 2" data-carousel-slide-to="1"></button>
-          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer" aria-current="false" aria-label="Slide 3" data-carousel-slide-to="2"></button>
-          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer" aria-current="false" aria-label="Slide 4" data-carousel-slide-to="3"></button>
+          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"
+            aria-current="true" aria-label="Slide 1" data-carousel-slide-to="0"></button>
+          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"
+            aria-current="false" aria-label="Slide 2" data-carousel-slide-to="1"></button>
+          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"
+            aria-current="false" aria-label="Slide 3" data-carousel-slide-to="2"></button>
+          <button type="button" class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-700 cursor-pointer"
+            aria-current="false" aria-label="Slide 4" data-carousel-slide-to="3"></button>
         </div>
       </div>
 
       <!-- Systems Grid Title & Search Bar -->
-      <div class="border-b border-gray-200 dark:border-gray-800 pb-4 mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div
+        class="border-b border-gray-200 dark:border-gray-800 pb-4 mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 class="text-lg font-extrabold text-gray-900 dark:text-white">Active Sub-Systems</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Click on any system card to open its interface, or drag and drop cards to arrange them based on your preference.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Click on any system card to open its interface, or
+            drag and drop cards to arrange them based on your preference.</p>
         </div>
         <!-- Mini Search Bar -->
         <div class="relative w-full sm:w-64">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 20 20">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
             </svg>
           </div>
-          <input type="text" id="search-systems" class="block w-full py-1.5 ps-10 pr-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white text-xs rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200" placeholder="Search systems..." />
+          <input type="text" id="search-systems"
+            class="block w-full py-1.5 ps-10 pr-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white text-xs rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200"
+            placeholder="Search systems..." />
         </div>
       </div>
 
@@ -236,49 +322,170 @@
           <!-- Loaded Dynamically by dashboard.js -->
         </div>
         <!-- Slider indicators (Muted dots at bottom) -->
-        <div id="systems-mobile-indicators" class="absolute z-30 flex -translate-x-1/2 bottom-0 left-1/2 space-x-2 rtl:space-x-reverse">
+        <div id="systems-mobile-indicators"
+          class="absolute z-30 flex -translate-x-1/2 bottom-0 left-1/2 space-x-2 rtl:space-x-reverse">
           <!-- Loaded Dynamically by dashboard.js -->
         </div>
       </div>
 
       <!-- Load More / Show More Button -->
       <div id="btn-show-more-container" class="hidden sm:flex justify-center mt-6">
-        <button id="btn-show-more" class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 font-bold text-xs px-5 py-2.5 shadow-sm transition-all duration-300 hover:-skew-x-12 select-none border border-transparent">
+        <button id="btn-show-more"
+          class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 dark:hover:bg-blue-700 font-bold text-xs px-5 py-2.5 shadow-sm transition-all duration-300 hover:-skew-x-12 select-none border border-transparent">
           <span class="inline-block" id="btn-show-more-text">Show More</span>
         </button>
       </div>
 
       <!-- Charts & Side Panels Row (Desktop View) -->
       <div class="hidden sm:grid sm:grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        
-        <!-- Left: ApexCharts Performance Graph (2/3 width on LG) -->
-        <div class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full">
+
+        <!-- Left: PH Public Holidays Directory & Work Status List (2/3 width on LG) -->
+        <div id="ph-holidays-directory-panel"
+          class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full min-h-[420px]">
           <div>
-            <div class="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
-              <div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-gray-500 dark:text-gray-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
-                </svg>
+            <!-- Header with Title & Year Quick Stats -->
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4 mb-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="bg-rose-50 dark:bg-rose-950/50 p-2.5 rounded-lg text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/60 shrink-0">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                  </svg>
+                </div>
+                <div>
+                  <h3
+                    class="text-base md:text-lg font-extrabold text-gray-900 dark:text-white leading-tight flex items-center gap-2">
+                    <span>Holiday & Observance Schedule</span>
+                    <span id="ph-holiday-list-year-badge"
+                      class="bg-blue-100 text-blue-800 text-[11px] font-black px-2 py-0.5 rounded-full dark:bg-blue-900/60 dark:text-blue-300">2026</span>
+                  </h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Philippine national holidays with
+                    government work and class suspension status</p>
+                </div>
               </div>
-              <div>
-                <h3 class="text-lg font-extrabold text-gray-900 dark:text-white leading-tight">Support Tickets Activity</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Weekly volume of support tickets received and resolved by staff</p>
+
+              <!-- Filter Pills -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <button type="button" data-holiday-filter="all"
+                  class="cursor-pointer holiday-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-xs transition-colors">
+                  All (<span id="count-filter-all">18</span>)
+                </button>
+                <button type="button" data-holiday-filter="no-work"
+                  class="cursor-pointer holiday-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                  No Work (<span id="count-filter-nowork">0</span>)
+                </button>
+                <button type="button" data-holiday-filter="special"
+                  class="cursor-pointer holiday-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                  Special / Working (<span id="count-filter-special">0</span>)
+                </button>
               </div>
             </div>
 
-            <!-- ApexCharts container for staff -->
-            <div id="staff-active-users-chart" class="w-full"></div>
+            <!-- Scrollable Holidays List Container -->
+            <div id="ph-holidays-full-list" class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+              <div class="py-12 text-center text-xs text-gray-400 dark:text-gray-500 animate-pulse">
+                Loading official holiday schedules from Nager Holiday API...
+              </div>
+            </div>
           </div>
-          
-          <div class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
-            <div class="flex justify-between items-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              <span>Next Refresh: <span class="text-blue-700 dark:text-blue-500">Auto-update active</span></span>
+
+          <!-- Card Footer & Official DOLE / PH Work Status Legends -->
+          <div
+            class="border-t border-gray-100 dark:border-gray-800 pt-3.5 mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px]">
+            <div class="flex items-center flex-wrap gap-2.5 font-bold">
+              <span class="text-gray-400 dark:text-gray-500 uppercase tracking-wider text-[10px]">LEGENDS:</span>
+              <span
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Regular (No Work & Gov/Classes Suspended)
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Special Non-Working
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Special Working / Observance
+              </span>
             </div>
           </div>
         </div>
 
-        <!-- Right: Recent Active Staff (1/3 width on LG) -->
+        <!-- Right: PH Public Holidays Calendar (1/3 width on LG) -->
+        <div id="ph-holiday-calendar-panel"
+          class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-5 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full min-h-[380px]">
+          <div>
+            <!-- Header with Month/Year Navigation -->
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+              <div>
+                <h3 class="text-sm font-extrabold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
+                  <img src="/ph-flag.svg" alt="PH Flag"
+                    class="w-5 h-3.5 rounded-[2px] shadow-xs object-cover shrink-0 border border-gray-200/60 dark:border-gray-700/60 inline-block" />
+                  <span>PH Public Holidays</span>
+                </h3>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-0.5">Hover holiday dates for
+                  details</p>
+              </div>
+
+              <!-- Month / Year controls -->
+              <div class="flex items-center gap-1">
+                <button type="button" id="ph-cal-prev-btn"
+                  class="cursor-pointer p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                  title="Previous Month">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+                <span id="ph-cal-month-label"
+                  class="text-xs font-black text-gray-800 dark:text-gray-200 min-w-[100px] text-center select-none">Loading...</span>
+                <button type="button" id="ph-cal-next-btn"
+                  class="cursor-pointer p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                  title="Next Month">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Day of Week Headers -->
+            <div
+              class="grid grid-cols-7 text-[10px] font-bold text-gray-400 dark:text-gray-500 text-center uppercase tracking-wider mb-2">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+
+            <!-- Calendar Days Grid -->
+            <div id="ph-cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs">
+              <!-- Rendered Dynamically by dashboard.js -->
+              <div class="col-span-7 py-8 text-center text-xs text-gray-400 animate-pulse">Loading holidays calendar...
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar Footer & Legend -->
+          <div
+            class="border-t border-gray-100 dark:border-gray-800 pt-3 mt-4 flex items-center justify-between text-[10px] font-bold text-gray-500 dark:text-gray-400">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                Holiday</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                Today</span>
+            </div>
+            <span id="ph-cal-holiday-count" class="text-rose-600 dark:text-rose-400">0 holidays</span>
+          </div>
+
+          <!-- Dynamic Flowbite Tooltips Container for Holidays -->
+          <div id="ph-cal-tooltips-container"></div>
+        </div>
+
+        <!-- TEMPORARILY DISABLED: Recent Active Staff (1/3 width on LG)
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full">
           <div>
             <div class="border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
@@ -286,7 +493,6 @@
               <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">Live status of online and recently active staff members</p>
             </div>
 
-            <!-- Recent active staff list -->
             <div id="staff-recent-active-list" class="space-y-4 text-left">
               <div class="animate-pulse space-y-3">
                 <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
@@ -305,12 +511,112 @@
             </button>
           </div>
         </div>
+        END TEMPORARILY DISABLED -->
       </div>
 
+      <!-- Mobile Header & View Details Banner (Outside and on top of calendar container) -->
+      <div class="sm:hidden mt-8 mb-2 flex items-center justify-between bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-3 shadow-xs">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+          <span class="text-xs font-extrabold text-gray-900 dark:text-white">Holiday & Observance</span>
+        </div>
+        <button type="button" id="mobile-btn-open-holidays-drawer" data-drawer-target="mobile-holidays-drawer" data-drawer-show="mobile-holidays-drawer" data-drawer-placement="bottom" aria-controls="mobile-holidays-drawer" class="cursor-pointer inline-flex items-center gap-1 text-xs font-black text-blue-700 dark:text-blue-400 hover:underline">
+          <span>View Details</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </button>
+      </div>
+
+      <!-- Mobile Holidays Calendar Card View -->
+      <div id="ph-holiday-mobile-card" class="sm:hidden mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-none shadow-sm flex flex-col justify-between transition-colors">
+        <div>
+          <!-- Header with Month/Year Navigation -->
+          <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+            <div>
+              <h3 class="text-sm font-extrabold text-gray-900 dark:text-white flex items-center gap-2 leading-tight">
+                <img src="/ph-flag.svg" alt="PH Flag" class="w-5 h-3.5 rounded-[2px] shadow-xs object-cover shrink-0 border border-gray-200/60 dark:border-gray-700/60 inline-block" />
+                <span>PH Public Holidays</span>
+              </h3>
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-0.5">Tap holiday dates for details</p>
+            </div>
+
+            <!-- Month / Year controls -->
+            <div class="flex items-center gap-1">
+              <button type="button" id="mobile-ph-cal-prev-btn" class="cursor-pointer p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors" title="Previous Month">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+              </button>
+              <span id="mobile-ph-cal-month-label" class="text-xs font-black text-gray-800 dark:text-gray-200 min-w-[80px] text-center select-none">Loading...</span>
+              <button type="button" id="mobile-ph-cal-next-btn" class="cursor-pointer p-1 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors" title="Next Month">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Day of Week Headers -->
+          <div class="grid grid-cols-7 text-[10px] font-bold text-gray-400 dark:text-gray-500 text-center uppercase tracking-wider mb-2">
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+          </div>
+
+          <!-- Calendar Days Grid -->
+          <div id="mobile-ph-cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-xs">
+            <!-- Rendered Dynamically by dashboard.js -->
+            <div class="col-span-7 py-8 text-center text-xs text-gray-400 animate-pulse">Loading holidays calendar...</div>
+          </div>
+        </div>
+
+        <!-- Calendar Footer & Legend -->
+        <div class="border-t border-gray-100 dark:border-gray-800 pt-3 mt-4 flex items-center justify-between text-[10px] font-bold text-gray-500 dark:text-gray-400">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> Holiday</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span> Today</span>
+          </div>
+          <span id="mobile-ph-cal-holiday-count" class="text-rose-600 dark:text-rose-400">0 holidays</span>
+        </div>
+      </div>
+
+      <!-- Flowbite Bottom Drawer for Mobile Holiday Details View -->
+      <div id="mobile-holidays-drawer" class="fixed bottom-0 left-0 right-0 z-50 w-full p-4 overflow-y-auto transition-transform bg-white dark:bg-gray-900 translate-y-full max-h-[85vh] rounded-t-2xl border-t border-gray-200 dark:border-gray-800 shadow-2xl sm:hidden" tabindex="-1" aria-labelledby="drawer-bottom-label">
+        <div class="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-3"></div>
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
+          <div class="flex items-center gap-2">
+            <img src="/ph-flag.svg" alt="PH Flag" class="w-5 h-3.5 rounded-[2px] shadow-xs object-cover shrink-0 border border-gray-200/60 dark:border-gray-700/60 inline-block" />
+            <h5 id="drawer-bottom-label" class="text-sm font-extrabold text-gray-900 dark:text-white">
+              Holiday & Observance Schedule (<span id="mobile-drawer-year-badge">2026</span>)
+            </h5>
+          </div>
+          <button type="button" data-drawer-hide="mobile-holidays-drawer" aria-controls="mobile-holidays-drawer" class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex items-center justify-center dark:hover:bg-gray-800 dark:hover:text-white">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+            <span class="sr-only">Close drawer</span>
+          </button>
+        </div>
+
+        <!-- Filter Pills inside Drawer -->
+        <div class="flex items-center gap-1.5 flex-wrap mb-3">
+          <button type="button" data-mobile-filter="all" class="cursor-pointer mobile-drawer-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-xs transition-colors">
+            All (<span id="mobile-drawer-count-all">18</span>)
+          </button>
+          <button type="button" data-mobile-filter="no-work" class="cursor-pointer mobile-drawer-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+            No Work (<span id="mobile-drawer-count-nowork">0</span>)
+          </button>
+          <button type="button" data-mobile-filter="special" class="cursor-pointer mobile-drawer-filter-btn px-2.5 py-1 text-[11px] font-bold rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+            Special / Working (<span id="mobile-drawer-count-special">0</span>)
+          </button>
+        </div>
+
+        <!-- Scrollable List of Holidays inside Drawer with wrap -->
+        <div id="mobile-holidays-drawer-list" class="space-y-2.5 overflow-y-auto max-h-[55vh] pb-4">
+          <!-- Rendered Dynamically by dashboard.js -->
+        </div>
+      </div>
+
+      <!-- TEMPORARILY DISABLED: Mobile Carousel Charts & Staff
       <div id="charts-mobile-carousel" class="relative w-full sm:hidden mt-8 mb-6">
-        <!-- Carousel wrapper -->
         <div class="relative h-[480px] overflow-hidden">
-          <!-- Slide 1: Support Tickets Activity Chart -->
           <div class="hidden duration-700 ease-in-out px-2" data-carousel-item="active">
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-[440px]">
               <div>
@@ -326,22 +632,16 @@
                     <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Weekly volume of support tickets received and resolved by staff</p>
                   </div>
                 </div>
-                <!-- ApexCharts container for staff mobile -->
                 <div id="staff-active-users-chart-mobile" class="w-full pointer-events-none select-none"></div>
               </div>
               <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
                 <div class="flex justify-between items-center text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <span>Next Refresh: <span class="text-blue-700 dark:text-blue-500">Auto-update active</span></span>
-                  <div class="flex items-center gap-1 opacity-80 text-gray-400 dark:text-gray-500 animate-pulse">
-                    <span class="text-[9px]">Swipe</span>
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Slide 2: Recent Active Staff -->
           <div class="hidden duration-700 ease-in-out px-2" data-carousel-item>
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-[440px]">
               <div>
@@ -349,7 +649,6 @@
                   <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Recent Active Staff</h3>
                   <p class="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-1">Live status of online and recently active staff members</p>
                 </div>
-                <!-- Staff list -->
                 <div id="mobile-recent-active-list" class="space-y-3.5 text-left">
                   <div class="animate-pulse space-y-3">
                     <div class="h-8 bg-gray-200 dark:bg-gray-800 rounded"></div>
@@ -359,10 +658,6 @@
                 </div>
               </div>
               <div class="border-t border-gray-100 dark:border-gray-800 pt-3 flex justify-between items-center">
-                <div class="flex items-center gap-1 opacity-80 text-gray-400 dark:text-gray-500 animate-pulse">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                  <span class="text-[9px]">Swipe</span>
-                </div>
                 <button type="button" id="mobile-btn-refresh-recent-staff" class="cursor-pointer text-[10px] font-bold text-blue-700 hover:text-blue-800 dark:text-blue-500 dark:hover:text-blue-400 flex items-center justify-center gap-1 transition-colors uppercase tracking-wider">
                   Refresh Status
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
@@ -370,56 +665,63 @@
               </div>
             </div>
           </div>
-
-
-        <!-- Slider indicators (Muted dots at bottom, hidden) -->
-        <div class="absolute z-30 hidden space-x-2 rtl:space-x-reverse bottom-0 left-1/2 -translate-x-1/2">
-          <button type="button" class="w-2.5 h-2.5 rounded-full" aria-current="true" aria-label="Slide 1" data-carousel-slide-to="0"></button>
-          <button type="button" class="w-2.5 h-2.5 rounded-full" aria-current="false" aria-label="Slide 2" data-carousel-slide-to="1"></button>
         </div>
       </div>
-      </div>
+      END TEMPORARILY DISABLED -->
     </main>
   </div>
 
   <!-- Intruder / PDL Alert Modal -->
-  <div id="intruder-modal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-      <div class="relative p-4 w-full max-w-md max-h-full">
-          <!-- Modal content -->
-          <div class="relative bg-white dark:bg-gray-900 border border-red-500 rounded-lg shadow-lg overflow-hidden">
-              <!-- Header with red alert theme -->
-              <div class="bg-red-600 dark:bg-red-700 p-4 text-white flex items-center justify-between">
-                  <h3 class="text-sm font-black uppercase tracking-wider flex items-center gap-2">
-                      <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                      </svg>
-                      Threat Detected
-                  </h3>
-                  <button type="button" class="cursor-pointer text-white/80 hover:text-white bg-transparent hover:bg-white/10 rounded-lg text-sm w-8 h-8 flex justify-center items-center" data-intruder-modal-close="true" aria-label="Close modal">
-                      <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/></svg>
-                      <span class="sr-only">Close modal</span>
-                  </button>
-              </div>
-              <!-- Body -->
-              <div class="p-6 text-center space-y-4">
-                  <div class="w-16 h-16 bg-red-100 dark:bg-red-950/50 rounded-full flex items-center justify-center mx-auto text-red-600 dark:text-red-400">
-                    <svg class="w-10 h-10 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-                    </svg>
-                  </div>
-                  <div>
-                      <h4 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight" id="intruder-type">SYSTEM LOCKED</h4>
-                      <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
-                          Intruder or PDL match detected. The system has initiated the freeze and capture security protocol. User credentials and portal operations are frozen.
-                      </p>
-                  </div>
-              </div>
-              <!-- Footer -->
-              <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex justify-end">
-                  <button data-intruder-modal-close="true" type="button" class="cursor-pointer text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 font-bold text-xs px-5 py-2.5 shadow-sm transition-all duration-300 hover:-skew-x-12 select-none border border-transparent">Acknowledge</button>
-              </div>
+  <div id="intruder-modal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-md max-h-full">
+      <!-- Modal content -->
+      <div class="relative bg-white dark:bg-gray-900 border border-red-500 rounded-lg shadow-lg overflow-hidden">
+        <!-- Header with red alert theme -->
+        <div class="bg-red-600 dark:bg-red-700 p-4 text-white flex items-center justify-between">
+          <h3 class="text-sm font-black uppercase tracking-wider flex items-center gap-2">
+            <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Threat Detected
+          </h3>
+          <button type="button"
+            class="cursor-pointer text-white/80 hover:text-white bg-transparent hover:bg-white/10 rounded-lg text-sm w-8 h-8 flex justify-center items-center"
+            data-intruder-modal-close="true" aria-label="Close modal">
+            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18 17.94 6M18 18 6.06 6" />
+            </svg>
+            <span class="sr-only">Close modal</span>
+          </button>
+        </div>
+        <!-- Body -->
+        <div class="p-6 text-center space-y-4">
+          <div
+            class="w-16 h-16 bg-red-100 dark:bg-red-950/50 rounded-full flex items-center justify-center mx-auto text-red-600 dark:text-red-400">
+            <svg class="w-10 h-10 animate-bounce" fill="none" stroke="currentColor" stroke-width="2"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
           </div>
+          <div>
+            <h4 class="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight" id="intruder-type">
+              SYSTEM LOCKED</h4>
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+              Intruder or PDL match detected. The system has initiated the freeze and capture security protocol. User
+              credentials and portal operations are frozen.
+            </p>
+          </div>
+        </div>
+        <!-- Footer -->
+        <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex justify-end">
+          <button data-intruder-modal-close="true" type="button"
+            class="cursor-pointer text-white bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 font-bold text-xs px-5 py-2.5 shadow-sm transition-all duration-300 hover:-skew-x-12 select-none border border-transparent">Acknowledge</button>
+        </div>
       </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

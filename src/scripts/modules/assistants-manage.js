@@ -1,7 +1,8 @@
 import { Modal } from 'flowbite';
-import { fetchGipsByStaff, createGip, updateGip, archiveGip } from '@/backend/api/gips.api.js';
+import { fetchGipsByStaff, fetchGipById, createGip, updateGip, archiveGip } from '@/backend/api/gips.api.js';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
 import { assistantAddDraftStorage } from '@/scripts/modules/storage.js';
+import { showAssistantDetailsModal } from '@/scripts/modules/modals.js';
 
 /* START STAFF ASSISTANTS MANAGEMENT CONTROLLER */
 export const initAssistantsManage = () => {
@@ -533,8 +534,30 @@ export const initAssistantsManage = () => {
         });
     }
 
+    // Fetch single assistant with fallback to cached list
+    const getAssistantData = async (id) => {
+        const cached = assistants.find(a => a.id === String(id));
+        try {
+            const { data, error } = await fetchGipById(id);
+            if (!error && data) {
+                return {
+                    id: String(data.id),
+                    name: data.full_name,
+                    username: data.username,
+                    email: data.email || '',
+                    phone: data.phone || '',
+                    status: data.status === 'online' ? 'Active' : 'Offline',
+                    avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name)}&background=random`
+                };
+            }
+        } catch (err) {
+            window.DEBUG?.warn('ASSISTANTS', `Failed to fetch single assistant #${id}, using cached`, err);
+        }
+        return cached || null;
+    };
+
     // Process Table Actions Delegation (View, Edit, Delete)
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
         const table = e.target.closest('#sorting-table');
         if (!table) return;
 
@@ -555,8 +578,7 @@ export const initAssistantsManage = () => {
         if (!row) return;
 
         const id = row.getAttribute('data-id');
-        const asst = assistants.find(a => a.id === id);
-        if (!asst) return;
+        if (!id) return;
 
         // Check if user clicked action buttons
         const editBtn = e.target.closest('.btn-edit');
@@ -564,18 +586,26 @@ export const initAssistantsManage = () => {
 
         if (editBtn) {
             e.stopPropagation();
-            configureEditMode(asst);
-            if (editModal) editModal.show();
+            editBtn.classList.add('animate-pulse');
+            const asst = await getAssistantData(id);
+            editBtn.classList.remove('animate-pulse');
+            if (asst) {
+                configureEditMode(asst);
+                if (editModal) editModal.show();
+            }
         } else if (archiveBtn) {
             e.stopPropagation();
-            assistantToArchiveId = asst.id;
-            if (archiveAssistantName) archiveAssistantName.textContent = asst.name;
+            const asst = assistants.find(a => a.id === id);
+            assistantToArchiveId = id;
+            if (archiveAssistantName) archiveAssistantName.textContent = asst ? asst.name : `#${id}`;
             if (archiveModal) archiveModal.show();
         } else {
-            // View Details Modal
-            populateViewModal(asst);
-            const triggerBtn = document.getElementById('trigger-view-modal-dummy');
-            if (triggerBtn) triggerBtn.click();
+            // View Details Modal on row click/tap
+            const asst = await getAssistantData(id);
+            if (asst) {
+                populateViewModal(asst);
+                showAssistantDetailsModal(asst);
+            }
         }
     });
 
@@ -696,14 +726,16 @@ export const initAssistantsManage = () => {
 
     // Grid Event Delegation for Edit/Archive
     if (gridContainer) {
-        gridContainer.addEventListener('click', (e) => {
+        gridContainer.addEventListener('click', async (e) => {
             const editBtn = e.target.closest('.grid-btn-edit');
             const archiveBtn = e.target.closest('.grid-btn-archive');
             
             if (editBtn) {
                 e.stopPropagation();
                 const id = editBtn.getAttribute('data-id');
-                const asst = assistants.find(a => a.id === id);
+                editBtn.classList.add('animate-pulse');
+                const asst = await getAssistantData(id);
+                editBtn.classList.remove('animate-pulse');
                 if (asst) {
                     configureEditMode(asst);
                     if (editModal) editModal.show();
@@ -712,22 +744,20 @@ export const initAssistantsManage = () => {
                 e.stopPropagation();
                 const id = archiveBtn.getAttribute('data-id');
                 const asst = assistants.find(a => a.id === id);
-                if (asst) {
-                    assistantToArchiveId = asst.id;
-                    if (archiveAssistantName) archiveAssistantName.textContent = asst.name;
-                    if (archiveModal) archiveModal.show();
-                }
+                assistantToArchiveId = id;
+                if (archiveAssistantName) archiveAssistantName.textContent = asst ? asst.name : `#${id}`;
+                if (archiveModal) archiveModal.show();
             } else {
-                // View action
+                // View action on card click/tap
                 const card = e.target.closest('.bg-white.dark\\:bg-gray-800');
                 if (card) {
                     const editGridBtn = card.querySelector('.grid-btn-edit');
                     if (editGridBtn) {
                         const id = editGridBtn.getAttribute('data-id');
-                        const asst = assistants.find(a => a.id === id);
+                        const asst = await getAssistantData(id);
                         if (asst) {
                             populateViewModal(asst);
-                            if (viewModal) viewModal.show();
+                            showAssistantDetailsModal(asst);
                         }
                     }
                 }
