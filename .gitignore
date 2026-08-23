@@ -40,3 +40,9 @@ src/backend/migrations/*.sql
 .vercel
 .env*
 .env*.local
+
+# Temporary / Testing SMSAPI Integration Suite
+src/pages/tools/sms-tester/
+src/scripts/pages/sms-tester.js
+api/sms/
+api/sms.js
