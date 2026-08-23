@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, pathToFileURL, URL } from 'node:url'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -106,11 +106,78 @@ function getHtmlEntries() {
 }
 
 
+// ─── Plugin: Local API Middleware for Vite dev server ───────────────────────
+function localApiMiddleware() {
+  return {
+    name: 'local-api-middleware',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = new URL(req.url, 'http://localhost:5173');
+        if (!url.pathname.startsWith('/api/')) return next();
+
+        let handlerPath = null;
+        if (url.pathname === '/api/chatbot' || url.pathname === '/api/chatbot/chatbot.api') {
+          handlerPath = path.resolve(__dirname, 'api/chatbot/chatbot.api.js');
+        } else if (url.pathname === '/api/auth/login') {
+          handlerPath = path.resolve(__dirname, 'api/auth/login.js');
+        } else if (url.pathname === '/api/auth/me') {
+          handlerPath = path.resolve(__dirname, 'api/auth/me.js');
+        } else if (url.pathname === '/api/auth/logout') {
+          handlerPath = path.resolve(__dirname, 'api/auth/logout.js');
+        } else if (url.pathname === '/api/profile') {
+          handlerPath = path.resolve(__dirname, 'api/profile.js');
+        } else if (url.pathname === '/api/audit-logs') {
+          handlerPath = path.resolve(__dirname, 'api/audit-logs.js');
+        } else if (url.pathname === '/api/external-account-links') {
+          handlerPath = path.resolve(__dirname, 'api/external-account-links.js');
+        } else if (url.pathname === '/api/external-system-directory') {
+          handlerPath = path.resolve(__dirname, 'api/external-system-directory.js');
+        } else if (url.pathname === '/api/sso/authorize') {
+          handlerPath = path.resolve(__dirname, 'api/sso/authorize.js');
+        } else if (url.pathname === '/api/sso/consume') {
+          handlerPath = path.resolve(__dirname, 'api/sso/consume.js');
+        }
+
+        if (!handlerPath || !fs.existsSync(handlerPath)) return next();
+
+        try {
+          let raw = '';
+          for await (const chunk of req) raw += chunk;
+          if (raw) {
+            try { req.body = JSON.parse(raw); } catch { req.body = raw; }
+          } else {
+            req.body = {};
+          }
+
+          res.status = (code) => { res.statusCode = code; return res; };
+          res.json = (payload) => {
+            if (!res.headersSent) res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(JSON.stringify(payload));
+            return res;
+          };
+
+          const handlerUrl = `${pathToFileURL(handlerPath).href}?t=${Date.now()}`;
+          const { default: handler } = await import(handlerUrl);
+          await handler(req, res);
+        } catch (err) {
+          console.error('[Vite Local API Middleware] Error:', err);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        }
+      });
+    }
+  };
+}
+
 export default defineConfig({
   plugins: [
     tailwindcss(),
     autoVersion(),
     copyStaticAssets(),
+    localApiMiddleware(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'script-defer',

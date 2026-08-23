@@ -27,7 +27,9 @@ const apiHandlers = {
     '/api/external-account-links': () => import(`../api/external-account-links.js?update=${Date.now()}`),
     '/api/external-system-directory': () => import(`../api/external-system-directory.js?update=${Date.now()}`),
     '/api/sso/authorize': () => import(`../api/sso/authorize.js?update=${Date.now()}`),
-    '/api/sso/consume': () => import(`../api/sso/consume.js?update=${Date.now()}`)
+    '/api/sso/consume': () => import(`../api/sso/consume.js?update=${Date.now()}`),
+    '/api/chatbot': () => import(`../api/chatbot/chatbot.api.js?update=${Date.now()}`),
+    '/api/chatbot/chatbot.api': () => import(`../api/chatbot/chatbot.api.js?update=${Date.now()}`)
 };
 
 /* START LOCAL PORTAL API SERVER - Executes Vercel route handlers before Vite in development */

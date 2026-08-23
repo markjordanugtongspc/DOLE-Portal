@@ -1,63 +1,79 @@
-/* START MODERN DEBUGGER SYSTEM */
-const ENABLE_DEBUG = false; // Global Toggle: set to true to enable logging, false to disable
+/* START MODERN DEBUGGER SYSTEM - Activated for Authenticated Admin Users and Admin Views */
+const isAdminUser = () => {
+    try {
+        const session = window.__PORTAL_SESSION || JSON.parse(localStorage.getItem('portal_user_session') || sessionStorage.getItem('portal_user_session') || '{}');
+        const roleId = Number(session?.role_id);
+        const isAdminRole = roleId === 1;
+        const isAdminPath = /\/src\/pages\/user\/admin\//.test(window.location.pathname);
+        const isDebugForced = localStorage.getItem('force_debug') === 'true';
+        return isAdminRole || isAdminPath || isDebugForced;
+    } catch {
+        return false;
+    }
+};
+
+const isDebugActive = () => isAdminUser();
 
 window.DEBUG = {
+    isEnabled: () => isDebugActive(),
     log: (module, message, data = '') => {
-        if (ENABLE_DEBUG) {
+        if (isDebugActive()) {
             console.log(`%c[DEBUG:${module}] %c${message}`, 'color: #1d4ed8; font-weight: bold; font-size: 11px;', 'color: inherit;', data);
         }
     },
     error: (module, message, err = '') => {
-        if (ENABLE_DEBUG) {
+        if (isDebugActive()) {
             console.error(`%c[DEBUG-ERROR:${module}] %c${message}`, 'color: #dc2626; font-weight: bold; font-size: 11px;', 'color: inherit;', err);
         }
     },
     success: (module, message, data = '') => {
-        if (ENABLE_DEBUG) {
+        if (isDebugActive()) {
             console.log(`%c[DEBUG-SUCCESS:${module}] %c${message}`, 'color: #16a34a; font-weight: bold; font-size: 11px;', 'color: inherit;', data);
         }
     },
     warn: (module, message, data = '') => {
-        if (ENABLE_DEBUG) {
+        if (isDebugActive()) {
             console.warn(`%c[DEBUG-WARN:${module}] %c${message}`, 'color: #d97706; font-weight: bold; font-size: 11px;', 'color: inherit;', data);
         }
     },
     flow: (module, message, data = '') => {
-        if (ENABLE_DEBUG) {
+        if (isDebugActive()) {
             console.log(`%c[FLOW:${module}] %c${message}`, 'color: #7c3aed; font-weight: bold; font-size: 11px;', 'color: inherit;', data);
         }
     },
     event: (module, message, data = '') => {
-        if (ENABLE_DEBUG) {
+        if (isDebugActive()) {
             console.log(`%c[EVENT:${module}] %c${message}`, 'color: #0891b2; font-weight: bold; font-size: 11px;', 'color: inherit;', data);
         }
     }
 };
 
-window.DEBUG.success('SYSTEM', 'Overall Debugger initialized and active.');
-if (ENABLE_DEBUG) {
-    window.addEventListener('error', (event) => {
+window.addEventListener('error', (event) => {
+    if (isDebugActive()) {
         window.DEBUG.error('WINDOW', event.message, { file: event.filename, line: event.lineno, column: event.colno, error: event.error });
-    });
+    }
+});
 
-    window.addEventListener('unhandledrejection', (event) => {
+window.addEventListener('unhandledrejection', (event) => {
+    if (isDebugActive()) {
         window.DEBUG.error('PROMISE', 'Unhandled promise rejection', event.reason);
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if (!isDebugActive()) return;
+    const target = event.target.closest('button, a, [data-modal-target], [data-drawer-show], [data-drawer-toggle], [data-collapse-toggle], input[type="checkbox"]');
+    if (!target) return;
+
+    window.DEBUG.event('CLICK', 'Interactive element clicked', {
+        tag: target.tagName,
+        id: target.id || null,
+        classes: target.className || null,
+        text: target.textContent?.trim().replace(/\s+/g, ' ').slice(0, 80) || null,
+        dataset: { ...target.dataset },
+        href: target.getAttribute('href')
     });
-
-    document.addEventListener('click', (event) => {
-        const target = event.target.closest('button, a, [data-modal-target], [data-drawer-show], [data-drawer-toggle], [data-collapse-toggle], input[type="checkbox"]');
-        if (!target) return;
-
-        window.DEBUG.event('CLICK', 'Interactive element clicked', {
-            tag: target.tagName,
-            id: target.id || null,
-            classes: target.className || null,
-            text: target.textContent?.trim().replace(/\s+/g, ' ').slice(0, 80) || null,
-            dataset: { ...target.dataset },
-            href: target.getAttribute('href')
-        });
-    }, true);
-}
+}, true);
 /* END MODERN DEBUGGER SYSTEM */
 
 /* START AUTO COPYRIGHT YEAR SYSTEM */
@@ -130,6 +146,7 @@ const bootAppModules = async () => {
     await importModule('Alerts module', () => import('@/scripts/modules/alerts.js'));
     await importModule('OCR Converter module', () => import('@/scripts/modules/ocr-converter.js'));
     await importModule('About page module', () => import('@/scripts/pages/about.js'));
+    await importModule('DOLE Support Chatbot module', () => import('@/scripts/modules/chatbot.js'));
 };
 
 bootAppModules();
