@@ -90,9 +90,8 @@ export default async function handler(req, res) {
             .upsert(verifiedLinks, { onConflict: 'portal_user_id,system_key' })
             .select('id, portal_user_id, system_key, external_user_id, external_full_name, external_username, linked_by, created_at, updated_at');
         if (error) {
-            const isExternalConflict = error.code === '23505';
-            return sendJson(res, isExternalConflict ? 409 : 500, {
-                error: isExternalConflict ? 'That external account is already assigned to a different Portal user.' : 'Unable to save external account assignments.'
+            return sendJson(res, 500, {
+                error: 'Unable to save external account assignments.'
             });
         }
         return sendJson(res, 200, { data });

@@ -5,6 +5,7 @@ const systemEnvironment = {
     GIP: { titleToken: 'gip', callbackOverride: 'SSO_GIP_CALLBACK_URL', secret: 'SSO_GIP_CLIENT_SECRET' }
 };
 
+/* START CALLBACK FROM URL - Validates and constructs SSO callback URL from system base URL */
 const callbackFromUrl = (value) => {
     const target = new URL(String(value || '').trim());
     if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password) {
@@ -12,8 +13,9 @@ const callbackFromUrl = (value) => {
     }
     return new URL('/sso/callback', target).toString();
 };
+/* END CALLBACK FROM URL */
 
-/* START SSO SYSTEM CONFIGURATION HELPERS */
+/* START GET SSO SYSTEM - Resolves external system SSO credentials and configuration */
 export const getSsoSystem = (value) => {
     const key = String(value || '').toUpperCase();
     const configuration = systemEnvironment[key];
@@ -25,8 +27,9 @@ export const getSsoSystem = (value) => {
         clientSecret: String(process.env[configuration.secret] || '').trim()
     };
 };
+/* END GET SSO SYSTEM */
 
-/* START DYNAMIC SSO CALLBACK RESOLUTION - Uses the active Portal systems.system_url CRUD value in production. */
+/* START DYNAMIC SSO CALLBACK RESOLUTION - Uses the active Portal systems.system_url CRUD value in production */
 export const resolveSsoCallback = async (admin, system) => {
     if (!system) throw new Error('The requested external system is not supported.');
 
@@ -48,10 +51,13 @@ export const resolveSsoCallback = async (admin, system) => {
 };
 /* END DYNAMIC SSO CALLBACK RESOLUTION */
 
+/* START VERIFY SSO CLIENT - Authenticates external system request via timing-safe secret comparison */
 export const verifySsoClient = (req, system) => {
     const supplied = String(req.headers['x-sso-client-secret'] || '');
     return Boolean(system?.clientSecret && supplied && secureEquals(supplied, system.clientSecret));
 };
+/* END VERIFY SSO CLIENT */
 
+/* START HASH SSO VALUE - Generates SHA-256 hash for secure token verification */
 export const hashSsoValue = (value) => sha256(value);
-/* END SSO SYSTEM CONFIGURATION HELPERS */
+/* END HASH SSO VALUE */
