@@ -41,6 +41,11 @@ const initDrawer = () => {
         if (drawerHeroEl) {
             drawerHeroEl.classList.remove('hidden');
         }
+        const chatbotFab = document.getElementById('dole-chatbot-fab');
+        const chatbotWindow = document.getElementById('dole-chatbot-window');
+        if (chatbotFab) chatbotFab.classList.add('!hidden');
+        if (chatbotWindow) chatbotWindow.classList.add('!hidden');
+
         if (window.DEBUG) window.DEBUG.success('DRAWER', 'Drawer opened.');
     };
     /* END showDrawer FUNCTIONALITY */
@@ -61,6 +66,11 @@ const initDrawer = () => {
         if (drawerHeroEl) {
             drawerHeroEl.classList.add('hidden');
         }
+        const chatbotFab = document.getElementById('dole-chatbot-fab');
+        const chatbotWindow = document.getElementById('dole-chatbot-window');
+        if (chatbotFab) chatbotFab.classList.remove('!hidden');
+        if (chatbotWindow) chatbotWindow.classList.remove('!hidden');
+
         if (window.DEBUG) window.DEBUG.success('DRAWER', 'Drawer closed.');
     };
     /* END hideDrawer FUNCTIONALITY */

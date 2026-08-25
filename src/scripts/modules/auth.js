@@ -363,9 +363,13 @@ const setupPasswordToggle = () => {
 /* END SETUP PASSWORD TOGGLE */
 
 /* START SETUP AUTH METHOD SWITCHER - Switches username, email, and phone login forms with URL param sync and Resend OTP cooldown */
-let otpResendTimer = null;
-let otpResendSecondsLeft = 0;
-const OTP_COOLDOWN_DURATION = 256; // Configurable cooldown seconds
+let phoneOtpResendTimer = null;
+let phoneOtpResendSecondsLeft = 0;
+
+let forgotOtpTimer = null;
+let forgotOtpSecondsLeft = 0;
+
+const OTP_COOLDOWN_DURATION = 256; // Configurable cooldown seconds (or temporary 5s)
 
 const formatCooldownTimer = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -388,22 +392,23 @@ const syncAllButtonsAndCooldown = () => {
         const form = getFormByPrefix(prefix);
         const submitBtn = form?.querySelector('button[type="submit"]');
         const mode = form?.dataset.authMode;
-        const isCoolingDown = otpResendSecondsLeft > 0;
+        const isPhoneCoolingDown = phoneOtpResendSecondsLeft > 0;
+        const isForgotCoolingDown = forgotOtpSecondsLeft > 0;
 
         if (mode === 'phone') {
             const rememberWrapper = document.getElementById(`${prefix}-remember-wrapper`);
             if (rememberWrapper) {
                 const resendBtn = document.getElementById(`${prefix}-resend-otp-btn`);
                 if (resendBtn) {
-                    resendBtn.disabled = isCoolingDown;
-                    resendBtn.className = `group relative inline-flex items-center text-xs font-semibold ${isCoolingDown ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer'} transition-colors focus:outline-none`;
+                    resendBtn.disabled = isPhoneCoolingDown;
+                    resendBtn.className = `group relative inline-flex items-center text-xs font-semibold ${isPhoneCoolingDown ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer'} transition-colors focus:outline-none`;
                     const labelSpan = resendBtn.querySelector('span:first-child');
                     if (labelSpan) {
-                        labelSpan.innerHTML = isCoolingDown ? `Resend code in <strong class="font-mono">${formatCooldownTimer(otpResendSecondsLeft)}</strong>` : 'Resend OTP';
+                        labelSpan.innerHTML = isPhoneCoolingDown ? `Code resent! Resend in <strong class="font-mono">${formatCooldownTimer(phoneOtpResendSecondsLeft)}</strong>` : 'Resend OTP';
                     }
                     const barSpan = resendBtn.querySelector('span:last-child');
                     if (barSpan) {
-                        barSpan.classList.toggle('hidden', isCoolingDown);
+                        barSpan.classList.toggle('hidden', isPhoneCoolingDown);
                     }
                 }
             }
@@ -414,11 +419,6 @@ const syncAllButtonsAndCooldown = () => {
                     submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
                     submitBtn.classList.add('cursor-pointer');
                     submitBtn.textContent = 'SUBMIT';
-                } else if (isCoolingDown) {
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('cursor-not-allowed', 'opacity-60');
-                    submitBtn.classList.remove('cursor-pointer');
-                    submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(otpResendSecondsLeft)}</span>)`;
                 } else {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
@@ -430,11 +430,11 @@ const syncAllButtonsAndCooldown = () => {
             const identityValue = document.getElementById(`${prefix}-username`)?.value.trim() || '';
             const isPhone = /^[0-9+]/.test(identityValue) || identityValue.startsWith('+63');
             if (submitBtn && isPhone) {
-                if (isCoolingDown) {
+                if (isForgotCoolingDown) {
                     submitBtn.disabled = true;
                     submitBtn.classList.add('cursor-not-allowed', 'opacity-60');
                     submitBtn.classList.remove('cursor-pointer');
-                    submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(otpResendSecondsLeft)}</span>)`;
+                    submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(forgotOtpSecondsLeft)}</span>)`;
                 } else {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
@@ -446,55 +446,81 @@ const syncAllButtonsAndCooldown = () => {
     });
 };
 
-const startOtpCooldown = (duration = OTP_COOLDOWN_DURATION) => {
-    if (otpResendTimer) clearInterval(otpResendTimer);
-    otpResendSecondsLeft = duration;
+/* START startPhoneOtpCooldown FUNCTIONALITY - Manages isolated cooldown and auto-resend loop for Phone login */
+const startPhoneOtpCooldown = (duration = OTP_COOLDOWN_DURATION) => {
+    if (phoneOtpResendTimer) clearInterval(phoneOtpResendTimer);
+    phoneOtpResendSecondsLeft = duration;
     syncAllButtonsAndCooldown();
 
-    otpResendTimer = setInterval(() => {
-        otpResendSecondsLeft -= 1;
-        if (otpResendSecondsLeft <= 0) {
-            clearInterval(otpResendTimer);
-            otpResendTimer = null;
-            otpResendSecondsLeft = 0;
+    phoneOtpResendTimer = setInterval(() => {
+        phoneOtpResendSecondsLeft -= 1;
+        if (phoneOtpResendSecondsLeft <= 0) {
+            clearInterval(phoneOtpResendTimer);
+            phoneOtpResendTimer = null;
+            phoneOtpResendSecondsLeft = 0;
             syncAllButtonsAndCooldown();
 
-            // Auto-trigger the button again 3.5 seconds after cooldown completes to loop cycle
+            // Auto-trigger resend 5 seconds after cooldown completes to loop cycle
             setTimeout(() => {
                 ['desktop', 'mobile'].forEach((prefix) => {
                     const form = getFormByPrefix(prefix);
-                    const mode = form?.dataset.authMode;
-                    const submitBtn = form?.querySelector('button[type="submit"]');
-
-                    if (mode === 'phone') {
+                    if (form?.dataset.authMode === 'phone') {
                         const otpWrapper = document.getElementById(`${prefix}-password-wrapper`);
-                        if (!otpWrapper?.dataset.otpSent) {
-                            const phoneInput = document.getElementById(`${prefix}-username`);
-                            if (phoneInput && phoneInput.value.trim().length === 10) {
-                                submitBtn?.click();
-                            }
+                        if (otpWrapper?.dataset.otpSent) {
+                            const resendBtn = document.getElementById(`${prefix}-resend-otp-btn`);
+                            resendBtn?.click();
                         }
-                    } else if (mode === 'forgot') {
+                    }
+                });
+            }, 5000);
+            return;
+        }
+        syncAllButtonsAndCooldown();
+    }, 1000);
+};
+/* END startPhoneOtpCooldown FUNCTIONALITY */
+
+/* START startForgotOtpCooldown FUNCTIONALITY - Manages isolated cooldown and auto-resend loop for Forgot Password */
+const startForgotOtpCooldown = (duration = OTP_COOLDOWN_DURATION) => {
+    if (forgotOtpTimer) clearInterval(forgotOtpTimer);
+    forgotOtpSecondsLeft = duration;
+    syncAllButtonsAndCooldown();
+
+    forgotOtpTimer = setInterval(() => {
+        forgotOtpSecondsLeft -= 1;
+        if (forgotOtpSecondsLeft <= 0) {
+            clearInterval(forgotOtpTimer);
+            forgotOtpTimer = null;
+            forgotOtpSecondsLeft = 0;
+            syncAllButtonsAndCooldown();
+
+            // Auto-trigger submit 5 seconds after cooldown completes to loop cycle
+            setTimeout(() => {
+                ['desktop', 'mobile'].forEach((prefix) => {
+                    const form = getFormByPrefix(prefix);
+                    if (form?.dataset.authMode === 'forgot') {
                         const forgotInput = document.getElementById(`${prefix}-username`);
                         const identityVal = forgotInput?.value.trim() || '';
                         const isPhone = /^[0-9+]/.test(identityVal) || identityVal.startsWith('+63');
                         if (isPhone) {
                             const clean = identityVal.replace(/\D/g, '').replace(/^63/, '');
                             if (clean.length === 10) {
+                                const submitBtn = form?.querySelector('button[type="submit"]');
                                 submitBtn?.click();
                             }
                         }
                     }
                 });
-            }, 3500);
+            }, 5000);
             return;
         }
         syncAllButtonsAndCooldown();
     }, 1000);
 };
+/* END startForgotOtpCooldown FUNCTIONALITY */
 
 const triggerResendOtp = async (prefix) => {
-    if (otpResendSecondsLeft > 0) return;
+    if (phoneOtpResendSecondsLeft > 0) return;
 
     const identityWrapper = document.getElementById(`${prefix}-username-wrapper`);
     const phoneInput = document.getElementById(`${prefix}-username`);
@@ -505,11 +531,8 @@ const triggerResendOtp = async (prefix) => {
         return;
     }
 
-    const resendBtn = document.getElementById(`${prefix}-resend-otp-btn`);
-    if (resendBtn) {
-        resendBtn.disabled = true;
-        resendBtn.textContent = 'Sending code...';
-    }
+    // Immediately start cooldown and update UI
+    startPhoneOtpCooldown();
 
     try {
         await new Promise((resolve) => setTimeout(resolve, 600));
@@ -518,7 +541,6 @@ const triggerResendOtp = async (prefix) => {
             identityWrapper,
             `New OTP sent to +63 ${phoneValue}. (Mock code: <strong class="text-emerald-700 dark:text-emerald-300 font-mono">${mockOtp}</strong>)`
         );
-        startOtpCooldown();
     } catch {
         setFieldError(identityWrapper, 'Failed to resend OTP. Please try again.');
     }
@@ -561,12 +583,12 @@ const setupAuthMethodSwitcher = () => {
         const rememberWrapper = document.getElementById(`${prefix}-remember-wrapper`);
         if (!rememberWrapper) return;
 
-        const isCoolingDown = otpResendSecondsLeft > 0;
+        const isCoolingDown = phoneOtpResendSecondsLeft > 0;
         rememberWrapper.innerHTML = `
             <div class="flex items-center justify-between w-full pt-1">
                 <button type="button" id="${prefix}-resend-otp-btn" ${isCoolingDown ? 'disabled' : ''}
                     class="group relative inline-flex items-center text-xs font-semibold ${isCoolingDown ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer'} transition-colors focus:outline-none">
-                    <span>${isCoolingDown ? `Resend code in <strong class="font-mono">${formatCooldownTimer(otpResendSecondsLeft)}</strong>` : 'Resend OTP'}</span>
+                    <span>${isCoolingDown ? `Code resent! Resend in <strong class="font-mono">${formatCooldownTimer(phoneOtpResendSecondsLeft)}</strong>` : 'Resend OTP'}</span>
                     <span class="absolute bottom-0 left-0 h-[1.5px] w-0 bg-blue-700 dark:bg-blue-400 transition-all duration-300 group-hover:w-full ${isCoolingDown ? 'hidden' : ''}"></span>
                 </button>
             </div>
@@ -591,7 +613,14 @@ const setupAuthMethodSwitcher = () => {
         const btn = document.createElement('button');
         btn.id = id;
         btn.type = 'button';
-        btn.className = `cursor-pointer w-full text-gray-900 bg-white border border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-700 dark:hover:text-blue-400 font-bold ${roundedClass} text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md`;
+        const isEmail = text.toLowerCase() === 'email';
+        const isPhone = text.toLowerCase() === 'phone';
+        const hoverColorClasses = isEmail
+            ? 'hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800 hover:text-emerald-700 dark:hover:text-emerald-400'
+            : isPhone
+                ? 'hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400'
+                : 'hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-700 dark:hover:text-blue-400';
+        btn.className = `cursor-pointer w-full text-gray-900 bg-white border border-gray-300 ${hoverColorClasses} font-bold ${roundedClass} text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md`;
         btn.innerHTML = `${svg}${text}`;
         btn.addEventListener('click', onClick);
         return btn;
@@ -606,6 +635,7 @@ const setupAuthMethodSwitcher = () => {
         const submitBtn = form?.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.textContent = 'SIGN IN';
+            submitBtn.dataset.btnId = '0';
         }
         delete passwordWrapper.dataset.otpSent;
         setupPasswordToggle();
@@ -639,16 +669,49 @@ const setupAuthMethodSwitcher = () => {
 
             passwordWrapper.classList.add('hidden');
             delete passwordWrapper.dataset.otpSent;
-            if (submitBtn) submitBtn.textContent = 'SEND OTP';
+            if (submitBtn) {
+                submitBtn.textContent = 'SEND OTP';
+                submitBtn.dataset.btnId = '1';
+            }
 
             // Show Resend OTP button instead of Remember Me
             renderResendOtpButton(prefix);
 
-            document.getElementById(`${prefix}-username`)?.addEventListener('input', (event) => {
-                let value = event.target.value.replace(/\D/g, '');
-                if (value.length > 0 && value[0] !== '9') value = `9${value.substring(1)}`;
-                event.target.value = value.slice(0, 10);
-            });
+            const phoneInputField = document.getElementById(`${prefix}-username`);
+            if (phoneInputField) {
+                // Prevent typing non-9 or 0 if input is currently empty
+                phoneInputField.addEventListener('keydown', (event) => {
+                    // Allow navigation, control keys, backspace, tab, enter
+                    if (event.ctrlKey || event.metaKey || event.altKey || event.key.length > 1) {
+                        return;
+                    }
+                    // If field is empty and user presses anything other than '9', block it completely
+                    const currentDigits = event.target.value.replace(/\D/g, '');
+                    if (currentDigits.length === 0 && event.key !== '9') {
+                        event.preventDefault();
+                    }
+                });
+
+                phoneInputField.addEventListener('beforeinput', (event) => {
+                    if (event.data) {
+                        const currentDigits = event.target.value.replace(/\D/g, '');
+                        if (currentDigits.length === 0 && !event.data.startsWith('9')) {
+                            event.preventDefault();
+                        }
+                    }
+                });
+
+                phoneInputField.addEventListener('input', (event) => {
+                    let raw = event.target.value.replace(/\D/g, '');
+                    // Strip any leading non-9 digits (e.g. 0912 -> 912 or 0 -> '')
+                    if (raw.length > 0 && raw[0] !== '9') {
+                        const firstNineIdx = raw.indexOf('9');
+                        raw = firstNineIdx !== -1 ? raw.slice(firstNineIdx) : '';
+                    }
+                    event.target.value = raw.slice(0, 10);
+                });
+            }
+
             document.getElementById(`${prefix}-otp`)?.addEventListener('input', (event) => {
                 event.target.value = event.target.value.replace(/\D/g, '').slice(0, 6);
             });
@@ -674,6 +737,7 @@ const setupAuthMethodSwitcher = () => {
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'SEND RESET LINK';
+                submitBtn.dataset.btnId = '3';
             }
 
             // Replace Remember Me section with "Remember your password? Log in"
@@ -709,10 +773,10 @@ const setupAuthMethodSwitcher = () => {
                     if (forgotLabel) forgotLabel.textContent = 'Phone';
 
                     // Direct cooldown handling on submit button
-                    if (otpResendSecondsLeft > 0) {
+                    if (forgotOtpSecondsLeft > 0) {
                         if (submitBtn) {
                             submitBtn.disabled = true;
-                            submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(otpResendSecondsLeft)}</span>)`;
+                            submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(forgotOtpSecondsLeft)}</span>)`;
                         }
                     } else if (submitBtn) {
                         submitBtn.disabled = false;
@@ -722,8 +786,9 @@ const setupAuthMethodSwitcher = () => {
                     // Clean phone value and ensure static +63 formatting
                     let digits = trimmed.replace(/\D/g, '');
                     if (digits.startsWith('63')) digits = digits.slice(2);
-                    if (digits.startsWith('0')) digits = digits.slice(1);
-                    if (digits.length > 0 && digits[0] !== '9') digits = `9${digits.slice(1)}`;
+                    if (digits.length > 0 && digits[0] !== '9') {
+                        digits = '';
+                    }
                     digits = digits.slice(0, 10);
 
                     // Update input with formatted number
@@ -821,6 +886,8 @@ const registerButtonClass = (prefix, variant = 'primary') => {
     const rounded = prefix === 'mobile' ? 'rounded-xl' : 'rounded-lg';
     const base = `cursor-pointer inline-flex shrink-0 items-center justify-center whitespace-nowrap ${rounded} px-5 py-3 text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none focus:ring-4`;
     if (variant === 'secondary') return `${base} border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700`;
+    if (variant === 'danger' || variant === 'rose' || variant === 'red') return `${base} bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-300 dark:bg-rose-600 dark:hover:bg-rose-700 shadow-md`;
+    if (variant === 'emerald' || variant === 'next') return `${base} bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-300 dark:bg-emerald-600 dark:hover:bg-emerald-700 shadow-md`;
     return `${base} bg-blue-700 text-white hover:bg-blue-800 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700`;
 };
 
@@ -846,15 +913,23 @@ const buildRegisterGipBlock = (prefix, index) => {
 const buildRegisterPanel = (prefix) => {
     const rounded = prefix === 'mobile' ? 'rounded-xl' : 'rounded-lg';
     const headingClass = prefix === 'mobile' ? 'text-3xl text-center' : 'text-4xl';
+    const isMobile = prefix === 'mobile';
+
     return `
-        <section id="${prefix}-register-panel" class="w-1/2 shrink-0 ${prefix === 'mobile' ? '' : 'pl-8'}">
-            <div class="mb-5 flex items-start justify-between gap-3">
+        <section id="${prefix}-register-panel" class="w-1/2 shrink-0 ${isMobile ? '' : 'pl-8'}">
+            <div class="mb-5 ${isMobile ? 'space-y-3 text-center' : 'flex items-start justify-between gap-3'}">
                 <div>
                     <p class="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-500">Registration Request</p>
                     <h2 class="${headingClass} font-extrabold text-gray-900 dark:text-white mt-1">Request Portal Access</h2>
                     <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm leading-relaxed">Approval is required before a registered account can log in.</p>
                 </div>
-                <button id="${prefix}-register-login-btn" type="button" class="${prefix === 'desktop' ? 'hidden' : registerButtonClass(prefix, 'secondary')} px-4 py-2.5">Login</button>
+                ${isMobile ? `
+                    <button id="${prefix}-register-login-btn" type="button" class="cursor-pointer w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold ${rounded} text-xs uppercase tracking-wider py-3 px-5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md">
+                        Login
+                    </button>
+                ` : `
+                    <button id="${prefix}-register-login-btn" type="button" class="hidden">Login</button>
+                `}
             </div>
             <form id="${prefix}-register-form" class="space-y-5 text-left">
                 <div class="border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-800/40 ${rounded}">
@@ -875,7 +950,13 @@ const buildRegisterPanel = (prefix) => {
                 <div id="${prefix}-register-step-2" data-register-step="2" class="hidden space-y-4">
                     <div class="border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/50 ${rounded}"><div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 class="text-sm font-extrabold text-gray-900 dark:text-white">Optional GIP Implementors</h3><p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">Add up to 2 linked GIP implementors only when needed.</p></div><button id="${prefix}-register-add-gip-btn" type="button" class="${registerButtonClass(prefix)} px-4 py-2.5">Add GIP</button></div><p id="${prefix}-register-gip-limit" class="mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400">0 / 2 GIP implementors added.</p><div id="${prefix}-register-gips-form-container" class="mt-3 space-y-3"></div></div>
                 </div>
-                <div class="flex items-center justify-between gap-3 pt-1"><button id="${prefix}-register-back-btn" type="button" class="${registerButtonClass(prefix, 'secondary')} hidden" hidden>Back</button><div class="ml-auto flex gap-3"><button id="${prefix}-register-next-btn" type="button" class="${registerButtonClass(prefix)}">Next</button><button id="${prefix}-register-submit-btn" type="submit" class="${registerButtonClass(prefix)} hidden" hidden>Submit Registration</button></div></div>
+                <div id="${prefix}-register-nav-container" class="grid grid-cols-1 gap-3 pt-1">
+                    <button id="${prefix}-register-back-btn" type="button" class="${registerButtonClass(prefix, 'rose')} w-full py-3 text-center hidden" hidden>Back</button>
+                    <div id="${prefix}-register-forward-container" class="w-full">
+                        <button id="${prefix}-register-next-btn" type="button" class="${registerButtonClass(prefix, 'emerald')} w-full py-3 text-center">Next</button>
+                        <button id="${prefix}-register-submit-btn" type="submit" class="${registerButtonClass(prefix)} w-full py-3 text-center hidden" hidden>Submit Registration</button>
+                    </div>
+                </div>
             </form>
         </section>`;
 };
@@ -884,7 +965,7 @@ const renderRegistrationShell = () => {
     [['desktop', document.getElementById('desktop-auth-content')], ['mobile', document.getElementById('mobile-auth-content')]].forEach(([prefix, root]) => {
         if (!root || root.dataset.registerShellReady) return;
         const loginMarkup = root.innerHTML;
-        root.innerHTML = `<div class="overflow-hidden"><div id="${prefix}-auth-track" class="flex w-[200%] transition-transform duration-500 ease-in-out"><section class="w-1/2 shrink-0">${loginMarkup}</section>${buildRegisterPanel(prefix)}</div></div>`;
+        root.innerHTML = `<div class="overflow-hidden"><div id="${prefix}-auth-track" class="flex w-[200%] items-start transition-transform duration-500 ease-in-out"><section class="w-1/2 shrink-0">${loginMarkup}</section>${buildRegisterPanel(prefix)}</div></div>`;
         root.dataset.registerShellReady = 'true';
     });
 };
@@ -942,6 +1023,12 @@ const setAuthViewMode = (mode) => {
     const heroBtn = document.getElementById('hero-register-btn');
     if (heroBtn) heroBtn.textContent = authViewMode === 'register' ? 'Login' : 'Register';
     syncDesktopPanelMotion();
+
+    // Hide chatbot on desktop registration view mode if needed
+    const chatbotFab = document.getElementById('dole-chatbot-fab');
+    if (chatbotFab && window.innerWidth >= 1024) {
+        chatbotFab.classList.toggle('hidden', authViewMode === 'register');
+    }
 };
 const showAuthStatusModal = ({ title, message, tone = 'info', onClose } = {}) => {
     const existing = document.getElementById('auth-status-modal');
@@ -1011,6 +1098,7 @@ const showRegisterStep = (prefix, index) => {
     document.querySelectorAll(`#${prefix}-register-form [data-register-step]`).forEach((step) => step.classList.toggle('hidden', Number(step.dataset.registerStep) !== index));
     const number = document.getElementById(`${prefix}-register-step-number`);
     const title = document.getElementById(`${prefix}-register-step-title`);
+    const navContainer = document.getElementById(`${prefix}-register-nav-container`);
     const back = document.getElementById(`${prefix}-register-back-btn`);
     const next = document.getElementById(`${prefix}-register-next-btn`);
     const submit = document.getElementById(`${prefix}-register-submit-btn`);
@@ -1021,9 +1109,21 @@ const showRegisterStep = (prefix, index) => {
     };
     if (number) number.textContent = String(index + 1);
     if (title) title.textContent = REGISTER_STEP_TITLES[index];
-    setHidden(back, index === 0);
+    
+    const showBack = index > 0;
+    setHidden(back, !showBack);
+    if (navContainer) {
+        navContainer.classList.toggle('grid-cols-2', showBack);
+        navContainer.classList.toggle('grid-cols-1', !showBack);
+    }
     setHidden(next, index === 2);
     setHidden(submit, index !== 2);
+
+    // Hide mobile top login button on Step 2 and Step 3
+    const mobileRegisterLoginBtn = document.getElementById(`${prefix}-register-login-btn`);
+    if (mobileRegisterLoginBtn && prefix === 'mobile') {
+        setHidden(mobileRegisterLoginBtn, index > 0);
+    }
 };
 
 const validateRegisterStep = (prefix, index) => {
@@ -1150,6 +1250,8 @@ const setupLoginForms = () => {
                 ? (document.getElementById(`${prefix}-otp`)?.value.trim() || '')
                 : (document.getElementById(`${prefix}-password`)?.value || '');
 
+            let hasError = false;
+
             if (mode === 'forgot') {
                 if (!identityValue) {
                     setFieldError(identityWrapper, 'Please enter your registered email or phone number.');
@@ -1158,7 +1260,7 @@ const setupLoginForms = () => {
 
                 const isPhone = /^[0-9+]/.test(identityValue) || identityValue.startsWith('+63');
                 if (isPhone) {
-                    if (otpResendSecondsLeft > 0) return;
+                    if (forgotOtpSecondsLeft > 0) return;
 
                     const cleanPhone = identityValue.replace(/\D/g, '').replace(/^63/, '');
                     if (cleanPhone.length !== 10) {
@@ -1174,7 +1276,7 @@ const setupLoginForms = () => {
                             identityWrapper,
                             `Password reset OTP sent to +63 ${cleanPhone}. (Mock code: <strong class="text-emerald-700 dark:text-emerald-300 font-mono">${mockOtp}</strong>)`
                         );
-                        startOtpCooldown();
+                        startForgotOtpCooldown();
                     } finally {
                         setLoading(form, false, 'SENDING OTP...', 'SEND OTP');
                     }
@@ -1210,7 +1312,6 @@ const setupLoginForms = () => {
 
             // In Phone mode: Step 1 is "SEND OTP" (OTP container is hidden or not sent yet)
             if (mode === 'phone' && !credentialWrapper?.dataset.otpSent) {
-                if (otpResendSecondsLeft > 0) return;
                 if (hasError) return;
 
                 setLoading(form, true, 'SENDING OTP...', 'SEND OTP');
@@ -1229,6 +1330,7 @@ const setupLoginForms = () => {
                     }
                     if (submitBtn) {
                         submitBtn.textContent = 'SUBMIT';
+                        submitBtn.dataset.btnId = '2';
                     }
 
                     const otpInput = document.getElementById(`${prefix}-otp`);
@@ -1242,7 +1344,6 @@ const setupLoginForms = () => {
                         identityWrapper,
                         `OTP sent to +63 ${identityValue}. (Mock code: <strong class="text-emerald-700 dark:text-emerald-300 font-mono">${mockOtp}</strong>)`
                     );
-                    startOtpCooldown();
                 } finally {
                     setLoading(form, false, 'SENDING OTP...', 'SUBMIT');
                 }

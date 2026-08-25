@@ -184,6 +184,29 @@ export class DoleChatbotController {
             });
         });
 
+        // Auto-save draft typing on input change
+        if (input) {
+            input.addEventListener('input', () => {
+                this.storage.setDraftMessage(input.value);
+            });
+        }
+
+        // Close chatbot window when user clicks/taps outside window and fab
+        document.addEventListener('pointerdown', (e) => {
+            if (!this.isOpen) return;
+            const windowEl = document.getElementById('dole-chatbot-window');
+            const fabEl = document.getElementById('dole-chatbot-fab');
+            const clearModal = document.getElementById('dole-chatbot-clear-modal');
+
+            // If user clicked inside chatbot window, FAB trigger, or clear modal, don't close
+            if (windowEl?.contains(e.target) || fabEl?.contains(e.target) || clearModal?.contains(e.target)) {
+                return;
+            }
+
+            // Outside click detected -> close chatbot window
+            this.closeWindow();
+        });
+
         // Quick prompt chips
         document.addEventListener('click', (e) => {
             const promptBtn = e.target.closest('.chatbot-quick-prompt');
@@ -209,6 +232,20 @@ export class DoleChatbotController {
     openWindow() {
         this.isOpen = true;
         this.restoreSession(); // Re-checks active user scope in case auth changed
+        
+        // Hide mobile login drawer if open
+        const drawerEl = document.getElementById('login-drawer');
+        const backdropEl = document.getElementById('drawer-backdrop');
+        const heroEl = document.getElementById('mobile-hero-content');
+        const drawerHeroEl = document.getElementById('mobile-drawer-hero-text');
+        if (drawerEl) {
+            drawerEl.classList.remove('translate-y-0');
+            drawerEl.classList.add('translate-y-full');
+        }
+        if (backdropEl) backdropEl.classList.add('hidden');
+        if (heroEl) heroEl.classList.remove('hidden');
+        if (drawerHeroEl) drawerHeroEl.classList.add('hidden');
+
         this.ui.showWindow();
         if (window.DEBUG) window.DEBUG.flow('CHATBOT', 'Chatbot window opened.');
     }
@@ -253,6 +290,13 @@ export class DoleChatbotController {
             if (window.DEBUG) window.DEBUG.log('CHATBOT', `Restored ${history.length} stored messages for user [${currentScope}].`);
         } else {
             this.ui.resetToWelcome();
+        }
+
+        // Restore any unfinished user draft from localStorage
+        const draft = this.storage.getDraftMessage();
+        const inputEl = document.getElementById('dole-chatbot-input');
+        if (inputEl && draft) {
+            inputEl.value = draft;
         }
     }
     /* END restoreSession METHOD */
@@ -322,8 +366,9 @@ export class DoleChatbotController {
             audience: this.audience
         });
 
-        // Clear input and trigger 2-second cooldown
+        // Clear input, destroy saved draft, and trigger 2-second cooldown
         input.value = '';
+        this.storage.setDraftMessage('');
         this.limiter.startCooldown();
 
         // Render User Message
@@ -1049,10 +1094,29 @@ export class ChatbotStorage {
         this.saveState(state);
     }
 
+    /* START getDraftMessage METHOD - Retrieves unsent draft text */
+    getDraftMessage() {
+        return this.loadState().draft || '';
+    }
+    /* END getDraftMessage METHOD */
+
+    /* START setDraftMessage METHOD - Persists or destroys unsent draft text */
+    setDraftMessage(draftText = '') {
+        const state = this.loadState();
+        if (draftText && draftText.trim()) {
+            state.draft = draftText;
+        } else {
+            delete state.draft;
+        }
+        this.saveState(state);
+    }
+    /* END setDraftMessage METHOD */
+
     clearHistory() {
         const state = this.loadState();
         state.messages = [];
         state.conversationId = null;
+        delete state.draft;
         this.saveState(state);
     }
 }
