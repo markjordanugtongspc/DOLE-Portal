@@ -36,11 +36,8 @@ class TicketReasonsChartController {
             gridColor: getTailwindColor(isDark ? 'gray-700' : 'gray-200', isDark ? '#374151' : '#e5e7eb'),
             tooltipTheme: isDark ? 'dark' : 'light',
             colors: isDark
-                ? ['blue-400', 'emerald-400', 'amber-400', 'rose-400', 'violet-400'].map((color) => getTailwindColor(color, '#9ca3af'))
-                : ['blue-700', 'emerald-600', 'amber-600', 'rose-600', 'violet-600'].map((color) => getTailwindColor(color, '#6b7280')),
-            gradientToColors: isDark
-                ? ['blue-700', 'emerald-700', 'amber-700', 'rose-700', 'violet-700'].map((color) => getTailwindColor(color, '#4b5563'))
-                : ['blue-300', 'emerald-300', 'amber-300', 'rose-300', 'violet-300'].map((color) => getTailwindColor(color, '#d1d5db'))
+                ? ['#3b82f6', '#10b981', '#f97316', '#ef4444', '#8b5cf6']
+                : ['#2563eb', '#059669', '#ea580c', '#dc2626', '#7c3aed']
         };
     }
 
@@ -145,17 +142,8 @@ class TicketReasonsChartController {
                 toolbar: { show: false }
             },
             fill: {
-                type: 'gradient',
-                gradient: {
-                    shade: this.isDarkMode() ? 'dark' : 'light',
-                    type: 'vertical',
-                    shadeIntensity: 0.35,
-                    inverseColors: false,
-                    opacityFrom: 0.95,
-                    opacityTo: 0.82,
-                    stops: [0, 100],
-                    gradientToColors: theme.gradientToColors
-                }
+                type: 'solid',
+                opacity: 1
             },
             plotOptions: {
                 bar: {
@@ -257,7 +245,7 @@ class TicketsAreaChartController {
         this.dropdownBtn = document.getElementById('dropdownLastDays9Button');
         this.dropdownMenu = document.getElementById('LastDays9dropdown');
         this.periodLabelEl = document.getElementById('tickets-area-period-label');
-        
+
         this.chart = null;
         this.tickets = [];
         this.activePeriod = 'last-7-days';
@@ -309,12 +297,12 @@ class TicketsAreaChartController {
                 e.preventDefault();
                 const period = link.getAttribute('data-period');
                 const labelText = link.textContent.trim();
-                
+
                 if (this.periodLabelEl) {
                     this.periodLabelEl.textContent = labelText;
                 }
                 this.dropdownMenu.classList.add('hidden');
-                
+
                 if (period && period !== this.activePeriod) {
                     this.activePeriod = period;
                     this.updateChartData();
@@ -834,7 +822,7 @@ const initDashboardChartsAndPopovers = () => {
     const renderCalendarDays = () => {
         if (!calendarDays) return;
         calendarDays.innerHTML = '';
-        
+
         // July 2026 starts on a Wednesday (3 empty spots)
         const emptySpots = 3;
         const totalDays = 31;

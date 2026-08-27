@@ -660,12 +660,8 @@ export class ChatbotUI {
         this.clearModalEl = document.getElementById('dole-chatbot-clear-modal');
     }
 
-    /* START setupOverlayObserver METHOD - Hides FAB when drawers/modals are active, shows when clear */
+    /* START setupOverlayObserver METHOD - Maintains chatbot FAB visibility across views */
     setupOverlayObserver() {
-        // Event-counter: increments on open events, decrements on close events
-        // FAB is hidden when counter > 0, visible when counter <= 0
-        let _overlayCount = 0;
-
         const showFab = () => {
             const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
             const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
@@ -673,81 +669,8 @@ export class ChatbotUI {
             if (staticIcon) staticIcon.classList.remove('!hidden');
         };
 
-        const hideFab = () => {
-            const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
-            const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
-            const windowEl = this.windowEl || document.getElementById('dole-chatbot-window');
-            if (fab) fab.classList.add('!hidden');
-            if (staticIcon) staticIcon.classList.add('!hidden');
-            if (windowEl && !windowEl.classList.contains('hidden')) {
-                this.controller.closeWindow();
-            }
-        };
-
-        const onOverlayOpen = () => {
-            _overlayCount++;
-            hideFab();
-            if (window.DEBUG) window.DEBUG.log('CHATBOT', `Overlay opened — count: ${_overlayCount}`);
-        };
-
-        const onOverlayClose = () => {
-            _overlayCount = Math.max(0, _overlayCount - 1);
-            if (_overlayCount === 0) {
-                showFab();
-                if (window.DEBUG) window.DEBUG.log('CHATBOT', 'All overlays closed — FAB restored.');
-            }
-        };
-
-        // Listen to named portal events dispatched from drawer.js, modals.js, assignment-drawer.js
-        window.addEventListener('portal:drawer-open', onOverlayOpen, { passive: true });
-        window.addEventListener('portal:drawer-close', onOverlayClose, { passive: true });
-        window.addEventListener('portal:modal-open', onOverlayOpen, { passive: true });
-        window.addEventListener('portal:modal-close', onOverlayClose, { passive: true });
-
-        // MutationObserver scoped ONLY to the login-drawer on landing page
-        // and to detect Flowbite-injected backdrop elements (simple, no infinite loop risk)
-        const backdropObserver = new MutationObserver(() => {
-            const loginDrawer = document.getElementById('login-drawer');
-            const isLoginDrawerOpen = Boolean(
-                loginDrawer &&
-                !loginDrawer.classList.contains('translate-y-full') &&
-                loginDrawer.classList.contains('translate-y-0')
-            );
-            const hasFlowbiteBackdrop = Boolean(
-                document.querySelector('[modal-backdrop]:not(.hidden), [drawer-backdrop]:not(.hidden)')
-            );
-            const hasPortalBackdrop = Boolean(
-                document.querySelector('#drawer-backdrop:not(.hidden)')
-            );
-
-            const anyBackdrop = isLoginDrawerOpen || hasFlowbiteBackdrop || hasPortalBackdrop;
-
-            // Sync counter & FAB with backdrop state (idempotent)
-            if (anyBackdrop && _overlayCount === 0) {
-                _overlayCount = 1;
-                hideFab();
-            } else if (!anyBackdrop && _overlayCount > 0) {
-                // Only clear if no named-event overlays are still open
-                // (drawer-open events decrement separately — this handles backdrop-only flows)
-                const hasOpenDrawerEvent = _overlayCount > 1;
-                if (!hasOpenDrawerEvent) {
-                    _overlayCount = 0;
-                    showFab();
-                }
-            }
-        });
-
-        backdropObserver.observe(document.body, {
-            attributes: true,
-            childList: true,
-            subtree: false, // Only top-level children — backdrops are direct body children
-            attributeFilter: ['class']
-        });
-
-        // Re-check on resize (orientation change)
-        window.addEventListener('resize', () => {
-            if (_overlayCount === 0) showFab();
-        }, { passive: true });
+        // Keep FAB visible across drawers and modals
+        showFab();
     }
     /* END setupOverlayObserver METHOD */
 

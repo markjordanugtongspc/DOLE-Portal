@@ -41,12 +41,6 @@ const initDrawer = () => {
         if (drawerHeroEl) {
             drawerHeroEl.classList.remove('hidden');
         }
-        const chatbotFab = document.getElementById('dole-chatbot-fab');
-        const chatbotStaticIcon = document.getElementById('dole-chatbot-fab-static-icon');
-        const chatbotWindow = document.getElementById('dole-chatbot-window');
-        if (chatbotFab) chatbotFab.classList.add('!hidden');
-        if (chatbotStaticIcon) chatbotStaticIcon.classList.add('!hidden');
-        if (chatbotWindow) chatbotWindow.classList.add('!hidden');
 
         window.dispatchEvent(new CustomEvent('portal:drawer-open'));
         if (window.DEBUG) window.DEBUG.success('DRAWER', 'Drawer opened.');
@@ -69,12 +63,6 @@ const initDrawer = () => {
         if (drawerHeroEl) {
             drawerHeroEl.classList.add('hidden');
         }
-        const chatbotFab = document.getElementById('dole-chatbot-fab');
-        const chatbotStaticIcon = document.getElementById('dole-chatbot-fab-static-icon');
-        const chatbotWindow = document.getElementById('dole-chatbot-window');
-        if (chatbotFab) chatbotFab.classList.remove('!hidden');
-        if (chatbotStaticIcon) chatbotStaticIcon.classList.remove('!hidden');
-        if (chatbotWindow) chatbotWindow.classList.remove('!hidden');
 
         window.dispatchEvent(new CustomEvent('portal:drawer-close'));
         if (window.DEBUG) window.DEBUG.success('DRAWER', 'Drawer closed.');

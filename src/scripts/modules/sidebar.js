@@ -220,14 +220,14 @@ const setupDynamicSidebar = () => {
     const role = isPublic
         ? 'public'
         : isGip
-        ? 'gip'
-        : sessionRoleId === 1
-        ? 'admin'
-        : sessionRoleId === 2
-        ? 'hr'
-        : sessionRoleId === 3
-        ? 'staff'
-        : (requestedRole === 'alerts' ? 'admin' : (requestedRole || 'staff'));
+            ? 'gip'
+            : sessionRoleId === 1
+                ? 'admin'
+                : sessionRoleId === 2
+                    ? 'hr'
+                    : sessionRoleId === 3
+                        ? 'staff'
+                        : (requestedRole === 'alerts' ? 'admin' : (requestedRole || 'staff'));
     const activeItem = sidebarEl.getAttribute('data-active') || (isPublic ? 'about-developer' : 'dashboard');
 
     // Keep the shell rendered by main.js during module startup, but repair the
@@ -239,8 +239,11 @@ const setupDynamicSidebar = () => {
 
     // Initialize Flowbite Drawer programmatically since it is dynamically injected
     const sidebarNode = document.getElementById('default-sidebar');
-    const toggleBtn = document.querySelector('[data-drawer-toggle="default-sidebar"]');
-    if (sidebarNode && toggleBtn) {
+    const toggleBtns = document.querySelectorAll('[data-drawer-toggle="default-sidebar"]');
+    if (sidebarNode && toggleBtns.length > 0) {
+        if (sidebarDrawerInstance) {
+            try { sidebarDrawerInstance.destroy(); } catch {}
+        }
         sidebarDrawerInstance = new Drawer(sidebarNode, {
             placement: 'right',
             backdrop: true,
@@ -249,10 +252,16 @@ const setupDynamicSidebar = () => {
             edgeOffset: '',
         });
 
-        toggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            sidebarDrawerInstance.toggle();
+        toggleBtns.forEach((btn) => {
+            if (btn.dataset.drawerToggleBound) return;
+            btn.dataset.drawerToggleBound = 'true';
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (sidebarDrawerInstance) {
+                    sidebarDrawerInstance.toggle();
+                }
+            });
         });
     }
 
@@ -262,10 +271,10 @@ const setupDynamicSidebar = () => {
         badgeEl.textContent = role === 'admin'
             ? 'Admin Access'
             : role === 'hr'
-            ? 'HR Access'
-            : role === 'staff'
-            ? 'Staff Access'
-            : 'Public Access';
+                ? 'HR Access'
+                : role === 'staff'
+                    ? 'Staff Access'
+                    : 'Public Access';
     }
 
     // Role-based navigation items configuration with SVGs
