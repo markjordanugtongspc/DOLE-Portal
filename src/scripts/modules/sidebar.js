@@ -250,6 +250,8 @@ const setupDynamicSidebar = () => {
             bodyScrolling: false,
             edge: false,
             edgeOffset: '',
+            onShow: () => window.dispatchEvent(new CustomEvent('portal:sidebar-open')),
+            onHide: () => window.dispatchEvent(new CustomEvent('portal:sidebar-close'))
         });
 
         toggleBtns.forEach((btn) => {

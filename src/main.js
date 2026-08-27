@@ -204,13 +204,13 @@ const fetchVercelStatusSummary = async () => {
 
         descriptionEls.forEach((el) => {
             el.textContent = descText;
-            el.classList.remove('text-emerald-400', 'text-amber-400', 'text-rose-400', 'text-green-400');
+            el.classList.remove('text-emerald-400', 'text-emerald-300', 'text-emerald-200', 'text-amber-400', 'text-amber-300', 'text-amber-200', 'text-rose-400', 'text-rose-300', 'text-rose-200', 'text-green-400');
             if (isNormal) {
-                el.classList.add('text-emerald-400');
+                el.classList.add('text-emerald-200');
             } else if (isMinor) {
-                el.classList.add('text-amber-400');
+                el.classList.add('text-amber-200');
             } else {
-                el.classList.add('text-rose-400');
+                el.classList.add('text-rose-200');
             }
         });
 

@@ -187,6 +187,68 @@ export class DoleChatbotController {
             this.applyFabPositionMode();
         });
 
+        /* START OVERLAY EVENT OBSERVERS - Hide chatbot when drawers, sidebars, or modals open */
+        window.addEventListener('portal:drawer-open', () => {
+            this.closeWindow();
+            this.ui.hideFab();
+        });
+
+        window.addEventListener('portal:drawer-close', () => {
+            this.ui.showFab();
+            this.applyFabPositionMode();
+        });
+
+        window.addEventListener('portal:modal-open', () => {
+            this.closeWindow();
+            this.ui.hideFab();
+        });
+
+        window.addEventListener('portal:modal-close', () => {
+            this.ui.showFab();
+            this.applyFabPositionMode();
+        });
+
+        window.addEventListener('portal:sidebar-open', () => {
+            this.closeWindow();
+            this.ui.hideFab();
+        });
+
+        window.addEventListener('portal:sidebar-close', () => {
+            this.ui.showFab();
+            this.applyFabPositionMode();
+        });
+
+        // Instant click trigger observer for mobile login drawer and sidebar drawer
+        document.addEventListener('click', (e) => {
+            const showLoginBtn = e.target.closest('#show-login-drawer');
+            if (showLoginBtn) {
+                this.closeWindow();
+                this.ui.hideFab();
+                return;
+            }
+
+            const hideLoginBtn = e.target.closest('#hide-login-drawer, #drawer-backdrop');
+            if (hideLoginBtn) {
+                this.ui.showFab();
+                this.applyFabPositionMode();
+                return;
+            }
+
+            const sidebarToggleBtn = e.target.closest('[data-drawer-toggle="default-sidebar"]');
+            if (sidebarToggleBtn) {
+                const sidebar = document.getElementById('default-sidebar');
+                const isCurrentlyClosed = sidebar?.classList.contains('-translate-x-full');
+                if (isCurrentlyClosed) {
+                    this.closeWindow();
+                    this.ui.hideFab();
+                } else {
+                    this.ui.showFab();
+                    this.applyFabPositionMode();
+                }
+            }
+        }, true);
+        /* END OVERLAY EVENT OBSERVERS */
+
         // Re-evaluate FAB position on resize (e.g. orientation change, browser resize)
         let _resizeFabTimer = null;
         window.addEventListener('resize', () => {
@@ -660,19 +722,98 @@ export class ChatbotUI {
         this.clearModalEl = document.getElementById('dole-chatbot-clear-modal');
     }
 
-    /* START setupOverlayObserver METHOD - Maintains chatbot FAB visibility across views */
+    /* START setupOverlayObserver METHOD - Automatically monitors drawers, sidebars, and modals to hide/show chatbot */
     setupOverlayObserver() {
-        const showFab = () => {
-            const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
-            const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
-            if (fab) fab.classList.remove('!hidden');
-            if (staticIcon) staticIcon.classList.remove('!hidden');
+        let isOverlayActive = false;
+
+        const checkActiveOverlays = () => {
+            const isMobile = window.matchMedia('(max-width: 639px)').matches;
+
+            // Check mobile login drawer
+            const loginDrawer = document.getElementById('login-drawer');
+            const isLoginDrawerOpen = Boolean(loginDrawer && (!loginDrawer.classList.contains('translate-y-full') || loginDrawer.classList.contains('translate-y-0')));
+
+            // Check mobile sidebar drawer
+            const sidebar = document.getElementById('default-sidebar');
+            const isMobileSidebarOpen = Boolean(isMobile && sidebar && (sidebar.classList.contains('transform-none') || !sidebar.classList.contains('-translate-x-full')));
+
+            // Check right-side system / assignment / ticket drawers
+            const isRightDrawerOpen = Boolean(
+                document.querySelector('#add-system-drawer:not(.translate-x-full), #assignment-drawer:not(.translate-x-full), #ticket-drawer:not(.translate-x-full)')
+            );
+
+            // Check Flowbite modal and drawer backdrops
+            const hasBackdrop = Boolean(
+                document.querySelector('[modal-backdrop]:not(.hidden), [drawer-backdrop]:not(.hidden), #drawer-backdrop:not(.hidden)')
+            );
+
+            // Check active dialogs/modals
+            const hasActiveModal = Boolean(
+                document.querySelector('[role="dialog"]:not(#dole-chatbot-window):not(#dole-chatbot-clear-modal):not(.hidden), #sidebar-logout-confirmation:not(.hidden)')
+            );
+
+            const modalOpenClass = Boolean((document.body.classList.contains('overflow-hidden') || document.documentElement.classList.contains('overflow-hidden')) && !this.isClearModalOpen());
+
+            const shouldHide = isLoginDrawerOpen || isMobileSidebarOpen || isRightDrawerOpen || hasBackdrop || hasActiveModal || modalOpenClass;
+
+            if (shouldHide && !isOverlayActive) {
+                isOverlayActive = true;
+                this.controller?.closeWindow?.();
+                this.hideFab();
+            } else if (!shouldHide && isOverlayActive) {
+                isOverlayActive = false;
+                this.showFab();
+                this.controller?.applyFabPositionMode?.();
+            }
         };
 
-        // Keep FAB visible across drawers and modals
-        showFab();
+        // Run mutation observer on document.body for dynamic attribute / class / child list changes
+        const observer = new MutationObserver(() => {
+            checkActiveOverlays();
+        });
+
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class', 'aria-hidden', 'style'],
+            subtree: true,
+            childList: true
+        });
+
+        // Also check on window resize or load
+        window.addEventListener('resize', checkActiveOverlays, { passive: true });
+        checkActiveOverlays();
     }
     /* END setupOverlayObserver METHOD */
+
+    /* START showFab METHOD - Displays floating chatbot action button */
+    showFab() {
+        const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
+        const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
+        if (fab) {
+            fab.classList.remove('hidden', '!hidden');
+            fab.style.display = '';
+            fab.removeAttribute('aria-hidden');
+        }
+        if (staticIcon) {
+            staticIcon.classList.remove('hidden', '!hidden');
+        }
+    }
+    /* END showFab METHOD */
+
+    /* START hideFab METHOD - Hides floating chatbot action button and icon */
+    hideFab() {
+        const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
+        const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
+        if (fab) {
+            fab.classList.add('!hidden');
+            fab.style.display = 'none';
+            fab.setAttribute('aria-hidden', 'true');
+        }
+        if (staticIcon) {
+            staticIcon.classList.add('!hidden');
+        }
+    }
+    /* END hideFab METHOD */
 
     showClearModal() {
         if (!this.clearModalEl) return;

@@ -519,6 +519,7 @@ const initSystemsManager = () => {
         drawerEl.classList.add('transform-none');
         drawerEl.setAttribute('aria-hidden', 'false');
         setPageScrollLock(true);
+        window.dispatchEvent(new CustomEvent('portal:drawer-open'));
     };
     /* END openDrawer FUNCTIONALITY */
 
@@ -526,6 +527,7 @@ const initSystemsManager = () => {
     const closeDrawer = () => {
         if (closeBtn) {
             closeBtn.click();
+            window.dispatchEvent(new CustomEvent('portal:drawer-close'));
             return;
         }
         if (drawerEl) {
@@ -533,6 +535,7 @@ const initSystemsManager = () => {
             drawerEl.classList.remove('transform-none');
             drawerEl.setAttribute('aria-hidden', 'true');
             setPageScrollLock(false);
+            window.dispatchEvent(new CustomEvent('portal:drawer-close'));
         }
     };
     /* END closeDrawer FUNCTIONALITY */
