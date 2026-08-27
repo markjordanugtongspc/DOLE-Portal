@@ -553,6 +553,7 @@ class StaffDashboardController {
         ).length;
     }
 
+    /* START createSystemCardHtml METHOD - Builds an interactive system card DOM element with spinner overlay */
     createSystemCardHtml(sys) {
         const card = document.createElement('div');
         const sysColor = sys.color || '#3b82f6';
@@ -563,6 +564,14 @@ class StaffDashboardController {
         card.setAttribute('data-system-id', sys.id);
         card.setAttribute('data-id', sys.id);
         card.innerHTML = `
+            <!-- Click Loading Spinner Overlay (hidden by default) -->
+            <div class="card-loading-overlay absolute inset-0 z-30 hidden items-center justify-center bg-black/60 backdrop-blur-[2px] flex-col gap-3 pointer-events-none select-none">
+                <svg class="animate-spin w-10 h-10 text-white drop-shadow-lg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-white text-xs font-bold tracking-widest uppercase opacity-90">Opening...</span>
+            </div>
             <div class="relative z-10 flex flex-col h-full justify-between">
                 <!-- System Preview Image Full Width at Top -->
                 <div class="w-full overflow-hidden">
@@ -583,7 +592,9 @@ class StaffDashboardController {
         `;
         return card;
     }
+    /* END createSystemCardHtml METHOD */
 
+    /* START bindCardClick METHOD - Handles system card click with loading spinner feedback and redirect */
     bindCardClick(card, sysId) {
         card.addEventListener('click', (e) => {
             const url = card.getAttribute('data-url');
@@ -591,7 +602,7 @@ class StaffDashboardController {
             const title = String(system?.title || '').toLowerCase();
             const systemKey = title.includes('spes') ? 'SPES' : title.includes('gip') ? 'GIP' : null;
             const openInNewTab = Boolean(e.ctrlKey || e.metaKey || e.button === 1);
-            
+
             // Increment click counter
             if (sysId) {
                 let clicks = parseInt(localStorage.getItem(`system_clicks_${sysId}`) || '0', 10);
@@ -603,20 +614,45 @@ class StaffDashboardController {
                 }
             }
 
-            // Redirect
+            // Show loading spinner overlay on card before redirecting
             if (url && url.trim() !== '') {
+                const overlay = card.querySelector('.card-loading-overlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    card.classList.add('pointer-events-none', 'scale-[0.99]');
+                }
+
+                // Auto-clear spinner safety fallback (e.g. if navigation is blocked)
+                const clearSpinner = () => {
+                    if (overlay) {
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                        card.classList.remove('pointer-events-none', 'scale-[0.99]');
+                    }
+                };
+                const spinnerTimeout = window.setTimeout(clearSpinner, 8000);
+
                 if (systemKey) {
                     window.dispatchEvent(new CustomEvent('portal:system-launch', {
                         detail: { systemKey, url, system, openInNewTab }
                     }));
+                    // Clear spinner on system-launch complete (SSO check) if not navigating
+                    window.addEventListener('portal:system-launch-done', () => {
+                        clearTimeout(spinnerTimeout);
+                        clearSpinner();
+                    }, { once: true });
                 } else if (openInNewTab) {
+                    window.clearTimeout(spinnerTimeout);
                     window.open(url, '_blank', 'noopener,noreferrer');
+                    clearSpinner();
                 } else {
                     window.location.href = url;
                 }
             }
         });
     }
+    /* END bindCardClick METHOD */
 
     bindDragAndDrop(card, sysId) {
         if (this.searchFilter.length > 0) {

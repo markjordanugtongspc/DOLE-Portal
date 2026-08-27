@@ -42,10 +42,13 @@ const initDrawer = () => {
             drawerHeroEl.classList.remove('hidden');
         }
         const chatbotFab = document.getElementById('dole-chatbot-fab');
+        const chatbotStaticIcon = document.getElementById('dole-chatbot-fab-static-icon');
         const chatbotWindow = document.getElementById('dole-chatbot-window');
         if (chatbotFab) chatbotFab.classList.add('!hidden');
+        if (chatbotStaticIcon) chatbotStaticIcon.classList.add('!hidden');
         if (chatbotWindow) chatbotWindow.classList.add('!hidden');
 
+        window.dispatchEvent(new CustomEvent('portal:drawer-open'));
         if (window.DEBUG) window.DEBUG.success('DRAWER', 'Drawer opened.');
     };
     /* END showDrawer FUNCTIONALITY */
@@ -67,10 +70,13 @@ const initDrawer = () => {
             drawerHeroEl.classList.add('hidden');
         }
         const chatbotFab = document.getElementById('dole-chatbot-fab');
+        const chatbotStaticIcon = document.getElementById('dole-chatbot-fab-static-icon');
         const chatbotWindow = document.getElementById('dole-chatbot-window');
         if (chatbotFab) chatbotFab.classList.remove('!hidden');
+        if (chatbotStaticIcon) chatbotStaticIcon.classList.remove('!hidden');
         if (chatbotWindow) chatbotWindow.classList.remove('!hidden');
 
+        window.dispatchEvent(new CustomEvent('portal:drawer-close'));
         if (window.DEBUG) window.DEBUG.success('DRAWER', 'Drawer closed.');
     };
     /* END hideDrawer FUNCTIONALITY */
@@ -714,6 +720,14 @@ const initSystemsManager = () => {
             }
 
             card.innerHTML = `
+                <!-- Click Loading Spinner Overlay (hidden by default) -->
+                <div class="card-loading-overlay absolute inset-0 z-30 hidden items-center justify-center bg-black/60 backdrop-blur-[2px] flex-col gap-3 pointer-events-none select-none">
+                    <svg class="animate-spin w-10 h-10 text-white drop-shadow-lg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-white text-xs font-bold tracking-widest uppercase opacity-90">Opening...</span>
+                </div>
                 <div class="relative z-10 flex flex-col h-full justify-between">
                     <div class="w-full overflow-hidden rounded-t-base">
                         <img class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100" src="${escapeHtml(sys.imageUrl)}" alt="${escapeHtml(sys.title)}" />
@@ -969,12 +983,34 @@ const initSystemsManager = () => {
             const openInNewTab = Boolean(event.ctrlKey || event.metaKey || event.button === 1);
 
             if (url && url.trim() !== '') {
+                // Show loading spinner overlay on the card to confirm click
+                const overlay = card.querySelector('.card-loading-overlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    card.classList.add('pointer-events-none', 'scale-[0.99]');
+                }
+                const clearSpinner = () => {
+                    if (overlay) {
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                        card.classList.remove('pointer-events-none', 'scale-[0.99]');
+                    }
+                };
+                const spinnerTimeout = window.setTimeout(clearSpinner, 8000);
+
                 if (systemKey) {
                     window.dispatchEvent(new CustomEvent('portal:system-launch', {
                         detail: { systemKey, url, system, openInNewTab }
                     }));
+                    window.addEventListener('portal:system-launch-done', () => {
+                        window.clearTimeout(spinnerTimeout);
+                        clearSpinner();
+                    }, { once: true });
                 } else if (openInNewTab) {
+                    window.clearTimeout(spinnerTimeout);
                     window.open(url, '_blank', 'noopener,noreferrer');
+                    clearSpinner();
                 } else {
                     window.location.href = url;
                 }

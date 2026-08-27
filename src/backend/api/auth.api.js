@@ -211,6 +211,9 @@ export function saveSession(user) {
         delete window.__PORTAL_SESSION;
         authStorage.clearUserSession();
     }
+    try {
+        window.dispatchEvent(new CustomEvent('portal:auth-changed', { detail: currentUserCache }));
+    } catch {}
 }
 
 export async function logout() {

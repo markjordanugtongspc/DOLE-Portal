@@ -98,9 +98,12 @@ export function showImagePreviewModal(imageUrl) {
             placement: 'center',
             backdrop: 'dynamic',
             closable: true,
+            onShow: () => window.dispatchEvent(new CustomEvent('portal:modal-open')),
+            onHide: () => window.dispatchEvent(new CustomEvent('portal:modal-close'))
         });
     }
 
+    window.dispatchEvent(new CustomEvent('portal:modal-open'));
     imageModalInstance.show();
 }
 
@@ -194,7 +197,9 @@ export function showAssistantDetailsModal(assistant = {}) {
         assistantDetailsModalInstance = new Modal(modalEl, {
             placement: 'center',
             backdrop: 'dynamic',
-            closable: true
+            closable: true,
+            onShow: () => window.dispatchEvent(new CustomEvent('portal:modal-open')),
+            onHide: () => window.dispatchEvent(new CustomEvent('portal:modal-close'))
         });
 
         modalEl.querySelectorAll('[data-modal-hide="viewAssistantModal"]').forEach(btn => {
@@ -202,6 +207,7 @@ export function showAssistantDetailsModal(assistant = {}) {
         });
     }
 
+    window.dispatchEvent(new CustomEvent('portal:modal-open'));
     assistantDetailsModalInstance.show();
 }
 /* END ASSISTANT DETAILS VIEW MODAL */
@@ -247,7 +253,13 @@ export const showUnassignedSystemModal = ({ systemName = 'This system', url = ''
                 </div>
             </div>`;
         document.body.appendChild(modal);
-        unassignedSystemModalInstance = new Modal(modal, { placement: 'center', backdrop: 'dynamic', closable: true });
+        unassignedSystemModalInstance = new Modal(modal, {
+            placement: 'center',
+            backdrop: 'dynamic',
+            closable: true,
+            onShow: () => window.dispatchEvent(new CustomEvent('portal:modal-open')),
+            onHide: () => window.dispatchEvent(new CustomEvent('portal:modal-close'))
+        });
     }
 
     const message = modal.querySelector('#unassigned-system-modal-message');
@@ -274,6 +286,7 @@ export const showUnassignedSystemModal = ({ systemName = 'This system', url = ''
     countdown.textContent = `Opening ${systemName} in ${remaining} seconds...`;
     openButton.onclick = openTarget;
     modal.querySelectorAll('[data-unassigned-system-close]').forEach((button) => { button.onclick = closeModal; });
+    window.dispatchEvent(new CustomEvent('portal:modal-open'));
     unassignedSystemModalInstance?.show();
     unassignedSystemCountdownTimer = window.setInterval(() => {
         remaining -= 1;
@@ -309,53 +322,69 @@ const createSettingsModal = () => {
     modal.id = 'global-settings-modal';
     modal.tabIndex = -1;
     modal.setAttribute('aria-hidden', 'true');
-    modal.className = 'fixed inset-0 z-50 hidden h-full w-full overflow-y-auto overflow-x-hidden p-2 sm:p-4 md:inset-0';
+    modal.className = 'fixed inset-0 z-50 hidden h-full w-full overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:inset-0';
     modal.innerHTML = `
-        <div class="relative mx-auto my-2 w-full max-w-3xl sm:my-4 md:my-8">
+        <div class="relative mx-auto my-3 w-full max-w-sm sm:max-w-xl md:max-w-3xl sm:my-4 md:my-8">
             <div class="relative rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
-                <div class="flex items-center justify-between rounded-t-xl border-b border-gray-200 p-3 dark:border-gray-700 sm:p-4 md:p-5">
+                <!-- Modal Header with image bg accent -->
+                <div class="flex items-center justify-between rounded-t-xl border-b border-gray-200 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-3 dark:border-gray-700 sm:p-4">
                     <div>
-                        <h2 class="text-lg font-extrabold text-gray-900 dark:text-white sm:text-xl">Settings</h2>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Manage your Portal profile and security settings.</p>
+                        <h2 class="text-base font-extrabold text-white sm:text-lg">Profile Settings</h2>
+                        <p class="mt-0.5 text-[11px] text-blue-200/80">Manage your profile and security settings.</p>
                     </div>
-                    <button type="button" data-settings-modal-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white" aria-label="Close settings">
+                    <button type="button" data-settings-modal-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white" aria-label="Close settings">
                         <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1l6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
                     </button>
                 </div>
                 <form id="global-settings-form">
-                    <div class="grid gap-4 p-3 sm:gap-5 sm:p-4 md:grid-cols-[180px_1fr] md:gap-6 md:p-6">
-                        <div class="flex flex-col items-center gap-2 sm:gap-3">
-                            <img id="settings-avatar-preview" class="h-24 w-24 rounded-full border-4 sm:h-28 sm:w-28 md:h-32 md:w-32 border-blue-100 object-cover shadow-sm dark:border-blue-900" alt="Profile avatar" />
-                            <label for="settings-avatar-file" class="cursor-pointer rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Change avatar</label>
-                            <input id="settings-avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
-                            <p class="text-center text-[11px] text-gray-500 dark:text-gray-400">PNG, JPG, or WEBP<br />Maximum 3MB</p>
+                    <div class="p-3 sm:p-4 md:p-6">
+                        <!-- Avatar + Profile Info Row (compact on mobile) -->
+                        <div class="flex items-center gap-3 mb-4 sm:mb-5">
+                            <div class="relative shrink-0">
+                                <img id="settings-avatar-preview" class="h-16 w-16 sm:h-20 sm:w-20 rounded-full border-4 border-blue-100 object-cover shadow-sm dark:border-blue-900" alt="Profile avatar" />
+                            </div>
+                            <div class="flex flex-col gap-1 min-w-0">
+                                <label for="settings-avatar-file" class="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-[11px] font-bold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 w-fit">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    Change Avatar
+                                </label>
+                                <input id="settings-avatar-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
+                                <p class="text-[10px] text-gray-400 dark:text-gray-500">PNG, JPG, WEBP &bull; Max 3MB</p>
+                            </div>
                         </div>
-                        <div class="space-y-4 sm:space-y-5">
-                            <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
-                                ${settingsField('full_name', 'Full name', 'text', 'autocomplete="name" required maxlength="160"')}
+
+                        <!-- Fields Grid -->
+                        <div class="space-y-3 sm:space-y-4">
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                ${settingsField('full_name', 'Full Name', 'text', 'autocomplete="name" required maxlength="160"')}
                                 ${settingsField('birthday', 'Birthday', 'date', 'autocomplete="bday"')}
                             </div>
-                            <div class="grid gap-3 sm:gap-4 sm:grid-cols-2">
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 ${settingsField('username', 'Username', 'text', 'autocomplete="username" required maxlength="80"')}
                                 ${settingsField('email', 'Email', 'email', 'autocomplete="email" required maxlength="180"')}
                             </div>
-                            ${settingsField('phone', 'Phone number', 'tel', 'autocomplete="tel" maxlength="40"')}
-                            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 sm:p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
-                                <h3 class="text-sm font-extrabold text-amber-900 dark:text-amber-200">Change password</h3>
-                                <p class="mt-1 text-xs text-amber-800 dark:text-amber-300">Leave all four fields empty to keep your current password.</p>
-                                <div class="mt-3 grid gap-3 sm:mt-4 sm:gap-4 sm:grid-cols-2">
-                                    ${settingsField('current_password', 'Current password', 'password', 'autocomplete="current-password" minlength="1"')}
-                                    ${settingsField('current_password_confirm', 'Confirm current password', 'password', 'autocomplete="current-password" minlength="1"')}
-                                    ${settingsField('new_password', 'New password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
-                                    ${settingsField('new_password_confirm', 'Confirm new password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
+                            ${settingsField('phone', 'Phone Number', 'tel', 'autocomplete="tel" maxlength="40"')}
+
+                            <!-- Change Password Section -->
+                            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
+                                <h3 class="text-xs font-extrabold text-amber-900 dark:text-amber-200">Change Password</h3>
+                                <p class="mt-0.5 text-[11px] text-amber-800 dark:text-amber-300">Leave all four fields empty to keep your current password.</p>
+                                <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    ${settingsField('current_password', 'Current Password', 'password', 'autocomplete="current-password" minlength="1"')}
+                                    ${settingsField('current_password_confirm', 'Confirm Current', 'password', 'autocomplete="current-password" minlength="1"')}
+                                    ${settingsField('new_password', 'New Password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
+                                    ${settingsField('new_password_confirm', 'Confirm New', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
                                 </div>
                             </div>
-                            <p id="settings-form-status" class="hidden rounded-lg p-3 text-sm font-semibold" role="alert"></p>
+
+                            <p id="settings-form-status" class="hidden rounded-lg p-2.5 text-xs font-semibold" role="alert"></p>
                         </div>
                     </div>
-                    <div class="flex flex-col-reverse gap-2 rounded-b-xl border-t border-gray-200 p-3 dark:border-gray-700 sm:flex-row sm:justify-end sm:gap-3 md:p-6">
-                        <button type="button" data-settings-modal-close class="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
-                        <button id="settings-save-button" type="submit" class="cursor-pointer rounded-lg bg-blue-700 px-4 py-2 sm:px-5 sm:py-2.5 text-sm font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">Save settings</button>
+
+                    <!-- Footer Actions -->
+                    <div class="flex flex-col-reverse gap-2 rounded-b-xl border-t border-gray-200 p-3 dark:border-gray-700 sm:flex-row sm:justify-end sm:gap-3 sm:p-4">
+                        <button type="button" data-settings-modal-close class="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
+                        <button id="settings-save-button" type="submit" class="cursor-pointer rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60">Save Settings</button>
                     </div>
                 </form>
             </div>
@@ -389,7 +418,13 @@ export const initSettingsModal = () => {
     document.documentElement.dataset.settingsModalWired = 'true';
 
     const modal = createSettingsModal();
-    settingsModalInstance = new Modal(modal, { placement: 'center', backdrop: 'dynamic', closable: true });
+    settingsModalInstance = new Modal(modal, {
+        placement: 'center',
+        backdrop: 'dynamic',
+        closable: true,
+        onShow: () => window.dispatchEvent(new CustomEvent('portal:modal-open')),
+        onHide: () => window.dispatchEvent(new CustomEvent('portal:modal-close'))
+    });
     modal.querySelectorAll('[data-settings-modal-close]').forEach((button) => {
         button.addEventListener('click', () => {
             document.activeElement?.blur();

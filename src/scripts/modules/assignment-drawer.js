@@ -190,7 +190,14 @@ const initStaffAssignmentDrawer = () => {
             });
             clear?.addEventListener('click', () => { matchedSystems.delete(index); result.classList.add('hidden'); empty.classList.add('hidden'); candidates.innerHTML = ''; form.classList.remove('hidden'); input.value = ''; input.focus(); updateAssignState(); });
         });    };
-    const close = () => { drawer.classList.add('translate-x-full'); backdrop.classList.add('hidden'); drawer.setAttribute('aria-hidden', 'true'); backdrop.setAttribute('aria-hidden', 'true'); document.body.classList.remove('overflow-hidden'); };
+    const close = () => {
+        drawer.classList.add('translate-x-full');
+        backdrop.classList.add('hidden');
+        drawer.setAttribute('aria-hidden', 'true');
+        backdrop.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+        window.dispatchEvent(new CustomEvent('portal:drawer-close'));
+    };
     const open = async (user) => {
         content.innerHTML = `<div class="flex items-center justify-center py-16"><svg class="animate-spin h-8 w-8 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
         drawer.classList.remove('translate-x-full');
@@ -199,6 +206,7 @@ const initStaffAssignmentDrawer = () => {
         backdrop.setAttribute('aria-hidden', 'false');
         document.body.classList.add('overflow-hidden');
         drawer.focus();
+        window.dispatchEvent(new CustomEvent('portal:drawer-open'));
 
         const response = await fetchExternalAccountLinks(user.id);
         render(user, response.data || []);

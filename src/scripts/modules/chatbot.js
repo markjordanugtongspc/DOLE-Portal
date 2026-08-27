@@ -86,6 +86,12 @@ export class DoleChatbotController {
         this.ui.initElements();
         this.bindEvents();
 
+        // Observe modals and drawers to automatically hide FAB while overlays are active
+        this.ui.setupOverlayObserver();
+
+        // Apply correct FAB position based on auth state
+        this.applyFabPositionMode();
+
         // Restore cached messages and check active lockdown state for current user scope
         this.restoreSession(true);
 
@@ -175,6 +181,18 @@ export class DoleChatbotController {
                 this.restoreSession(true);
             }
         });
+
+        window.addEventListener('portal:auth-changed', () => {
+            this.restoreSession(true);
+            this.applyFabPositionMode();
+        });
+
+        // Re-evaluate FAB position on resize (e.g. orientation change, browser resize)
+        let _resizeFabTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(_resizeFabTimer);
+            _resizeFabTimer = setTimeout(() => this.applyFabPositionMode(), 150);
+        }, { passive: true });
 
         // Topic selector pill clicks
         topicPills.forEach((pill) => {
@@ -298,8 +316,78 @@ export class DoleChatbotController {
         if (inputEl && draft) {
             inputEl.value = draft;
         }
+
+        // Re-apply FAB position based on current auth state
+        this.applyFabPositionMode();
     }
     /* END restoreSession METHOD */
+
+    /* START applyFabPositionMode METHOD - Repositions FAB on mobile based on auth state */
+    applyFabPositionMode() {
+        const fab = document.getElementById('dole-chatbot-fab');
+        const windowEl = document.getElementById('dole-chatbot-window');
+        if (!fab) return;
+
+        // Match exact same priority order as ChatbotStorage.getCurrentUserIdentifier()
+        const isAuthenticated = Boolean(
+            window.__PORTAL_SESSION ||
+            sessionStorage.getItem('portal_user') ||
+            localStorage.getItem('portal_user_backup') ||
+            localStorage.getItem('portal_user_session')
+        );
+        const isMobile = window.matchMedia('(max-width: 639px)').matches;
+
+        if (!isAuthenticated && isMobile) {
+            // Unauthenticated + mobile: position FAB above the white login card
+            // Use ResizeObserver to track card height dynamically
+            const landingCard = document.querySelector('.lg\\:hidden.bg-white.rounded-t-\\[1\\.5rem\\]');
+            const applyCardOffset = (cardHeight) => {
+                const offsetPx = (cardHeight || 160) + 12; // 12px gap above card
+                fab.style.setProperty('bottom', `${offsetPx}px`, 'important');
+                fab.style.removeProperty('right'); // keep default right-4 from class
+                fab.classList.remove('bottom-4', 'sm:bottom-6');
+                if (windowEl) {
+                    // Chat window opens upward from FAB — position it above FAB
+                    windowEl.style.setProperty('bottom', `${offsetPx + 64 + 8}px`, 'important');
+                    windowEl.classList.remove('bottom-20', 'sm:bottom-24');
+                }
+            };
+
+            if (landingCard) {
+                applyCardOffset(landingCard.getBoundingClientRect().height);
+                // Track future resizes (content changes, font scaling, etc.)
+                if (!this._landingCardObserver) {
+                    this._landingCardObserver = new ResizeObserver((entries) => {
+                        for (const entry of entries) {
+                            applyCardOffset(entry.contentRect.height);
+                        }
+                    });
+                    this._landingCardObserver.observe(landingCard);
+                }
+            } else {
+                // Fallback if card not in DOM yet: use 176px (approx card height)
+                applyCardOffset(160);
+            }
+        } else {
+            // Authenticated or desktop: standard fixed bottom-right position
+            fab.style.removeProperty('bottom');
+            fab.classList.add('bottom-4', 'sm:bottom-6');
+            if (windowEl) {
+                windowEl.style.removeProperty('bottom');
+                windowEl.classList.add('bottom-20', 'sm:bottom-24');
+            }
+            // Disconnect landing card observer if no longer needed
+            if (this._landingCardObserver) {
+                this._landingCardObserver.disconnect();
+                this._landingCardObserver = null;
+            }
+        }
+
+        if (window.DEBUG) {
+            window.DEBUG.log('CHATBOT', `FAB position mode: ${!isAuthenticated && isMobile ? 'unauthenticated-mobile (above login card)' : 'standard (bottom-right)'}`);
+        }
+    }
+    /* END applyFabPositionMode METHOD */
 
     /* START handleClearPrompt METHOD - Temporarily hides chatbox and opens confirmation modal */
     handleClearPrompt() {
@@ -571,6 +659,97 @@ export class ChatbotUI {
         this.cooldownBadge = document.getElementById('dole-chatbot-cooldown-badge');
         this.clearModalEl = document.getElementById('dole-chatbot-clear-modal');
     }
+
+    /* START setupOverlayObserver METHOD - Hides FAB when drawers/modals are active, shows when clear */
+    setupOverlayObserver() {
+        // Event-counter: increments on open events, decrements on close events
+        // FAB is hidden when counter > 0, visible when counter <= 0
+        let _overlayCount = 0;
+
+        const showFab = () => {
+            const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
+            const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
+            if (fab) fab.classList.remove('!hidden');
+            if (staticIcon) staticIcon.classList.remove('!hidden');
+        };
+
+        const hideFab = () => {
+            const fab = this.fabEl || document.getElementById('dole-chatbot-fab');
+            const staticIcon = document.getElementById('dole-chatbot-fab-static-icon');
+            const windowEl = this.windowEl || document.getElementById('dole-chatbot-window');
+            if (fab) fab.classList.add('!hidden');
+            if (staticIcon) staticIcon.classList.add('!hidden');
+            if (windowEl && !windowEl.classList.contains('hidden')) {
+                this.controller.closeWindow();
+            }
+        };
+
+        const onOverlayOpen = () => {
+            _overlayCount++;
+            hideFab();
+            if (window.DEBUG) window.DEBUG.log('CHATBOT', `Overlay opened — count: ${_overlayCount}`);
+        };
+
+        const onOverlayClose = () => {
+            _overlayCount = Math.max(0, _overlayCount - 1);
+            if (_overlayCount === 0) {
+                showFab();
+                if (window.DEBUG) window.DEBUG.log('CHATBOT', 'All overlays closed — FAB restored.');
+            }
+        };
+
+        // Listen to named portal events dispatched from drawer.js, modals.js, assignment-drawer.js
+        window.addEventListener('portal:drawer-open', onOverlayOpen, { passive: true });
+        window.addEventListener('portal:drawer-close', onOverlayClose, { passive: true });
+        window.addEventListener('portal:modal-open', onOverlayOpen, { passive: true });
+        window.addEventListener('portal:modal-close', onOverlayClose, { passive: true });
+
+        // MutationObserver scoped ONLY to the login-drawer on landing page
+        // and to detect Flowbite-injected backdrop elements (simple, no infinite loop risk)
+        const backdropObserver = new MutationObserver(() => {
+            const loginDrawer = document.getElementById('login-drawer');
+            const isLoginDrawerOpen = Boolean(
+                loginDrawer &&
+                !loginDrawer.classList.contains('translate-y-full') &&
+                loginDrawer.classList.contains('translate-y-0')
+            );
+            const hasFlowbiteBackdrop = Boolean(
+                document.querySelector('[modal-backdrop]:not(.hidden), [drawer-backdrop]:not(.hidden)')
+            );
+            const hasPortalBackdrop = Boolean(
+                document.querySelector('#drawer-backdrop:not(.hidden)')
+            );
+
+            const anyBackdrop = isLoginDrawerOpen || hasFlowbiteBackdrop || hasPortalBackdrop;
+
+            // Sync counter & FAB with backdrop state (idempotent)
+            if (anyBackdrop && _overlayCount === 0) {
+                _overlayCount = 1;
+                hideFab();
+            } else if (!anyBackdrop && _overlayCount > 0) {
+                // Only clear if no named-event overlays are still open
+                // (drawer-open events decrement separately — this handles backdrop-only flows)
+                const hasOpenDrawerEvent = _overlayCount > 1;
+                if (!hasOpenDrawerEvent) {
+                    _overlayCount = 0;
+                    showFab();
+                }
+            }
+        });
+
+        backdropObserver.observe(document.body, {
+            attributes: true,
+            childList: true,
+            subtree: false, // Only top-level children — backdrops are direct body children
+            attributeFilter: ['class']
+        });
+
+        // Re-check on resize (orientation change)
+        window.addEventListener('resize', () => {
+            if (_overlayCount === 0) showFab();
+        }, { passive: true });
+    }
+    /* END setupOverlayObserver METHOD */
 
     showClearModal() {
         if (!this.clearModalEl) return;

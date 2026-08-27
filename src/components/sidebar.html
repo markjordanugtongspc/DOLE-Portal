@@ -1,12 +1,40 @@
-<div id="mobile-sidebar-toggle-row" class="flex items-center justify-between w-full sm:hidden">
-   <div id="mobile-chat-back-slot" class="flex items-center"></div>
-   <button data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" data-drawer-placement="right" type="button" class="text-heading bg-transparent box-border border border-transparent hover:bg-neutral-secondary-medium focus:ring-4 focus:ring-neutral-tertiary font-medium leading-5 rounded-base me-3 mt-3 text-sm p-2 focus:outline-none inline-flex cursor-pointer">
-      <span class="sr-only">Open sidebar</span>
-      <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-         <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"/>
-      </svg>
-   </button>
+<!-- Mobile Top Header Bar (visible on mobile only, hidden on sm+) -->
+<div id="mobile-sidebar-toggle-row"
+  class="relative flex items-center justify-between w-full sm:hidden h-14 overflow-hidden"
+  style="background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 60%, #312e81 100%);">
+
+  <!-- Background landscape image at ~30% opacity -->
+  <div class="absolute inset-0 w-full h-full pointer-events-none select-none"
+    style="background-image: url('/src/assets/images/slider/sl1.jpg'); background-size: cover; background-position: center 40%; opacity: 0.28; mix-blend-mode: luminosity;">
+  </div>
+
+  <!-- Gradient darkening overlay (left to right) -->
+  <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/40 to-transparent pointer-events-none"></div>
+
+  <!-- Brand identity (left side) -->
+  <div id="mobile-chat-back-slot" class="relative z-10 flex items-center gap-2.5 pl-4">
+    <img src="/src/assets/logos/dole_logo.png" alt="DOLE" class="h-7 w-7 drop-shadow-sm shrink-0 brightness-200">
+    <div class="flex flex-col leading-tight">
+      <span class="text-[11px] font-extrabold text-white tracking-wider uppercase leading-none">DOLE Portal</span>
+      <span class="text-[9px] font-semibold text-blue-200/90 tracking-widest uppercase leading-none mt-0.5">Region X — Iligan</span>
+    </div>
+  </div>
+
+  <!-- Hamburger menu (right side) -->
+  <button
+    data-drawer-target="default-sidebar"
+    data-drawer-toggle="default-sidebar"
+    aria-controls="default-sidebar"
+    data-drawer-placement="right"
+    type="button"
+    class="relative z-10 cursor-pointer inline-flex items-center justify-center w-10 h-10 mr-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white/30">
+    <span class="sr-only">Open sidebar</span>
+    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+       <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"/>
+    </svg>
+  </button>
 </div>
+
 
 <aside id="default-sidebar" class="fixed top-0 right-0 sm:right-auto sm:left-0 z-40 w-64 h-full transition-transform translate-x-full sm:translate-x-0" aria-label="Sidebar">
    <div class="h-full px-3 py-4 overflow-y-auto bg-white dark:bg-gray-900 border-e border-gray-200 dark:border-gray-800 transition-colors flex flex-col">
