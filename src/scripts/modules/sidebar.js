@@ -215,9 +215,12 @@ const setupDynamicSidebar = () => {
     const requestedRole = sidebarEl.getAttribute('data-role');
     const sessionUser = getCachedCurrentUser() || window.__PORTAL_SESSION || authStorage.getUserSession();
     const sessionRoleId = Number(sessionUser?.role_id);
+    const isGip = Boolean(sessionUser?.is_gip || sessionUser?.gip_id);
     const isPublic = !sessionUser || (!sessionRoleId && !requestedRole);
     const role = isPublic
         ? 'public'
+        : isGip
+        ? 'gip'
         : sessionRoleId === 1
         ? 'admin'
         : sessionRoleId === 2
@@ -399,6 +402,30 @@ const setupDynamicSidebar = () => {
         staff: [
             { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
             { id: 'assistants', label: 'Manage Assistants', url: '/src/pages/user/staff/assistants/', svg: SVG_ASSISTANTS },
+            {
+                id: 'tickets',
+                label: 'My Tickets',
+                url: '/src/pages/user/staff/tickets/',
+                svg: SVG_TICKETS_ADMIN,
+                badge: null,
+                dropdown: [
+                    { id: 'articles', label: 'Browse Articles', url: '/src/pages/user/staff/articles/', svg: SVG_ARTICLES_ADMIN }
+                ]
+            },
+            {
+                id: 'tools',
+                label: 'Tools',
+                url: '#',
+                svg: SVG_TOOLS,
+                dropdown: [
+                    { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
+                    { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
+                ]
+            },
+            { id: 'about-developer', label: 'About Developer', url: '/src/pages/about/', svg: SVG_ABOUT_DEV, hasSeparator: true }
+        ],
+        gip: [
+            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
             {
                 id: 'tickets',
                 label: 'My Tickets',

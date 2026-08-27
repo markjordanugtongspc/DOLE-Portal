@@ -26,11 +26,35 @@ const normalizeDate = (value) => {
     return Number.isNaN(date.getTime()) ? null : value;
 };
 
-const loadUser = (admin, userId) => admin
-    .from('users')
-    .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at, password, pin')
-    .eq('id', userId)
-    .single();
+const loadUser = async (admin, userId, isGip = false) => {
+    if (isGip) {
+        const { data, error } = await admin
+            .from('gips')
+            .select('id, full_name, username, email, phone, avatar_url, status, archived_at, password')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (error || !data) return { data: null, error };
+        return {
+            data: {
+                ...data,
+                role_id: 3,
+                office_id: null,
+                birthday: null,
+                approval_status: 'APPROVED',
+                is_gip: true,
+                gip_id: data.id
+            },
+            error: null
+        };
+    }
+
+    return admin
+        .from('users')
+        .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at, password, pin')
+        .eq('id', userId)
+        .single();
+};
 
 /* START PROFILE SETTINGS API */
 export default async function handler(req, res) {
@@ -42,8 +66,10 @@ export default async function handler(req, res) {
         const session = await requirePortalSession(req, res, admin);
         if (!session) return;
 
+        const isGip = Boolean(session.user?.is_gip);
+
         if (req.method === 'GET') {
-            const { data, error } = await loadUser(admin, session.user.id);
+            const { data, error } = await loadUser(admin, session.user.id, isGip);
             if (error || !data) return sendJson(res, 404, { error: 'Your user profile could not be found.' });
             return sendJson(res, 200, { data: safeUser(data) });
         }
@@ -53,16 +79,16 @@ export default async function handler(req, res) {
         const username = String(body.username || '').trim();
         const email = String(body.email || '').trim().toLowerCase();
         const phone = String(body.phone || '').trim() || null;
-        const birthday = normalizeDate(String(body.birthday || '').trim());
+        const birthday = isGip ? null : normalizeDate(String(body.birthday || '').trim());
         const avatarUrl = body.avatar_url === null || body.avatar_url === '' ? null : String(body.avatar_url || '').trim();
 
         if (!fullName || fullName.length > 160) return sendJson(res, 400, { error: 'Please provide a valid full name.' });
         if (!username || username.length > 80) return sendJson(res, 400, { error: 'Please provide a valid username.' });
         if (!email || !isValidEmail(email) || email.length > 180) return sendJson(res, 400, { error: 'Please provide a valid email address.' });
-        if (String(body.birthday || '').trim() && !birthday) return sendJson(res, 400, { error: 'Please provide a valid birthday.' });
+        if (!isGip && String(body.birthday || '').trim() && !birthday) return sendJson(res, 400, { error: 'Please provide a valid birthday.' });
         if (avatarUrl && avatarUrl.length > 2048) return sendJson(res, 400, { error: 'The avatar URL is too long.' });
 
-        const { data: current, error: currentError } = await loadUser(admin, session.user.id);
+        const { data: current, error: currentError } = await loadUser(admin, session.user.id, isGip);
         if (currentError || !current) return sendJson(res, 404, { error: 'Your user profile could not be found.' });
 
         const newPassword = String(body.new_password || '');
@@ -78,20 +104,23 @@ export default async function handler(req, res) {
             if (!newPassword || !newPasswordConfirm || newPassword !== newPasswordConfirm) {
                 return sendJson(res, 400, { error: 'New password and confirmation must match.' });
             }
-            if (newPassword.length < 12 || newPassword.length > 256) {
-                return sendJson(res, 400, { error: 'The new password must be 12 to 256 characters long.' });
+            if (newPassword.length < 8 || newPassword.length > 256) {
+                return sendJson(res, 400, { error: 'The new password must be at least 8 characters long.' });
             }
             const verification = await verifyCredential(current.password, currentPassword);
             if (!verification.valid) return sendJson(res, 400, { error: 'The current password is incorrect.' });
         }
 
-        const duplicateQuery = async (column, value) => admin
-            .from('users')
-            .select('id')
-            .eq(column, value)
-            .neq('id', session.user.id)
-            .is('archived_at', null)
-            .maybeSingle();
+        const duplicateQuery = async (column, value) => {
+            const userQ = admin.from('users').select('id').eq(column, value).is('archived_at', null);
+            if (!isGip) userQ.neq('id', session.user.id);
+            const gipQ = admin.from('gips').select('id').eq(column, value).is('archived_at', null);
+            if (isGip) gipQ.neq('id', session.user.id);
+
+            const [uRes, gRes] = await Promise.all([userQ.maybeSingle(), gipQ.maybeSingle()]);
+            return { data: uRes.data || gRes.data, error: uRes.error || gRes.error };
+        };
+
         const [usernameMatch, emailMatch] = await Promise.all([
             duplicateQuery('username', username),
             duplicateQuery('email', email)
@@ -100,28 +129,36 @@ export default async function handler(req, res) {
         if (usernameMatch.data) return sendJson(res, 409, { error: 'That username is already in use.', field: 'username' });
         if (emailMatch.data) return sendJson(res, 409, { error: 'That email address is already in use.', field: 'email' });
 
-        const updates = { full_name: fullName, birthday, username, email, phone, avatar_url, updated_at: new Date().toISOString() };
+        const targetTable = isGip ? 'gips' : 'users';
+        const updates = isGip
+            ? { full_name: fullName, username, email, phone, avatar_url, updated_at: new Date().toISOString() }
+            : { full_name: fullName, birthday, username, email, phone, avatar_url, updated_at: new Date().toISOString() };
+
         if (changingPassword) updates.password = await hashCredential(newPassword);
+
         const { data: updated, error: updateError } = await admin
-            .from('users')
+            .from(targetTable)
             .update(updates)
             .eq('id', session.user.id)
-            .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status')
+            .select(isGip ? 'id, full_name, username, email, phone, avatar_url, status' : 'id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status')
             .single();
+
         if (updateError || !updated) return sendJson(res, 500, { error: updateError?.message || 'Unable to save your profile.' });
+
+        const finalUser = isGip ? { ...updated, role_id: 3, is_gip: true, gip_id: updated.id, approval_status: 'APPROVED' } : updated;
 
         await writeAuditLog(admin, req, {
             actorId: session.user.id,
             targetUserId: session.user.id,
             eventType: 'account',
             action: changingPassword ? 'profile_and_password_changed' : 'profile_updated',
-            entityType: 'user',
+            entityType: isGip ? 'gip' : 'user',
             entityId: session.user.id,
-            message: changingPassword ? 'User profile and password changed.' : 'User profile changed.',
+            message: changingPassword ? 'Profile and password changed.' : 'Profile updated.',
             metadata: { changed_fields: [...profileFields.filter((field) => Object.prototype.hasOwnProperty.call(updates, field)), ...(changingPassword ? ['password'] : [])] }
         });
 
-        return sendJson(res, 200, { data: safeUser(updated) });
+        return sendJson(res, 200, { data: safeUser(finalUser) });
     } catch (error) {
         console.error('[PORTAL PROFILE] Profile update failed:', error.message);
         return sendJson(res, 500, { error: 'Unable to update your profile right now.' });

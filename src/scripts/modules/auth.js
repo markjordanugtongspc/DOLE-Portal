@@ -218,10 +218,14 @@ const setupRouteGuard = async () => {
     const isToolsRoute = /\/src\/pages\/tools\//.test(window.location.pathname);
     const requiredRole = getRequiredRole();
     const userRole = getRoleGroup(user.role_id);
+    const isGip = Boolean(user?.is_gip || user?.gip_id);
     const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
+    const isAssistantsRoute = /\/src\/pages\/user\/staff\/assistants\//.test(window.location.pathname);
     const hasAlertsAccess = isAlertsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2);
     const hasToolsAccess = isToolsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2 || Number(user.role_id) === 3);
-    if (requiredRole && !hasAlertsAccess && !hasToolsAccess && userRole !== requiredRole) {
+    const isAssistantsBlocked = isAssistantsRoute && isGip;
+
+    if (isAssistantsBlocked || (requiredRole && !hasAlertsAccess && !hasToolsAccess && userRole !== requiredRole)) {
         const redirectRoute = getDashboardRoute(user);
         blockProtectedPageRender();
         showAuthNotice({
@@ -248,11 +252,11 @@ const setLoading = (form, isLoading, loadingText = 'SIGNING IN...', defaultText 
     if (isLoading) {
         submitBtn.textContent = loadingText;
     } else {
-        if (otpResendSecondsLeft > 0 && (defaultText === 'SEND OTP' || form?.dataset.authMode === 'phone' || (form?.dataset.authMode === 'forgot' && defaultText === 'SEND OTP'))) {
+        if (phoneOtpResendSecondsLeft > 0 && (defaultText === 'SEND OTP' || form?.dataset.authMode === 'phone' || (form?.dataset.authMode === 'forgot' && defaultText === 'SEND OTP'))) {
             submitBtn.disabled = true;
             submitBtn.classList.add('cursor-not-allowed', 'opacity-60');
             submitBtn.classList.remove('cursor-pointer');
-            submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(otpResendSecondsLeft)}</span>)`;
+            submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(phoneOtpResendSecondsLeft)}</span>)`;
         } else {
             submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
             submitBtn.classList.add('cursor-pointer');

@@ -26,10 +26,14 @@ if (isAboutRoute) {
 } else if (routeMatch && cachedSessionUser) {
     window.__PORTAL_SESSION = cachedSessionUser;
     const roleId = Number(cachedSessionUser.role_id);
+    const isGip = Boolean(cachedSessionUser.is_gip || cachedSessionUser.gip_id);
     const requiredRole = routeMatch[1];
     const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
+    const isAssistantsRoute = /\/src\/pages\/user\/staff\/assistants\//.test(window.location.pathname);
     const allowed = isToolsRoute
         ? true
+        : isAssistantsRoute
+        ? !isGip && (roleId === 2 || roleId === 3)
         : isAlertsRoute
         ? roleId === 1 || roleId === 2
         : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
@@ -109,10 +113,14 @@ const validateProtectedRoute = async () => {
         }
 
         const roleId = Number(user.role_id);
+        const isGip = Boolean(user.is_gip || user.gip_id);
         const requiredRole = routeMatch[1];
         const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
+        const isAssistantsRoute = /\/src\/pages\/user\/staff\/assistants\//.test(window.location.pathname);
         const allowed = isToolsRoute
             ? true
+            : isAssistantsRoute
+            ? !isGip && (roleId === 2 || roleId === 3)
             : isAlertsRoute
             ? roleId === 1 || roleId === 2
             : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;

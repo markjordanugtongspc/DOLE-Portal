@@ -9,7 +9,9 @@ const safeUser = (user) => ({
     id: Number(user.id), role_id: Number(user.role_id), office_id: user.office_id === null ? null : Number(user.office_id),
     full_name: user.full_name, username: user.username, email: user.email, phone: user.phone,
     birthday: user.birthday, avatar_url: user.avatar_url || null,
-    approval_status: user.approval_status, status: 'online'
+    approval_status: user.approval_status, status: 'online',
+    is_gip: Boolean(user.is_gip),
+    gip_id: user.gip_id || null
 });
 
 const maskIdentity = (identity) => {
@@ -61,7 +63,7 @@ export default async function handler(req, res) {
 
     try {
         const admin = createPortalAdmin();
-        const { data: user, error } = await admin
+        let { data: user, error } = await admin
             .from('users')
             .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at, password, pin')
             .eq(column, normalizedIdentity)
@@ -70,6 +72,44 @@ export default async function handler(req, res) {
         if (error) {
             console.error('[PORTAL AUTH] Supabase query error:', error.message);
             return sendJson(res, 500, { error: 'Database query failed during authentication.' });
+        }
+
+        let isGipUser = false;
+        // If not found in users table, check gips table
+        if (!user) {
+            const { data: gip, error: gipError } = await admin
+                .from('gips')
+                .select('id, full_name, username, email, phone, avatar_url, status, archived_at, password, created_by')
+                .eq(column, normalizedIdentity)
+                .maybeSingle();
+
+            if (gipError) {
+                console.error('[PORTAL AUTH] Supabase GIP query error:', gipError.message);
+                return sendJson(res, 500, { error: 'Database query failed during authentication.' });
+            }
+
+            if (gip && !gip.archived_at) {
+                isGipUser = true;
+                user = {
+                    id: gip.id,
+                    role_id: 3, // Staff / Assistant role
+                    office_id: null,
+                    full_name: gip.full_name,
+                    birthday: null,
+                    username: gip.username,
+                    email: gip.email,
+                    phone: gip.phone,
+                    avatar_url: gip.avatar_url,
+                    approval_status: 'APPROVED',
+                    status: gip.status || 'offline',
+                    archived_at: gip.archived_at,
+                    password: gip.password,
+                    pin: null,
+                    is_gip: true,
+                    gip_id: gip.id,
+                    created_by: gip.created_by
+                };
+            }
         }
 
         if (!user || user.archived_at) {
@@ -93,17 +133,20 @@ export default async function handler(req, res) {
         }
 
         if (verification.upgrade) {
-            await admin.from('users').update({ [credentialColumn]: await hashCredential(credential), updated_at: new Date().toISOString() }).eq('id', user.id);
+            const targetTable = isGipUser ? 'gips' : 'users';
+            await admin.from(targetTable).update({ [credentialColumn]: await hashCredential(credential), updated_at: new Date().toISOString() }).eq('id', user.id);
         }
-        await admin.from('users').update({ status: 'online', last_seen: new Date().toISOString() }).eq('id', user.id);
+        
+        const targetTable = isGipUser ? 'gips' : 'users';
+        await admin.from(targetTable).update({ status: 'online', updated_at: new Date().toISOString() }).eq('id', user.id);
 
-        const session = await issuePortalSession(admin, user.id, Boolean(body.remember));
+        const session = await issuePortalSession(admin, user.id, Boolean(body.remember), isGipUser, user.created_by);
         res.setHeader('Set-Cookie', createSessionCookie(session.token, session.maxAge, req));
         await recordLoginAudit(req, { mode, identity, reason: 'authenticated', success: true, userId: user.id });
         return sendJson(res, 200, { data: safeUser(user) });
     } catch (error) {
-        console.error('[PORTAL AUTH] Login failed:', error.message);
-        return sendJson(res, 500, { error: 'Server authentication is not configured.' });
+        console.error('[PORTAL AUTH] Login failed:', error.message || error);
+        return sendJson(res, 500, { error: error.message || 'Server authentication is not configured.' });
     }
 }
 /* END PORTAL BACKEND LOGIN API */

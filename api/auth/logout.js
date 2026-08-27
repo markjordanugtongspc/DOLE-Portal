@@ -19,10 +19,13 @@ export default async function handler(req, res) {
                 entityType: 'session',
                 message: 'User logged out.',
             });
-            await Promise.all([
-                revokePortalSession(admin, session.sessionId),
-                admin.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', session.user.id)
-            ]);
+            const statusUpdates = [revokePortalSession(admin, session.sessionId)];
+            if (session.user?.is_gip) {
+                statusUpdates.push(admin.from('gips').update({ status: 'offline', updated_at: new Date().toISOString() }).eq('id', session.user.id));
+            } else {
+                statusUpdates.push(admin.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', session.user.id));
+            }
+            await Promise.all(statusUpdates);
         }
         res.setHeader('Set-Cookie', clearSessionCookie(req));
         return sendJson(res, 200, { data: { logged_out: true } });

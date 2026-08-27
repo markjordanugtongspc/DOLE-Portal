@@ -38,6 +38,8 @@ export const initAssistantsManage = () => {
 
     const pwdRequiredStar = document.getElementById('pwd-required-star');
     const confPwdRequiredStar = document.getElementById('conf-pwd-required-star');
+    const pwdLabel = document.getElementById('pwd-label');
+    const confPwdLabel = document.getElementById('conf-pwd-label');
 
     let currentDataTable = null;
 
@@ -320,23 +322,29 @@ export const initAssistantsManage = () => {
         if (!idInput?.value) assistantAddDraftStorage.saveDraft(assistantDraftData());
     };
     /* END ASSISTANT ADD DRAFT CACHE */
-    // Configure Add Mode
+    /* START CONFIGURE ADD MODE */
     const configureAddMode = () => {
         resetForm();
         if (modalTitle) modalTitle.textContent = 'Add Assistant';
         if (submitBtn) submitBtn.textContent = 'Add Assistant';
-        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢'; }
+        if (pwdLabel) pwdLabel.innerHTML = 'Password <span class="text-red-500" id="pwd-required-star">*</span>';
+        if (confPwdLabel) confPwdLabel.innerHTML = 'Confirm Password <span class="text-red-500" id="conf-pwd-required-star">*</span>';
+        if (passwordInput) { passwordInput.required = true; passwordInput.placeholder = '••••••••'; }
         if (confirmPasswordInput) confirmPasswordInput.required = true;
         if (pwdRequiredStar) pwdRequiredStar.classList.remove('hidden');
         if (confPwdRequiredStar) confPwdRequiredStar.classList.remove('hidden');
         restoreAssistantDraft();
+        window.DEBUG?.flow('ASSISTANTS', 'Configured Add Assistant modal.');
     };
+    /* END CONFIGURE ADD MODE */
 
-    // Configure Edit Mode
+    /* START CONFIGURE EDIT MODE */
     const configureEditMode = (asst) => {
         resetForm();
         if (modalTitle) modalTitle.textContent = 'Edit Assistant';
         if (submitBtn) submitBtn.textContent = 'Save Changes';
+        if (pwdLabel) pwdLabel.innerHTML = 'New Password <span class="text-gray-400 font-normal text-[11px]">(Optional)</span>';
+        if (confPwdLabel) confPwdLabel.innerHTML = 'Confirm New Password <span class="text-gray-400 font-normal text-[11px]">(Optional)</span>';
 
         if (idInput) idInput.value = asst.id;
         if (nameInput) nameInput.value = asst.name;
@@ -349,7 +357,9 @@ export const initAssistantsManage = () => {
         if (confirmPasswordInput) confirmPasswordInput.required = false;
         if (pwdRequiredStar) pwdRequiredStar.classList.add('hidden');
         if (confPwdRequiredStar) confPwdRequiredStar.classList.add('hidden');
+        window.DEBUG?.flow('ASSISTANTS', `Configured Edit Assistant modal for ID: ${asst.id}`);
     };
+    /* END CONFIGURE EDIT MODE */
 
     // Attach close listeners to modals explicitly
     const setupModalClose = (modalEl, modalInstance) => {
@@ -430,7 +440,7 @@ export const initAssistantsManage = () => {
         }
     };
 
-    // Submit handler
+    /* START ASSISTANT FORM SUBMISSION */
     if (submitBtn && form) {
         submitBtn.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -449,10 +459,17 @@ export const initAssistantsManage = () => {
             const password = passwordInput.value;
             const confirm = confirmPasswordInput.value;
 
-            // Password mismatch validation
-            if (password !== confirm) {
-                alert('Passwords do not match!');
+            // Password validation
+            if (!id && !password) {
+                showToast('warning', 'Please enter a password for the new assistant.');
                 return;
+            }
+
+            if (password || confirm) {
+                if (password !== confirm) {
+                    showToast('danger', 'New password and confirmation do not match.');
+                    return;
+                }
             }
 
             const staffId = getUserId();
@@ -462,6 +479,7 @@ export const initAssistantsManage = () => {
             try {
                 if (!id) {
                     // ADD
+                    window.DEBUG?.flow('ASSISTANTS', 'Creating new GIP assistant...', { username, created_by: staffId });
                     const payload = {
                         full_name: name,
                         username,
@@ -474,8 +492,10 @@ export const initAssistantsManage = () => {
                     const res = await createGip(payload);
                     if (res.error) throw new Error(res.error);
                     assistantAddDraftStorage.clearDraft();
+                    window.DEBUG?.success('ASSISTANTS', 'GIP assistant created successfully', res.data);
                 } else {
-                    // EDIT
+                    // EDIT / SET NEW PASSWORD
+                    window.DEBUG?.flow('ASSISTANTS', `Updating GIP assistant #${id}...`, { username, hasNewPassword: Boolean(password) });
                     const updates = {
                         full_name: name,
                         username,
@@ -487,6 +507,7 @@ export const initAssistantsManage = () => {
                     }
                     const res = await updateGip(id, updates);
                     if (res.error) throw new Error(res.error);
+                    window.DEBUG?.success('ASSISTANTS', `GIP assistant #${id} updated successfully`, res.data);
                 }
 
                 await load();
@@ -496,6 +517,7 @@ export const initAssistantsManage = () => {
                 }
                 showToast('success', `Assistant "${name}" saved successfully.`);
             } catch (err) {
+                window.DEBUG?.error('ASSISTANTS', 'Failed to save assistant', err.message || err);
                 if (editModal) editModal.hide();
                 showToast('danger', err.message || 'Failed to save assistant.', (isManual) => {
                     if (!isManual) {
@@ -508,6 +530,7 @@ export const initAssistantsManage = () => {
             }
         });
     }
+    /* END ASSISTANT FORM SUBMISSION */
 
 
     form?.addEventListener('input', cacheAssistantDraft);
