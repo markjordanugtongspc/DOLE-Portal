@@ -76,14 +76,14 @@ const getPhoneSearchVariants = (rawPhone = '') => {
 
     const set = new Set([
         rawPhone,
-        tenDigits,                                     // 9562676206
-        `0${tenDigits}`,                               // 09562676206
-        `63${tenDigits}`,                              // 639562676206
-        `+63${tenDigits}`,                             // +639562676206
-        `+63 ${tenDigits}`,                            // +63 9562676206
-        `+63 ${tenDigits.slice(0, 3)} ${tenDigits.slice(3, 6)} ${tenDigits.slice(6)}`, // +63 956 267 6206
-        `0${tenDigits.slice(0, 3)} ${tenDigits.slice(3, 6)} ${tenDigits.slice(6)}`,  // 0956 267 6206
-        `${tenDigits.slice(0, 3)}-${tenDigits.slice(3, 6)}-${tenDigits.slice(6)}`     // 956-267-6206
+        tenDigits,
+        `0${tenDigits}`,
+        `63${tenDigits}`,
+        `+63${tenDigits}`,
+        `+63 ${tenDigits}`,
+        `+63 ${tenDigits.slice(0, 3)} ${tenDigits.slice(3, 6)} ${tenDigits.slice(6)}`,
+        `0${tenDigits.slice(0, 3)} ${tenDigits.slice(3, 6)} ${tenDigits.slice(6)}`,
+        `${tenDigits.slice(0, 3)}-${tenDigits.slice(3, 6)}-${tenDigits.slice(6)}`
     ]);
 
     return Array.from(set).filter(Boolean);
@@ -93,7 +93,6 @@ const findAccountByPhone = async (admin, rawPhone) => {
     const tenDigits = extractTenDigitPhone(rawPhone);
     const variants = getPhoneSearchVariants(rawPhone);
 
-    // 1. Search in users table with all format variants
     let { data: users, error: userError } = await admin
         .from('users')
         .select('id, full_name, username, email, phone, approval_status, status, archived_at')
@@ -117,7 +116,6 @@ const findAccountByPhone = async (admin, rawPhone) => {
         return { user: activeUser, isGip: false };
     }
 
-    // 2. Search in gips table if not found in users
     let { data: gips, error: gipError } = await admin
         .from('gips')
         .select('id, full_name, username, email, phone, status, archived_at')
@@ -359,8 +357,6 @@ export default async function handler(req, res) {
 
         try {
             const admin = createPortalAdmin();
-
-            // Match account with flexible phone formatting (10-digit, 11-digit, +63, etc.)
             const { user, isGip: isGipUser } = await findAccountByPhone(admin, rawPhone);
 
             if (!user || user.archived_at) {
@@ -376,12 +372,10 @@ export default async function handler(req, res) {
                 });
             }
 
-            // Generate 6-digit numeric OTP (Production Live)
             const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-            const expiresAt = Date.now() + (5 * 60 * 1000); // 5 minutes TTL
+            const expiresAt = Date.now() + (5 * 60 * 1000);
             const challenge = createOtpChallenge(normalizedPhone, otpCode, expiresAt);
 
-            // Format & Dispatch SMS
             const smsMessage = formatForgotPasswordSms({
                 fullName: user.full_name,
                 otpCode
@@ -390,7 +384,6 @@ export default async function handler(req, res) {
             await dispatchSms(normalizedPhone, smsMessage);
             recordOtpSent(normalizedPhone);
 
-            // Write audit log
             await writeAuditLog(admin, req, {
                 eventType: 'auth',
                 action: 'forgot_password_otp_sent',
@@ -448,7 +441,6 @@ export default async function handler(req, res) {
                 return sendJson(res, 404, { error: 'Account record not found.' });
             }
 
-            // Issue 10-minute reset token
             const resetExpiresAt = Date.now() + (10 * 60 * 1000);
             const resetToken = createResetToken(user.id, normalizedPhone, isGipUser, resetExpiresAt);
 

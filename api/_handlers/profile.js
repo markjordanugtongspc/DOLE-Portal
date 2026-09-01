@@ -1,8 +1,8 @@
-import { createPortalAdmin } from './_lib/supabase-admin.js';
-import { writeAuditLog } from './_lib/audit.js';
-import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from './_lib/http.js';
-import { hashCredential, verifyCredential } from './_lib/security.js';
-import { requirePortalSession } from './_lib/session.js';
+import { createPortalAdmin } from '../_lib/supabase-admin.js';
+import { writeAuditLog } from '../_lib/audit.js';
+import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from '../_lib/http.js';
+import { hashCredential, verifyCredential } from '../_lib/security.js';
+import { requirePortalSession } from '../_lib/session.js';
 
 const profileFields = ['full_name', 'birthday', 'username', 'email', 'phone', 'avatar_url'];
 const safeUser = (user = {}) => ({

@@ -43,6 +43,7 @@ const recordLoginAudit = async (req, details) => {
         console.error('[PORTAL AUDIT] Login audit failed:', error.message);
     }
 };
+
 /* START PORTAL BACKEND LOGIN API */
 export default async function handler(req, res) {
     if (!allowMethods(req, res, ['POST'])) return;

@@ -103,7 +103,6 @@ const inferTopic = (text = '', requestedTopic = '') => {
 const cleanAgentResponse = (rawText) => {
     if (!rawText) return 'I am here to help you with the DOLE Portal and its programs. How may I assist you?';
 
-    // If text is JSON wrapped
     let text = rawText;
     try {
         const parsed = JSON.parse(rawText);
@@ -113,7 +112,6 @@ const cleanAgentResponse = (rawText) => {
         // Not raw JSON, keep as is
     }
 
-    // Filter out internal thinking / procedure narrative lines if any
     const lines = text.split('\n');
     const filtered = lines.filter((line) => {
         const trimmed = line.trim();
@@ -347,7 +345,6 @@ export default async function handler(req, res) {
 
     try {
         if (isStreamRequested) {
-            // Server-Sent Events (SSE) Streaming from CREAO Realtime API
             const creaoStreamRes = await fetch(`${baseUrl}/v1/realtime/runs`, {
                 method: 'POST',
                 headers: {
@@ -393,7 +390,6 @@ export default async function handler(req, res) {
             return;
         }
 
-        // Non-streaming fallback execution via Realtime stream aggregation
         const creaoRes = await fetch(`${baseUrl}/v1/realtime/runs`, {
             method: 'POST',
             headers: {

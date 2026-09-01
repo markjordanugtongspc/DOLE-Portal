@@ -115,34 +115,8 @@ function localApiMiddleware() {
         const url = new URL(req.url, 'http://localhost:5173');
         if (!url.pathname.startsWith('/api/')) return next();
 
-        let handlerPath = null;
-        if (url.pathname === '/api/chatbot' || url.pathname === '/api/chatbot/chatbot.api') {
-          handlerPath = path.resolve(__dirname, 'api/chatbot/chatbot.api.js');
-        } else if (url.pathname === '/api/auth/login') {
-          handlerPath = path.resolve(__dirname, 'api/auth/login.js');
-        } else if (url.pathname === '/api/auth/me') {
-          handlerPath = path.resolve(__dirname, 'api/auth/me.js');
-        } else if (url.pathname === '/api/auth/logout') {
-          handlerPath = path.resolve(__dirname, 'api/auth/logout.js');
-        } else if (url.pathname === '/api/profile') {
-          handlerPath = path.resolve(__dirname, 'api/profile.js');
-        } else if (url.pathname === '/api/audit-logs') {
-          handlerPath = path.resolve(__dirname, 'api/audit-logs.js');
-        } else if (url.pathname === '/api/external-account-links') {
-          handlerPath = path.resolve(__dirname, 'api/external-account-links.js');
-        } else if (url.pathname === '/api/external-system-directory') {
-          handlerPath = path.resolve(__dirname, 'api/external-system-directory.js');
-        } else if (url.pathname === '/api/sso/authorize') {
-          handlerPath = path.resolve(__dirname, 'api/sso/authorize.js');
-        } else if (url.pathname === '/api/sso/consume') {
-          handlerPath = path.resolve(__dirname, 'api/sso/consume.js');
-        } else if (url.pathname === '/api/auth/forgot-password') {
-          handlerPath = path.resolve(__dirname, 'api/auth/forgot-password.js');
-        } else if (url.pathname === '/api/sms' || url.pathname === '/api/sms/send') {
-          handlerPath = path.resolve(__dirname, 'api/sms/send.js');
-        }
-
-        if (!handlerPath || !fs.existsSync(handlerPath)) return next();
+        const handlerPath = path.resolve(__dirname, 'api/index.js');
+        if (!fs.existsSync(handlerPath)) return next();
 
         try {
           let raw = '';

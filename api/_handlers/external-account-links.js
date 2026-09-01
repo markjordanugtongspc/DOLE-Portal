@@ -1,7 +1,7 @@
-import { createPortalAdmin } from './_lib/supabase-admin.js';
-import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from './_lib/http.js';
-import { requirePortalAdmin } from './_lib/session.js';
-import { validateExternalAccount } from './_lib/external-systems.js';
+import { createPortalAdmin } from '../_lib/supabase-admin.js';
+import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from '../_lib/http.js';
+import { requirePortalAdmin } from '../_lib/session.js';
+import { validateExternalAccount } from '../_lib/external-systems.js';
 
 const SYSTEM_KEYS = new Set(['SPES', 'GIP']);
 

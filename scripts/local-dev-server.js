@@ -2,7 +2,7 @@ import http from 'node:http';
 import { createServer as createViteServer, loadEnv } from 'vite';
 
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const configDir = path.resolve(__dirname, '../src/backend/config');
@@ -18,24 +18,7 @@ for (const [name, value] of Object.entries(localEnvironment)) {
 }
 process.env.PORTAL_APP_ORIGIN = `http://localhost:${port}`;
 
-const apiHandlers = {
-    '/api/auth/login': () => import(`../api/auth/login.js?update=${Date.now()}`),
-    '/api/auth/me': () => import(`../api/auth/me.js?update=${Date.now()}`),
-    '/api/auth/logout': () => import(`../api/auth/logout.js?update=${Date.now()}`),
-    '/api/auth/forgot-password': () => import(`../api/auth/forgot-password.js?update=${Date.now()}`),
-    '/api/sms': () => import(`../api/sms/send.js?update=${Date.now()}`),
-    '/api/sms/send': () => import(`../api/sms/send.js?update=${Date.now()}`),
-    '/api/profile': () => import(`../api/profile.js?update=${Date.now()}`),
-    '/api/audit-logs': () => import(`../api/audit-logs.js?update=${Date.now()}`),
-    '/api/external-account-links': () => import(`../api/external-account-links.js?update=${Date.now()}`),
-    '/api/external-system-directory': () => import(`../api/external-system-directory.js?update=${Date.now()}`),
-    '/api/sso/authorize': () => import(`../api/sso/authorize.js?update=${Date.now()}`),
-    '/api/sso/consume': () => import(`../api/sso/consume.js?update=${Date.now()}`),
-    '/api/chatbot': () => import(`../api/chatbot/chatbot.api.js?update=${Date.now()}`),
-    '/api/chatbot/chatbot.api': () => import(`../api/chatbot/chatbot.api.js?update=${Date.now()}`)
-};
-
-/* START LOCAL PORTAL API SERVER - Executes Vercel route handlers before Vite in development */
+/* START LOCAL PORTAL API SERVER - Executes centralized Vercel entry-point in development */
 const readJsonBody = async (req) => {
     let raw = '';
     for await (const chunk of req) raw += chunk;
@@ -61,17 +44,19 @@ const vite = await createViteServer({
 
 const server = http.createServer(async (req, res) => {
     const pathname = new URL(req.url || '/', `http://localhost:${port}`).pathname;
-    const loadHandler = apiHandlers[pathname];
 
-    if (!loadHandler) return vite.middlewares(req, res);
+    if (!pathname.startsWith('/api/') && pathname !== '/api') {
+        return vite.middlewares(req, res);
+    }
 
     try {
         req.body = await readJsonBody(req);
-        const { default: handler } = await loadHandler();
+        const apiIndexPath = path.resolve(__dirname, '../api/index.js');
+        const { default: handler } = await import(`${pathToFileURL(apiIndexPath).href}?update=${Date.now()}`);
         await handler(req, decorateResponse(res));
     } catch (error) {
-        console.error('[LOCAL PORTAL API] Failed:', error.message);
-        if (!res.headersSent) decorateResponse(res).status(500).json({ error: 'Local Portal API failed to start.' });
+        console.error('[LOCAL PORTAL API] Failed:', error);
+        if (!res.headersSent) decorateResponse(res).status(500).json({ error: error.message || 'Local Portal API failed to start.' });
     }
 });
 

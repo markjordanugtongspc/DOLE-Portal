@@ -1,7 +1,23 @@
 /* START SERVER HTTP HELPERS */
 export const sendJson = (res, status, payload = {}) => {
-    res.setHeader('Cache-Control', 'no-store');
-    return res.status(status).json(payload);
+    try {
+        if (!res.headersSent) res.setHeader('Cache-Control', 'no-store');
+    } catch {}
+    if (typeof res.status === 'function' && typeof res.json === 'function') {
+        return res.status(status).json(payload);
+    }
+    if (typeof res.status === 'function') {
+        res.status(status);
+    } else {
+        res.statusCode = status;
+    }
+    if (typeof res.json === 'function') {
+        return res.json(payload);
+    }
+    if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+    return res.end(JSON.stringify(payload));
 };
 
 export const allowMethods = (req, res, methods) => {

@@ -1,7 +1,7 @@
-import { createPortalAdmin } from './_lib/supabase-admin.js';
-import { writeAuditLog } from './_lib/audit.js';
-import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from './_lib/http.js';
-import { requirePortalSession } from './_lib/session.js';
+import { createPortalAdmin } from '../_lib/supabase-admin.js';
+import { writeAuditLog } from '../_lib/audit.js';
+import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from '../_lib/http.js';
+import { requirePortalSession } from '../_lib/session.js';
 
 const allowedEventTypes = new Set(['account', 'system', 'ticket', 'session', 'auth']);
 const allowedRoles = new Set([1, 2]);
