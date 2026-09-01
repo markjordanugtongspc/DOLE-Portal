@@ -1,4 +1,4 @@
-import { Modal } from 'flowbite';
+import { Modal, initTooltips } from 'flowbite';
 import {
     getCurrentUser,
     isHashedCredential,
@@ -7,7 +7,10 @@ import {
     loginWithUsername,
     logout,
     registerPendingUser,
-    saveSession
+    requestForgotPasswordOtp,
+    resetPasswordWithToken,
+    saveSession,
+    verifyForgotPasswordOtp
 } from '@/backend/api/auth.api.js';
 import { createGip } from '@/backend/api/gips.api.js';
 import { fetchOffices, fetchRoles } from '@/backend/api/users.api.js';
@@ -50,17 +53,32 @@ const getRoleGroup = (roleId) => {
 
 /* START GET DASHBOARD ROUTE - Resolves target dashboard route based on user role */
 const getDashboardRoute = (user) => {
-    const roleGroup = getRoleGroup(user?.role_id);
+    if (!user || !user.id || !user.role_id) return '/';
+    const roleGroup = getRoleGroup(user.role_id);
     return ROLE_ROUTES[roleGroup] || ROLE_ROUTES.staff;
 };
 /* END GET DASHBOARD ROUTE */
+
+let switchModeFn = null;
+const switchMode = (prefix, mode, syncUrl = true) => {
+    if (typeof switchModeFn === 'function') {
+        return switchModeFn(prefix, mode, syncUrl);
+    }
+};
+
+const restoreFormHeader = (prefix) => {
+    const headingEl = document.querySelector(`#${prefix}-auth-content h2`) || document.querySelector(`#desktop-auth-content h2`) || document.querySelector(`#mobile-auth-content h2`);
+    const descEl = document.querySelector(`#desktop-auth-content p`) || document.querySelector(`#mobile-auth-content p`);
+    if (headingEl) headingEl.textContent = 'Welcome Back';
+    if (descEl) descEl.textContent = 'Sign in to access your DOLE Portal dashboard.';
+};
 
 const isProtectedPage = () => /\/src\/pages\/(user\/(admin|staff)|tools)\//.test(window.location.pathname);
 const getRequiredRole = () => {
     if (/\/src\/pages\/tools\//.test(window.location.pathname)) return 'tools';
     return window.location.pathname.match(/\/src\/pages\/user\/(admin|staff)\//)?.[1] || null;
 };
-const getFormByPrefix = (prefix) => document.getElementById(`${prefix}-username`)?.closest('form') || null;
+const getFormByPrefix = (prefix) => document.getElementById(`${prefix}-username-wrapper`)?.closest('form') || document.querySelector(`form:has(#${prefix}-username-wrapper)`) || null;
 const getCurrentMode = (prefix) => getFormByPrefix(prefix)?.dataset.authMode || 'username';
 /* START GET CREDENTIAL INPUT - Returns the active password or PIN input for a login form */
 const getCredentialInput = (prefix, mode = getCurrentMode(prefix)) => document.getElementById(`${prefix}-${mode === 'phone' ? 'pin' : 'password'}`);
@@ -199,7 +217,7 @@ const setupRouteGuard = async () => {
 
         if (params.get('auth') !== 'logout') {
             const user = await getCurrentUser({ force: true });
-            if (user) {
+            if (user && user.id && user.role_id) {
                 const redirectRoute = getDashboardRoute(user);
                 window.location.replace(redirectRoute);
             }
@@ -208,7 +226,7 @@ const setupRouteGuard = async () => {
     }
 
     const user = await getCurrentUser({ force: true });
-    if (!user) {
+    if (!user || !user.id || !user.role_id) {
         window.__AUTH_ROUTE_BLOCKED = true;
         document.documentElement.classList.add('overflow-hidden');
         document.body?.classList.add('hidden');
@@ -243,26 +261,20 @@ const setupRouteGuard = async () => {
 
 /* START SET LOADING - Updates login submit buttons while credentials are checked */
 const setLoading = (form, isLoading, loadingText = 'SIGNING IN...', defaultText = 'SIGN IN') => {
-    const submitBtn = form.querySelector('button[type="submit"]');
+    const submitBtn = form?.querySelector('button[type="submit"]');
     if (!submitBtn) return;
-    submitBtn.disabled = isLoading;
-    submitBtn.classList.toggle('opacity-60', isLoading);
-    submitBtn.classList.toggle('cursor-not-allowed', isLoading);
+    submitBtn.disabled = Boolean(isLoading);
+    submitBtn.classList.toggle('opacity-60', Boolean(isLoading));
+    submitBtn.classList.toggle('cursor-not-allowed', Boolean(isLoading));
     submitBtn.classList.toggle('cursor-pointer', !isLoading);
-    submitBtn.classList.toggle('pointer-events-none', isLoading);
+    submitBtn.classList.toggle('pointer-events-none', Boolean(isLoading));
     if (isLoading) {
         submitBtn.textContent = loadingText;
     } else {
-        if (phoneOtpResendSecondsLeft > 0 && (defaultText === 'SEND OTP' || form?.dataset.authMode === 'phone' || (form?.dataset.authMode === 'forgot' && defaultText === 'SEND OTP'))) {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('cursor-not-allowed', 'opacity-60');
-            submitBtn.classList.remove('cursor-pointer');
-            submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(phoneOtpResendSecondsLeft)}</span>)`;
-        } else {
-            submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
-            submitBtn.classList.add('cursor-pointer');
-            submitBtn.textContent = defaultText;
-        }
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('cursor-not-allowed', 'opacity-60', 'pointer-events-none');
+        submitBtn.classList.add('cursor-pointer');
+        submitBtn.textContent = defaultText;
     }
 };
 /* END SET LOADING */
@@ -344,26 +356,36 @@ const setupInputErrorReset = (prefix) => {
 };
 /* END FIELD ERROR HELPERS */
 
-/* START SETUP PASSWORD TOGGLE - Binds password visibility icons for desktop and mobile */
+/* START SETUP PASSWORD TOGGLE - Global event delegation for password visibility */
 const setupPasswordToggle = () => {
     const openEyeSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0Z" /></svg>`;
     const slashedEyeSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>`;
 
-    const bindToggle = (inputId, toggleId) => {
-        const inputEl = document.getElementById(inputId);
-        const toggleBtn = document.getElementById(toggleId);
-        if (!inputEl || !toggleBtn || toggleBtn.dataset.authToggleBound) return;
+    if (!window.__AUTH_TOGGLE_GLOBAL_BOUND) {
+        window.__AUTH_TOGGLE_GLOBAL_BOUND = true;
+        document.addEventListener('click', (event) => {
+            const toggleBtn = event.target.closest('[id$="-password-toggle"], [id$="-pass-toggle"]');
+            if (!toggleBtn) return;
+            event.preventDefault();
+            event.stopPropagation();
 
-        toggleBtn.dataset.authToggleBound = 'true';
-        toggleBtn.addEventListener('click', () => {
-            const isHidden = inputEl.type === 'password';
-            inputEl.type = isHidden ? 'text' : 'password';
-            toggleBtn.innerHTML = isHidden ? openEyeSvg : slashedEyeSvg;
+            const id = toggleBtn.id;
+            let inputId = null;
+            if (id === 'desktop-password-toggle') inputId = 'desktop-password';
+            else if (id === 'mobile-password-toggle') inputId = 'mobile-password';
+            else if (id.includes('confirm-password-toggle')) inputId = id.replace('-confirm-password-toggle', '-confirm-new-password');
+            else if (id.includes('new-password-toggle')) inputId = id.replace('-new-password-toggle', '-new-password');
+
+            if (inputId) {
+                const inputEl = document.getElementById(inputId);
+                if (inputEl) {
+                    const isHidden = inputEl.type === 'password';
+                    inputEl.type = isHidden ? 'text' : 'password';
+                    toggleBtn.innerHTML = isHidden ? openEyeSvg : slashedEyeSvg;
+                }
+            }
         });
-    };
-
-    bindToggle('desktop-password', 'desktop-password-toggle');
-    bindToggle('mobile-password', 'mobile-password-toggle');
+    }
 };
 /* END SETUP PASSWORD TOGGLE */
 
@@ -371,10 +393,7 @@ const setupPasswordToggle = () => {
 let phoneOtpResendTimer = null;
 let phoneOtpResendSecondsLeft = 0;
 
-let forgotOtpTimer = null;
-let forgotOtpSecondsLeft = 0;
-
-const OTP_COOLDOWN_DURATION = 256; // Configurable cooldown seconds (or temporary 5s)
+const OTP_COOLDOWN_DURATION = 60; // 60s cooldown standard
 
 const formatCooldownTimer = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -398,7 +417,6 @@ const syncAllButtonsAndCooldown = () => {
         const submitBtn = form?.querySelector('button[type="submit"]');
         const mode = form?.dataset.authMode;
         const isPhoneCoolingDown = phoneOtpResendSecondsLeft > 0;
-        const isForgotCoolingDown = forgotOtpSecondsLeft > 0;
 
         if (mode === 'phone') {
             const rememberWrapper = document.getElementById(`${prefix}-remember-wrapper`);
@@ -424,22 +442,6 @@ const syncAllButtonsAndCooldown = () => {
                     submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
                     submitBtn.classList.add('cursor-pointer');
                     submitBtn.textContent = 'SUBMIT';
-                } else {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
-                    submitBtn.classList.add('cursor-pointer');
-                    submitBtn.textContent = 'SEND OTP';
-                }
-            }
-        } else if (mode === 'forgot') {
-            const identityValue = document.getElementById(`${prefix}-username`)?.value.trim() || '';
-            const isPhone = /^[0-9+]/.test(identityValue) || identityValue.startsWith('+63');
-            if (submitBtn && isPhone) {
-                if (isForgotCoolingDown) {
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('cursor-not-allowed', 'opacity-60');
-                    submitBtn.classList.remove('cursor-pointer');
-                    submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(forgotOtpSecondsLeft)}</span>)`;
                 } else {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
@@ -485,44 +487,361 @@ const startPhoneOtpCooldown = (duration = OTP_COOLDOWN_DURATION) => {
 };
 /* END startPhoneOtpCooldown FUNCTIONALITY */
 
-/* START startForgotOtpCooldown FUNCTIONALITY - Manages isolated cooldown and auto-resend loop for Forgot Password */
-const startForgotOtpCooldown = (duration = OTP_COOLDOWN_DURATION) => {
-    if (forgotOtpTimer) clearInterval(forgotOtpTimer);
-    forgotOtpSecondsLeft = duration;
-    syncAllButtonsAndCooldown();
+/* START FORGOT PASSWORD PRODUCTION LOGIC & STEP RENDERERS */
+const FORGOT_STORAGE_KEY = 'dole_portal_forgot_session';
 
-    forgotOtpTimer = setInterval(() => {
-        forgotOtpSecondsLeft -= 1;
-        if (forgotOtpSecondsLeft <= 0) {
-            clearInterval(forgotOtpTimer);
-            forgotOtpTimer = null;
-            forgotOtpSecondsLeft = 0;
-            syncAllButtonsAndCooldown();
-
-            // Auto-trigger submit 5 seconds after cooldown completes to loop cycle
-            setTimeout(() => {
-                ['desktop', 'mobile'].forEach((prefix) => {
-                    const form = getFormByPrefix(prefix);
-                    if (form?.dataset.authMode === 'forgot') {
-                        const forgotInput = document.getElementById(`${prefix}-username`);
-                        const identityVal = forgotInput?.value.trim() || '';
-                        const isPhone = /^[0-9+]/.test(identityVal) || identityVal.startsWith('+63');
-                        if (isPhone) {
-                            const clean = identityVal.replace(/\D/g, '').replace(/^63/, '');
-                            if (clean.length === 10) {
-                                const submitBtn = form?.querySelector('button[type="submit"]');
-                                submitBtn?.click();
-                            }
-                        }
-                    }
-                });
-            }, 5000);
-            return;
+const loadForgotSession = (prefix) => {
+    try {
+        const raw = localStorage.getItem(`${FORGOT_STORAGE_KEY}_${prefix}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.cooldownUntil && parsed.cooldownUntil > Date.now()) {
+            return {
+                step: parsed.step || 'otp',
+                phone: parsed.phone || '',
+                maskedPhone: parsed.maskedPhone || '',
+                challenge: parsed.challenge || '',
+                resetToken: parsed.resetToken || '',
+                cooldownUntil: parsed.cooldownUntil,
+                cooldown: Math.ceil((parsed.cooldownUntil - Date.now()) / 1000)
+            };
         }
-        syncAllButtonsAndCooldown();
+    } catch {}
+    return null;
+};
+
+const saveForgotSession = (prefix, session) => {
+    try {
+        if (!session || !session.phone) {
+            localStorage.removeItem(`${FORGOT_STORAGE_KEY}_${prefix}`);
+        } else {
+            localStorage.setItem(`${FORGOT_STORAGE_KEY}_${prefix}`, JSON.stringify({
+                step: session.step,
+                phone: session.phone,
+                maskedPhone: session.maskedPhone,
+                challenge: session.challenge,
+                resetToken: session.resetToken,
+                cooldownUntil: session.cooldownUntil || (Date.now() + (session.cooldown * 1000))
+            }));
+        }
+    } catch {}
+};
+
+const clearForgotSessionStorage = (prefix) => {
+    try { localStorage.removeItem(`${FORGOT_STORAGE_KEY}_${prefix}`); } catch {}
+};
+
+const forgotSessions = {
+    desktop: { step: 'phone', phone: '', maskedPhone: '', challenge: '', resetToken: '', cooldown: 0, timer: null },
+    mobile: { step: 'phone', phone: '', maskedPhone: '', challenge: '', resetToken: '', cooldown: 0, timer: null }
+};
+
+const resetForgotSession = (prefix) => {
+    const session = forgotSessions[prefix];
+    if (session?.timer) clearInterval(session.timer);
+    forgotSessions[prefix] = { step: 'phone', phone: '', maskedPhone: '', challenge: '', resetToken: '', cooldown: 0, timer: null };
+    clearForgotSessionStorage(prefix);
+};
+
+const startForgotTimer = (prefix, seconds = 60) => {
+    const session = forgotSessions[prefix];
+    if (session.timer) clearInterval(session.timer);
+    session.cooldown = seconds;
+    session.cooldownUntil = Date.now() + (seconds * 1000);
+    saveForgotSession(prefix, session);
+    syncForgotResendUI(prefix);
+
+    session.timer = setInterval(() => {
+        session.cooldown = Math.max(0, Math.ceil((session.cooldownUntil - Date.now()) / 1000));
+        syncForgotResendUI(prefix);
+        if (session.cooldown <= 0) {
+            clearInterval(session.timer);
+            session.timer = null;
+            session.cooldown = 0;
+            saveForgotSession(prefix, session);
+        }
     }, 1000);
 };
-/* END startForgotOtpCooldown FUNCTIONALITY */
+
+const syncForgotResendUI = (prefix) => {
+    const session = forgotSessions[prefix];
+    const container = document.getElementById(`${prefix}-forgot-resend-container`);
+    if (!container) return;
+
+    if (session.cooldown > 0) {
+        container.innerHTML = `
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 select-none">
+                Resend in <strong class="font-mono text-blue-700 dark:text-blue-400">${formatCooldownTimer(session.cooldown)}</strong>
+            </span>
+        `;
+    } else {
+        container.innerHTML = `
+            <button type="button" id="${prefix}-forgot-resend-btn" class="text-xs font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline cursor-pointer focus:outline-none transition-colors">
+                Resend OTP
+            </button>
+        `;
+        document.getElementById(`${prefix}-forgot-resend-btn`)?.addEventListener('click', () => {
+            handleForgotResend(prefix);
+        });
+    }
+};
+
+const handleForgotResend = async (prefix) => {
+    const session = forgotSessions[prefix];
+    if (session.cooldown > 0 || !session.phone) return;
+
+    const identityWrapper = document.getElementById(`${prefix}-username-wrapper`);
+    const form = getFormByPrefix(prefix);
+    setLoading(form, true, 'RESENDING OTP...', 'SUBMIT OTP');
+
+    try {
+        const result = await requestForgotPasswordOtp(session.phone);
+        if (result.error) {
+            setFieldError(identityWrapper, result.error);
+            return;
+        }
+
+        session.challenge = result.challenge;
+        session.maskedPhone = result.maskedPhone || session.maskedPhone;
+        startForgotTimer(prefix, result.cooldownSeconds || 60);
+        setFieldNotice(identityWrapper, `New OTP verification code sent to <strong>${session.maskedPhone}</strong>.`);
+    } catch (err) {
+        setFieldError(identityWrapper, err.message || 'API Offline Cannot Send, Contact Developer');
+    } finally {
+        setLoading(form, false, 'RESENDING OTP...', 'SUBMIT OTP');
+    }
+};
+
+const renderForgotPhoneStep = (prefix) => {
+    setFormMode(prefix, 'forgot');
+
+    // Anti-spam & page reload persistence: restore existing active OTP step
+    const persisted = loadForgotSession(prefix);
+    if (persisted && persisted.step === 'otp' && persisted.cooldown > 0) {
+        forgotSessions[prefix] = { ...persisted, timer: null };
+        renderForgotOtpStep(prefix);
+        startForgotTimer(prefix, persisted.cooldown);
+        return;
+    }
+
+    const isMobile = prefix === 'mobile';
+    const roundedClass = isMobile ? 'rounded-xl' : 'rounded-lg';
+    const roundedLeftClass = isMobile ? 'rounded-l-xl' : 'rounded-l-lg';
+    const roundedRightClass = isMobile ? 'rounded-r-xl' : 'rounded-r-lg';
+
+    const headingEl = document.querySelector(`#${prefix}-auth-content h2`) || document.querySelector(`#desktop-auth-content h2`) || document.querySelector(`#mobile-auth-content h2`);
+    const descEl = document.querySelector(`#desktop-auth-content p`) || document.querySelector(`#mobile-auth-content p`);
+    if (headingEl) headingEl.textContent = 'Forgot Password';
+    if (descEl) descEl.textContent = 'Enter your registered Philippine mobile number to receive an OTP verification code via SMS.';
+
+    const usernameWrapper = document.getElementById(`${prefix}-username-wrapper`);
+    const passwordWrapper = document.getElementById(`${prefix}-password-wrapper`);
+    const form = getFormByPrefix(prefix);
+    const submitBtn = form?.querySelector('button[type="submit"]');
+
+    if (usernameWrapper) {
+        usernameWrapper.innerHTML = `
+            <label for="${prefix}-username" class="block mb-1.5 text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Mobile Number</label>
+            <div class="flex items-center">
+                <span class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-3 py-2.5 text-sm font-bold ${roundedLeftClass} border-r-0 select-none">+63</span>
+                <input type="tel" id="${prefix}-username" name="forgot_phone" class="bg-gray-50 border border-gray-300 text-gray-900 ${roundedRightClass} rounded-l-none focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors" placeholder="9123456789" required autofocus>
+            </div>
+        `;
+
+        const phoneInput = document.getElementById(`${prefix}-username`);
+        if (phoneInput) {
+            phoneInput.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey || e.altKey || e.key.length > 1) return;
+                const digits = e.target.value.replace(/\D/g, '');
+                if (digits.length === 0 && e.key !== '9') e.preventDefault();
+            });
+            phoneInput.addEventListener('input', (e) => {
+                let raw = e.target.value.replace(/\D/g, '');
+                if (raw.length > 0 && raw[0] !== '9') {
+                    const idx = raw.indexOf('9');
+                    raw = idx !== -1 ? raw.slice(idx) : '';
+                }
+                e.target.value = raw.slice(0, 10);
+            });
+        }
+    }
+
+    if (passwordWrapper) {
+        passwordWrapper.innerHTML = '';
+        passwordWrapper.classList.add('hidden');
+    }
+
+    if (form) form.dataset.authMode = 'forgot';
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
+        submitBtn.classList.add('cursor-pointer');
+        submitBtn.textContent = 'SEND OTP';
+        submitBtn.dataset.btnId = '3';
+    }
+
+    const rememberWrapper = document.getElementById(`${prefix}-remember-wrapper`);
+    if (rememberWrapper) {
+        rememberWrapper.innerHTML = `
+            <div class="flex items-center justify-center w-full pt-1.5 text-xs text-gray-600 dark:text-gray-400">
+                <span>Remember your password?</span>
+                <button type="button" id="${prefix}-back-to-login-btn" class="group relative ml-1.5 font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer focus:outline-none transition-colors">
+                    <span>Log in</span>
+                    <span class="absolute bottom-0 left-0 h-[1.5px] w-0 bg-blue-700 dark:bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
+                </button>
+            </div>
+        `;
+        document.getElementById(`${prefix}-back-to-login-btn`)?.addEventListener('click', () => {
+            resetForgotSession(prefix);
+            restoreFormHeader(prefix);
+            switchMode(prefix, 'username');
+        });
+    }
+};
+
+const renderForgotOtpStep = (prefix) => {
+    setFormMode(prefix, 'forgot');
+    const isMobile = prefix === 'mobile';
+    const roundedClass = isMobile ? 'rounded-xl' : 'rounded-lg';
+    const roundedLeftClass = isMobile ? 'rounded-l-xl' : 'rounded-l-lg';
+    const roundedRightClass = isMobile ? 'rounded-r-xl' : 'rounded-r-lg';
+    const session = forgotSessions[prefix];
+
+    const headingEl = document.querySelector(`#${prefix}-auth-content h2`) || document.querySelector(`#desktop-auth-content h2`) || document.querySelector(`#mobile-auth-content h2`);
+    const descEl = document.querySelector(`#desktop-auth-content p`) || document.querySelector(`#mobile-auth-content p`);
+    if (headingEl) headingEl.textContent = 'Verify Mobile Code';
+    if (descEl) descEl.innerHTML = `We sent a 6-digit verification code via SMS to <strong class="font-mono text-blue-700 dark:text-blue-400">${session.maskedPhone || session.phone}</strong>.`;
+
+    const usernameWrapper = document.getElementById(`${prefix}-username-wrapper`);
+    const passwordWrapper = document.getElementById(`${prefix}-password-wrapper`);
+    const form = getFormByPrefix(prefix);
+    const submitBtn = form?.querySelector('button[type="submit"]');
+
+    if (usernameWrapper) {
+        usernameWrapper.innerHTML = `
+            <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Mobile Number</label>
+                <button type="button" id="${prefix}-forgot-change-phone-btn" class="text-xs font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline cursor-pointer">Change Number</button>
+            </div>
+            <div class="flex items-center opacity-85">
+                <span class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-3 py-2 text-sm font-bold ${roundedLeftClass} border-r-0 select-none">+63</span>
+                <input type="text" value="${session.phone.replace(/^\+63/, '')}" disabled class="bg-gray-100 dark:bg-gray-800/60 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 ${roundedRightClass} rounded-l-none block w-full p-2 text-sm cursor-not-allowed select-none font-mono">
+                <input type="hidden" id="${prefix}-username" value="${session.phone}">
+            </div>
+        `;
+
+        document.getElementById(`${prefix}-forgot-change-phone-btn`)?.addEventListener('click', () => {
+            resetForgotSession(prefix);
+            renderForgotPhoneStep(prefix);
+        });
+    }
+
+    if (passwordWrapper) {
+        passwordWrapper.classList.remove('hidden');
+        passwordWrapper.innerHTML = `
+            <div class="flex items-center justify-between mb-1.5 pt-2">
+                <label for="${prefix}-forgot-otp" class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">6-Digit OTP Code</label>
+                <div id="${prefix}-forgot-resend-container" class="flex items-center text-xs"></div>
+            </div>
+            <input type="text" id="${prefix}-forgot-otp" name="forgot_otp" maxlength="6" inputmode="numeric" autocomplete="one-time-code" class="bg-gray-50 border border-gray-300 text-gray-900 ${roundedClass} focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-base text-center tracking-[0.5em] font-mono font-bold transition-colors" placeholder="••••••" required autofocus>
+        `;
+
+        const otpInput = document.getElementById(`${prefix}-forgot-otp`);
+        if (otpInput) {
+            otpInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+            });
+            otpInput.focus();
+        }
+
+        syncForgotResendUI(prefix);
+    }
+
+    if (form) form.dataset.authMode = 'forgot';
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
+        submitBtn.classList.add('cursor-pointer');
+        submitBtn.textContent = 'SUBMIT OTP';
+        submitBtn.dataset.btnId = '3';
+    }
+};
+
+const renderForgotResetStep = (prefix) => {
+    setFormMode(prefix, 'forgot');
+    const isMobile = prefix === 'mobile';
+    const roundedClass = isMobile ? 'rounded-xl' : 'rounded-lg';
+    const session = forgotSessions[prefix];
+
+    const headingEl = document.querySelector(`#${prefix}-auth-content h2`) || document.querySelector(`#desktop-auth-content h2`) || document.querySelector(`#mobile-auth-content h2`);
+    const descEl = document.querySelector(`#desktop-auth-content p`) || document.querySelector(`#mobile-auth-content p`);
+    if (headingEl) headingEl.textContent = 'Set New Password';
+    if (descEl) descEl.textContent = 'Create a strong new password for your DOLE Portal account (minimum 8 characters).';
+
+    const usernameWrapper = document.getElementById(`${prefix}-username-wrapper`);
+    const passwordWrapper = document.getElementById(`${prefix}-password-wrapper`);
+    const form = getFormByPrefix(prefix);
+    const submitBtn = form?.querySelector('button[type="submit"]');
+
+    const openEyeSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0Z" /></svg>`;
+    const slashedEyeSvg = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>`;
+
+    if (usernameWrapper) {
+        usernameWrapper.innerHTML = `
+            <input type="hidden" id="${prefix}-username" value="${session.phone}">
+            <div class="flex justify-between items-center mb-1.5">
+                <label for="${prefix}-new-password" class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">New Password</label>
+            </div>
+            <div class="relative flex items-center">
+                <input type="password" id="${prefix}-new-password" name="new_password" class="bg-gray-50 border border-gray-300 text-gray-900 ${roundedClass} focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors" placeholder="Minimum 8 characters" required minlength="8">
+                <button type="button" id="${prefix}-new-password-toggle" class="absolute right-2.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer p-1">
+                    ${openEyeSvg}
+                </button>
+            </div>
+        `;
+
+        const newPassInput = document.getElementById(`${prefix}-new-password`);
+        const newPassToggle = document.getElementById(`${prefix}-new-password-toggle`);
+        newPassToggle?.addEventListener('click', () => {
+            const isHidden = newPassInput.type === 'password';
+            newPassInput.type = isHidden ? 'text' : 'password';
+            newPassToggle.innerHTML = isHidden ? openEyeSvg : slashedEyeSvg;
+        });
+    }
+
+    if (passwordWrapper) {
+        passwordWrapper.classList.remove('hidden');
+        passwordWrapper.innerHTML = `
+            <div class="flex justify-between items-center mb-1.5">
+                <label for="${prefix}-confirm-new-password" class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Confirm New Password</label>
+            </div>
+            <div class="relative flex items-center">
+                <input type="password" id="${prefix}-confirm-new-password" name="confirm_new_password" class="bg-gray-50 border border-gray-300 text-gray-900 ${roundedClass} focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors" placeholder="Re-enter new password" required minlength="8">
+                <button type="button" id="${prefix}-confirm-password-toggle" class="absolute right-2.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 cursor-pointer p-1">
+                    ${openEyeSvg}
+                </button>
+            </div>
+        `;
+
+        const confirmPassInput = document.getElementById(`${prefix}-confirm-new-password`);
+        const confirmPassToggle = document.getElementById(`${prefix}-confirm-password-toggle`);
+        confirmPassToggle?.addEventListener('click', () => {
+            const isHidden = confirmPassInput.type === 'password';
+            confirmPassInput.type = isHidden ? 'text' : 'password';
+            confirmPassToggle.innerHTML = isHidden ? openEyeSvg : slashedEyeSvg;
+        });
+    }
+
+    if (form) form.dataset.authMode = 'forgot';
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('cursor-not-allowed', 'opacity-60');
+        submitBtn.classList.add('cursor-pointer');
+        submitBtn.textContent = 'RESET PASSWORD';
+        submitBtn.dataset.btnId = '3';
+    }
+};
+/* END FORGOT PASSWORD PRODUCTION LOGIC & STEP RENDERERS */
 
 const triggerResendOtp = async (prefix) => {
     if (phoneOtpResendSecondsLeft > 0) return;
@@ -715,97 +1034,8 @@ const setupAuthMethodSwitcher = () => {
                 event.target.value = event.target.value.replace(/\D/g, '').slice(0, 6);
             });
         } else if (mode === 'forgot') {
-            const headingEl = document.querySelector(`#${prefix}-auth-content h2`) || document.querySelector(`#desktop-auth-content h2`) || document.querySelector(`#mobile-auth-content h2`);
-            const descEl = document.querySelector(`#desktop-auth-content p`) || document.querySelector(`#mobile-auth-content p`);
-
-            // Set Forgot Password title & description
-            if (headingEl) headingEl.textContent = 'Forgot Password';
-            if (descEl) descEl.textContent = 'Enter your registered email or phone number and we will send you verification instructions to reset your account password.';
-
-            usernameWrapper.innerHTML = `
-                <div class="flex justify-between items-center mb-1.5">
-                    <label id="${prefix}-forgot-label" for="${prefix}-username" class="block text-xs font-bold text-blue-700 dark:text-blue-500 uppercase tracking-wide">Email or Phone</label>
-                </div>
-                <div id="${prefix}-forgot-input-container" class="relative flex items-center">
-                    <input type="text" id="${prefix}-username" name="forgot_identity" class="bg-gray-50 border border-gray-300 text-gray-900 ${roundedClass} focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white text-sm transition-colors" placeholder="Enter your email or phone number" required>
-                </div>`;
-
-            passwordWrapper.innerHTML = '';
-            passwordWrapper.classList.add('hidden');
-
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'SEND RESET LINK';
-                submitBtn.dataset.btnId = '3';
-            }
-
-            // Replace Remember Me section with "Remember your password? Log in"
-            const rememberWrapper = document.getElementById(`${prefix}-remember-wrapper`);
-            if (rememberWrapper) {
-                rememberWrapper.innerHTML = `
-                    <div class="flex items-center justify-center w-full pt-1.5 text-xs text-gray-600 dark:text-gray-400">
-                        <span>Remember your password?</span>
-                        <button type="button" id="${prefix}-back-to-login-btn" class="group relative ml-1.5 font-bold text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer focus:outline-none transition-colors">
-                            <span>Log in</span>
-                            <span class="absolute bottom-0 left-0 h-[1.5px] w-0 bg-blue-700 dark:bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
-                        </button>
-                    </div>
-                `;
-                document.getElementById(`${prefix}-back-to-login-btn`)?.addEventListener('click', () => {
-                    restoreFormHeader(prefix);
-                    switchMode(prefix, 'username');
-                });
-            }
-
-            // Dynamic detection of Phone vs Email on typing
-            const forgotInput = document.getElementById(`${prefix}-username`);
-            const forgotLabel = document.getElementById(`${prefix}-forgot-label`);
-
-            forgotInput?.addEventListener('input', (event) => {
-                let val = event.target.value;
-                const trimmed = val.trim();
-
-                // Check if user is typing a phone number (starts with digits, 0, 9, or +)
-                const isPhone = /^[0-9+]/.test(trimmed);
-
-                if (isPhone && trimmed.length > 0) {
-                    if (forgotLabel) forgotLabel.textContent = 'Phone';
-
-                    // Direct cooldown handling on submit button
-                    if (forgotOtpSecondsLeft > 0) {
-                        if (submitBtn) {
-                            submitBtn.disabled = true;
-                            submitBtn.innerHTML = `SEND OTP (<span class="font-mono">${formatCooldownTimer(forgotOtpSecondsLeft)}</span>)`;
-                        }
-                    } else if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'SEND OTP';
-                    }
-
-                    // Clean phone value and ensure static +63 formatting
-                    let digits = trimmed.replace(/\D/g, '');
-                    if (digits.startsWith('63')) digits = digits.slice(2);
-                    if (digits.length > 0 && digits[0] !== '9') {
-                        digits = '';
-                    }
-                    digits = digits.slice(0, 10);
-
-                    // Update input with formatted number
-                    event.target.value = digits.length > 0 ? `+63 ${digits}` : '';
-                } else if (trimmed.length > 0) {
-                    if (forgotLabel) forgotLabel.textContent = 'Email';
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'SEND RESET LINK';
-                    }
-                } else {
-                    if (forgotLabel) forgotLabel.textContent = 'Email or Phone';
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'SEND RESET LINK';
-                    }
-                }
-            });
+            resetForgotSession(prefix);
+            renderForgotPhoneStep(prefix);
         } else if (mode === 'email') {
             restoreFormHeader(prefix);
             usernameWrapper.innerHTML = `
@@ -864,20 +1094,65 @@ const setupAuthMethodSwitcher = () => {
         }
     });
 
+    switchModeFn = switchMode;
+
     // Check URL parameters for active auth method e.g. ?method=phone, ?method=email, ?method=forgot
     const initialUrlMethod = new URLSearchParams(window.location.search).get('method');
-    const validInitialMode = ['phone', 'email', 'username', 'forgot'].includes(initialUrlMethod) ? initialUrlMethod : 'username';
+    const validInitialMode = ['forgot'].includes(initialUrlMethod) ? initialUrlMethod : 'username';
 
     ['desktop', 'mobile'].forEach((prefix) => {
         setFormMode(prefix, 'username');
-        if (validInitialMode !== 'username') {
-            switchMode(prefix, validInitialMode, false);
+        if (validInitialMode === 'forgot') {
+            switchMode(prefix, 'forgot', false);
         }
-        document.getElementById(`${prefix}-email-btn`)?.addEventListener('click', () => switchMode(prefix, 'email'));
-        document.getElementById(`${prefix}-phone-btn`)?.addEventListener('click', () => switchMode(prefix, 'phone'));
     });
+
+    try {
+        initTooltips();
+    } catch {}
+
+    setupForgotPasswordTourHighlight();
 };
 /* END SETUP AUTH METHOD SWITCHER */
+
+/* START FORGOT PASSWORD TOUR HIGHLIGHT ON LOGIN PAGE */
+const setupForgotPasswordTourHighlight = () => {
+    const isTourActive = new URLSearchParams(window.location.search).get('tour') === 'forgot-pwd' ||
+                         sessionStorage.getItem('dole_forgot_pwd_tour') === 'active';
+    if (!isTourActive) return;
+
+    sessionStorage.removeItem('dole_forgot_pwd_tour');
+
+    const triggerLinks = [
+        document.getElementById('desktop-forgot-password-link'),
+        document.getElementById('mobile-forgot-password-link')
+    ].filter(Boolean);
+
+    triggerLinks.forEach((link) => {
+        link.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        link.classList.add(
+            'ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-900',
+            'animate-pulse', 'bg-blue-100', 'dark:bg-blue-900/60',
+            'px-2.5', 'py-1', 'rounded-md', 'shadow-md', 'scale-105', 'transition-all'
+        );
+
+        const cleanUp = () => {
+            link.classList.remove(
+                'ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-900',
+                'animate-pulse', 'bg-blue-100', 'dark:bg-blue-900/60',
+                'px-2.5', 'py-1', 'rounded-md', 'shadow-md', 'scale-105'
+            );
+        };
+
+        link.addEventListener('click', cleanUp, { once: true });
+        setTimeout(cleanUp, 8000);
+    });
+
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete('tour');
+    window.history.replaceState({}, '', cleanUrl.toString());
+};
+/* END FORGOT PASSWORD TOUR HIGHLIGHT ON LOGIN PAGE */
 
 
 /* START REGISTRATION FLOW - Builds and controls the public registration panel without changing the original login design */
@@ -1252,50 +1527,115 @@ const setupLoginForms = () => {
             let hasError = false;
 
             if (mode === 'forgot') {
-                if (!identityValue) {
-                    setFieldError(identityWrapper, 'Please enter your registered email or phone number.');
-                    return;
-                }
+                const session = forgotSessions[prefix];
 
-                const isPhone = /^[0-9+]/.test(identityValue) || identityValue.startsWith('+63');
-                if (isPhone) {
-                    if (forgotOtpSecondsLeft > 0) return;
+                // STEP 1: SUBMIT PHONE NUMBER -> SEND OTP
+                if (session.step === 'phone') {
+                    const phoneInput = document.getElementById(`${prefix}-username`);
+                    const rawVal = phoneInput?.value.trim() || '';
+                    const cleanPhone = rawVal.replace(/\D/g, '').replace(/^63/, '');
 
-                    const cleanPhone = identityValue.replace(/\D/g, '').replace(/^63/, '');
-                    if (cleanPhone.length !== 10) {
-                        setFieldError(identityWrapper, 'Enter a valid 10-digit phone number (+63 9XXXXXXXXX).');
+                    if (!cleanPhone || cleanPhone.length !== 10 || !cleanPhone.startsWith('9')) {
+                        setFieldError(identityWrapper, 'Please enter a valid 10-digit mobile number (+63 9XXXXXXXXX).');
                         return;
                     }
 
                     setLoading(form, true, 'SENDING OTP...', 'SEND OTP');
                     try {
-                        await new Promise((resolve) => setTimeout(resolve, 600));
-                        const mockOtp = '123456';
-                        setFieldNotice(
-                            identityWrapper,
-                            `Password reset OTP sent to +63 ${cleanPhone}. (Mock code: <strong class="text-emerald-700 dark:text-emerald-300 font-mono">${mockOtp}</strong>)`
-                        );
-                        startForgotOtpCooldown();
-                    } finally {
+                        const result = await requestForgotPasswordOtp(cleanPhone);
+                        if (result.error) {
+                            setFieldError(identityWrapper, result.error);
+                            setLoading(form, false, 'SENDING OTP...', 'SEND OTP');
+                            return;
+                        }
+
+                        session.phone = result.phone || `+63${cleanPhone}`;
+                        session.maskedPhone = result.maskedPhone || `+63 ${cleanPhone.slice(0, 3)} *** ${cleanPhone.slice(-2)}`;
+                        session.challenge = result.challenge;
+                        session.step = 'otp';
+
+                        renderForgotOtpStep(prefix);
+                        startForgotTimer(prefix, result.cooldownSeconds || 60);
+                    } catch (err) {
+                        setFieldError(identityWrapper, err.message || 'API Offline Cannot Send, Contact Developer');
                         setLoading(form, false, 'SENDING OTP...', 'SEND OTP');
                     }
-                } else {
-                    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identityValue);
-                    if (!isValidEmail) {
-                        setFieldError(identityWrapper, 'Enter a valid email address.');
+                    return;
+                }
+
+                // STEP 2: SUBMIT 6-DIGIT OTP -> VERIFY
+                if (session.step === 'otp') {
+                    const otpInput = document.getElementById(`${prefix}-forgot-otp`);
+                    const otpVal = otpInput?.value.trim().replace(/\D/g, '') || '';
+
+                    if (!otpVal || otpVal.length !== 6) {
+                        setFieldError(credentialWrapper, 'Please enter the 6-digit verification code.');
+                        otpInput?.focus();
                         return;
                     }
 
-                    setLoading(form, true, 'SENDING LINK...', 'SEND RESET LINK');
+                    setLoading(form, true, 'SUBMITTING OTP...', 'SUBMIT OTP');
                     try {
-                        await new Promise((resolve) => setTimeout(resolve, 600));
-                        setFieldNotice(
-                            identityWrapper,
-                            `Reset link sent to <strong>${identityValue}</strong>. Please check your inbox.`
-                        );
-                    } finally {
-                        setLoading(form, false, 'SENDING LINK...', 'SEND RESET LINK');
+                        const result = await verifyForgotPasswordOtp(session.phone, otpVal, session.challenge);
+                        if (result.error) {
+                            setFieldError(credentialWrapper, result.error);
+                            setLoading(form, false, 'SUBMITTING OTP...', 'SUBMIT OTP');
+                            return;
+                        }
+
+                        session.resetToken = result.resetToken;
+                        session.step = 'reset';
+                        renderForgotResetStep(prefix);
+                    } catch (err) {
+                        setFieldError(credentialWrapper, err.message || 'Verification failed. Please try again.');
+                        setLoading(form, false, 'SUBMITTING OTP...', 'SUBMIT OTP');
                     }
+                    return;
+                }
+
+                // STEP 3: SUBMIT NEW PASSWORD -> RESET
+                if (session.step === 'reset') {
+                    const newPassInput = document.getElementById(`${prefix}-new-password`);
+                    const confirmPassInput = document.getElementById(`${prefix}-confirm-new-password`);
+                    const newPassword = newPassInput?.value || '';
+                    const confirmPassword = confirmPassInput?.value || '';
+
+                    if (!newPassword || newPassword.length < 8) {
+                        setFieldError(identityWrapper, 'Password must be at least 8 characters long.');
+                        newPassInput?.focus();
+                        return;
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        setFieldError(credentialWrapper, 'Passwords do not match. Please re-type.');
+                        confirmPassInput?.focus();
+                        return;
+                    }
+
+                    setLoading(form, true, 'UPDATING...', 'RESET PASSWORD');
+                    try {
+                        const result = await resetPasswordWithToken(session.resetToken, newPassword);
+                        if (result.error) {
+                            setFieldError(credentialWrapper, result.error);
+                            setLoading(form, false, 'UPDATING...', 'RESET PASSWORD');
+                            return;
+                        }
+
+                        resetForgotSession(prefix);
+                        showAuthNotice({
+                            title: 'Password Updated',
+                            message: 'Your account password has been reset successfully. Please sign in with your new credentials.',
+                            autoCloseMs: 3000,
+                            onAction: () => {
+                                restoreFormHeader(prefix);
+                                switchMode(prefix, 'username');
+                            }
+                        });
+                    } catch (err) {
+                        setFieldError(credentialWrapper, err.message || 'Failed to update password. Please try again.');
+                        setLoading(form, false, 'UPDATING...', 'RESET PASSWORD');
+                    }
+                    return;
                 }
                 return;
             }

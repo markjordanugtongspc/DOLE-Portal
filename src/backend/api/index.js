@@ -96,3 +96,9 @@ export {
 } from './notifications.api.js';
 
 export { fetchCurrentProfile, updateCurrentProfile, uploadUserAvatar } from './profile.api.js';
+
+// ─── SMS Service ───────────────────────────────────────────────────────────────
+export {
+    checkSmsGatewayStatus,
+    sendPortalSms
+} from './sms.api.js';

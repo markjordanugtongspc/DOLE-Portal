@@ -14,7 +14,12 @@ import { authStorage } from './modules/storage.js';
 
 let cachedSessionUser = null;
 try {
-    cachedSessionUser = authStorage.getUserSession();
+    const raw = authStorage.getUserSession();
+    if (raw && raw.id && raw.role_id) {
+        cachedSessionUser = raw;
+    } else {
+        authStorage.clearUserSession();
+    }
 } catch {}
 
 if (isAboutRoute) {

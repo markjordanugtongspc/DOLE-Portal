@@ -4,8 +4,17 @@
  * Automatically rotates announcements in loop, pauses on hover, expandable/collapsible, and supports interactive feature highlights.
  */
 
+import { Modal } from 'flowbite';
+
 /* START ANNOUNCEMENT DATA LIST - Top items are prioritized and sequenced first */
 export const PORTAL_ANNOUNCEMENTS = [
+    {
+        id: 'announcement-forgot-password-sms-2026',
+        text: 'You can now reset your password via SMS OTP if you forgot it. Ensure your mobile number is updated in Profile Settings!',
+        ctaText: 'Try It Out',
+        ctaUrl: '#',
+        actionType: 'forgot-password-guide'
+    },
     {
         id: 'announcement-ticket-ux-2026',
         text: 'Enhanced Ticket UI/UX and chat sizes for desktop and laptop view.',
@@ -35,6 +44,225 @@ export const ANNOUNCEMENT_STORAGE_DISMISSED_KEY = 'dole_announcement_banner_dism
 let bannerLoopInterval = null;
 let currentAnnouncementIndex = 0;
 let isBannerPaused = false;
+let forgotTourModalInstance = null;
+
+/* START FORGOT PASSWORD INTERACTIVE TOUR SYSTEM */
+const updateTourUrlParam = (step) => {
+    const url = new URL(window.location.href);
+    if (step) {
+        url.searchParams.set('tour', step);
+    } else {
+        url.searchParams.delete('tour');
+    }
+    window.history.replaceState({}, '', url.toString());
+};
+
+export const startProfilePhoneTour = () => {
+    const userCard = document.getElementById('sidebar-user-card');
+    const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
+    const settingsBtn = document.getElementById('sidebar-profile-settings-btn');
+    if (!userCard) return;
+
+    // STEP 1: Highlight the user profile dropdown card alone
+    updateTourUrlParam('profile-dropdown');
+    userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    userCard.classList.add('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
+
+    // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Settings button
+    setTimeout(() => {
+        userCard.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
+        
+        const container = document.getElementById('sidebar-user-actions-container');
+        const isClosed = container?.classList.contains('grid-rows-[0fr]');
+        if (isClosed && profileInfoBtn) {
+            profileInfoBtn.click();
+        }
+
+        updateTourUrlParam('profile-settings');
+        if (settingsBtn) {
+            settingsBtn.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
+        }
+
+        // STEP 3: After 2.0s, remove Settings button highlight and open the Settings Modal
+        setTimeout(() => {
+            if (settingsBtn) {
+                settingsBtn.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
+                settingsBtn.click();
+            }
+
+            // STEP 4: Inside Modal, highlight ONLY the Phone Number input field first
+            setTimeout(() => {
+                updateTourUrlParam('phone-number-field');
+                const phoneInput = document.getElementById('phone') || document.getElementById('settings-phone');
+                const saveBtn = document.getElementById('settings-save-button');
+
+                if (phoneInput) {
+                    phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    phoneInput.focus();
+                    phoneInput.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                }
+
+                // STEP 5: After 2.5s on the Phone field, remove Phone highlight and highlight ONLY the Save Settings button
+                setTimeout(() => {
+                    if (phoneInput) {
+                        phoneInput.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                    }
+
+                    updateTourUrlParam('save-settings');
+                    sessionStorage.setItem('dole_forgot_pwd_tour_step', 'awaiting_profile_save');
+
+                    if (saveBtn) {
+                        saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        saveBtn.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                    }
+                }, 2500);
+            }, 500);
+        }, 2000);
+    }, 1500);
+};
+
+export const startLogoutTour = () => {
+    sessionStorage.setItem('dole_forgot_pwd_tour', 'active');
+    const userCard = document.getElementById('sidebar-user-card');
+    const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
+    const logoutBtn = document.getElementById('sidebar-profile-logout-btn');
+    if (!userCard) return;
+
+    // STEP 1: Highlight the profile dropdown card alone
+    updateTourUrlParam('logout-dropdown');
+    userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    userCard.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
+
+    // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Logout button
+    setTimeout(() => {
+        userCard.classList.remove('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
+
+        const container = document.getElementById('sidebar-user-actions-container');
+        const isClosed = container?.classList.contains('grid-rows-[0fr]');
+        if (isClosed && profileInfoBtn) {
+            profileInfoBtn.click();
+        }
+
+        updateTourUrlParam('logout-button');
+        if (logoutBtn) {
+            logoutBtn.classList.add('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
+        }
+
+        // STEP 3: After 2.0s, remove Logout button highlight and open the Logout Confirmation Modal
+        setTimeout(() => {
+            if (logoutBtn) {
+                logoutBtn.classList.remove('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
+                logoutBtn.click();
+            }
+
+            // STEP 4: Inside Modal, highlight ONLY the Confirm Logout button
+            setTimeout(() => {
+                updateTourUrlParam('confirm-logout');
+                const confirmLogoutBtn = document.getElementById('sidebar-logout-confirm-btn');
+                if (confirmLogoutBtn) {
+                    confirmLogoutBtn.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                }
+            }, 500);
+        }, 2000);
+    }, 1500);
+};
+
+// Listen for successful profile save during tour to transition into logout phase
+window.addEventListener('portal:tour-profile-saved', () => {
+    const saveBtn = document.getElementById('settings-save-button');
+    if (saveBtn) {
+        saveBtn.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+    }
+    setTimeout(() => {
+        startLogoutTour();
+    }, 600);
+});
+
+export const showForgotPasswordTourModal = () => {
+    let modalEl = document.getElementById('forgot-password-tour-modal');
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = 'forgot-password-tour-modal';
+        modalEl.tabIndex = -1;
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.className = 'fixed inset-0 z-[100] hidden h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden p-4';
+        modalEl.innerHTML = `
+            <div class="relative w-full max-w-md">
+                <div class="relative rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800 overflow-hidden">
+                    <!-- Top Gradient Header -->
+                    <div class="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-5 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-xs text-white shadow-xs shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                            </span>
+                            <div>
+                                <h3 class="text-base font-extrabold text-white leading-tight">SMS Password Reset</h3>
+                                <p class="text-[11px] text-blue-200/80">Account Security & Recovery</p>
+                            </div>
+                        </div>
+                        <button type="button" data-tour-modal-close class="cursor-pointer inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-colors" aria-label="Close dialog">
+                            <svg class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1l6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="p-5 sm:p-6 space-y-3">
+                        <p class="text-sm leading-relaxed text-gray-700 dark:text-gray-200">
+                            Have you already registered your active <strong>Philippine mobile number</strong> in your <strong>Profile Settings</strong>?
+                        </p>
+                        <div class="rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/70 dark:bg-blue-950/20 p-3 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                            <svg class="w-4 h-4 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span>Your mobile number is required to receive one-time OTP SMS verification codes when recovering your password.</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Choices -->
+                    <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 border-t border-gray-100 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-900/30 p-4 sm:p-5">
+                        <button type="button" id="btn-tour-no-update" class="cursor-pointer w-full sm:w-auto rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors shadow-xs">
+                            No, update my profile
+                        </button>
+                        <button type="button" id="btn-tour-yes-proceed" class="cursor-pointer w-full sm:w-auto rounded-xl bg-blue-700 px-5 py-2.5 text-xs font-extrabold text-white shadow-md hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300">
+                            Yes, I have
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalEl);
+
+        forgotTourModalInstance = new Modal(modalEl, {
+            placement: 'center',
+            backdrop: 'dynamic',
+            closable: true,
+            onShow: () => window.dispatchEvent(new CustomEvent('portal:modal-open')),
+            onHide: () => window.dispatchEvent(new CustomEvent('portal:modal-close'))
+        });
+
+        modalEl.querySelectorAll('[data-tour-modal-close]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                forgotTourModalInstance?.hide();
+                updateTourUrlParam(null);
+            });
+        });
+
+        document.getElementById('btn-tour-no-update')?.addEventListener('click', () => {
+            forgotTourModalInstance?.hide();
+            startProfilePhoneTour();
+        });
+
+        document.getElementById('btn-tour-yes-proceed')?.addEventListener('click', () => {
+            forgotTourModalInstance?.hide();
+            startLogoutTour();
+        });
+    }
+
+    forgotTourModalInstance.show();
+};
+/* END FORGOT PASSWORD INTERACTIVE TOUR SYSTEM */
 
 /* START HIGHLIGHT PROFILE SETTINGS - Pulses emerald border and auto-toggles card preview twice */
 const triggerSettingsHighlight = () => {
@@ -42,32 +270,27 @@ const triggerSettingsHighlight = () => {
     const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
     if (!userCard) return;
 
-    // Scroll sidebar into view if on mobile/small screen or sidebar needs focus
     userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Add Emerald Pulse Glow Ring
     userCard.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
 
-    // Simulate double toggle demo (open -> close -> return)
     if (profileInfoBtn) {
         setTimeout(() => {
-            profileInfoBtn.click(); // Open 1st time
+            profileInfoBtn.click();
         }, 400);
 
         setTimeout(() => {
-            profileInfoBtn.click(); // Close 1st time
+            profileInfoBtn.click();
         }, 1800);
 
         setTimeout(() => {
-            profileInfoBtn.click(); // Open 2nd time demo
+            profileInfoBtn.click();
         }, 2600);
 
         setTimeout(() => {
-            profileInfoBtn.click(); // Return to default/saved state
+            profileInfoBtn.click();
         }, 4000);
     }
 
-    // Clean up animation classes after 4.5 seconds
     setTimeout(() => {
         userCard.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
     }, 4500);
@@ -103,10 +326,8 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
 
     if (!PORTAL_ANNOUNCEMENTS || PORTAL_ANNOUNCEMENTS.length === 0) return;
 
-    // Check if dismissed in localStorage
     const isDismissed = localStorage.getItem(ANNOUNCEMENT_STORAGE_DISMISSED_KEY) === 'true';
 
-    // Clear any existing banner in slot
     targetSlot.innerHTML = '';
 
     const bannerWrapper = document.createElement('div');
@@ -174,7 +395,6 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
         }, 300);
     };
 
-    // Sequential loop every 5.5 seconds if not dismissed
     const nextAnnouncement = () => {
         if (isBannerPaused) return;
         currentAnnouncementIndex = (currentAnnouncementIndex + 1) % PORTAL_ANNOUNCEMENTS.length;
@@ -192,7 +412,6 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
         startLoop();
     }
 
-    // Hover pause mechanism: Pauses loop sequence when user hovers over the banner
     if (bannerBox) {
         bannerBox.addEventListener('mouseenter', () => {
             isBannerPaused = true;
@@ -212,7 +431,10 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
                 return;
             }
 
-            if (currentItem.actionType === 'settings-highlight') {
+            if (currentItem.actionType === 'forgot-password-guide') {
+                e.preventDefault();
+                showForgotPasswordTourModal();
+            } else if (currentItem.actionType === 'settings-highlight') {
                 e.preventDefault();
                 triggerSettingsHighlight();
             } else if (currentItem.actionType === 'tickets-highlight') {
@@ -222,7 +444,7 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
         });
     }
 
-    // Dismiss button: Smoothly collapses accordion and saves state
+    // Dismiss button
     if (dismissBtn) {
         dismissBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -238,10 +460,11 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
 };
 /* END RENDER MARKETING CTA BANNER */
 
-/* START RESET ANNOUNCEMENT DISMISSAL - Clears dismissed state on logout or inactivity timeout */
+/* START RESET ANNOUNCEMENT DISMISSAL */
 export const resetAnnouncementDismissal = () => {
     try {
         localStorage.removeItem(ANNOUNCEMENT_STORAGE_DISMISSED_KEY);
     } catch {}
 };
 /* END RESET ANNOUNCEMENT DISMISSAL */
+

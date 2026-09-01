@@ -189,7 +189,11 @@ const setupSidebarLogout = () => {
             if (window.DEBUG) window.DEBUG.error('SIDEBAR', 'Logout failed', error);
             // The HttpOnly session is cleared by the backend logout endpoint.
         } finally {
-            window.location.replace('/');
+            if (sessionStorage.getItem('dole_forgot_pwd_tour') === 'active') {
+                window.location.replace('/?tour=forgot-pwd');
+            } else {
+                window.location.replace('/');
+            }
         }
     });
     if (!modalEl.dataset.logoutEscapeBound) {

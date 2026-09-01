@@ -144,7 +144,8 @@ const portalApiRequest = async (url, options = {}) => {
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) return { data: null, error: payload.error || 'The Portal authentication request failed.', code: payload.code, field: payload.field };
-        return { data: payload.data ?? payload, error: null };
+        const responseData = Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
+        return { data: responseData ?? null, error: null };
     } catch {
         return { data: null, error: 'Unable to reach the Portal authentication service.', code: 'auth_backend_unavailable', field: 'credential' };
     }
@@ -155,7 +156,7 @@ const loginWithPortalBackend = async (mode, identity, credential, remember = fal
         method: 'POST',
         body: JSON.stringify({ mode, identity, credential, remember })
     });
-    if (!result.error) saveSession(result.data);
+    if (!result.error && result.data?.id) saveSession(result.data);
     return result;
 };
 
@@ -163,7 +164,7 @@ export const loginWithUsername = (username, password, remember = false) => login
 export const loginWithEmail = (email, password, remember = false) => loginWithPortalBackend('email', email, password, remember);
 export const loginWithPhone = (phone, pin, remember = false) => loginWithPortalBackend('phone', phone, pin, remember);
 
-export const getCachedCurrentUser = () => currentUserCache;
+export const getCachedCurrentUser = () => (currentUserCache?.id ? currentUserCache : null);
 
 /**
  * Detects if a user is currently logged in across all storage and backend API layers.
@@ -173,28 +174,25 @@ export const getCachedCurrentUser = () => currentUserCache;
  * Ensures user session state is updated globally on window.__PORTAL_SESSION and authStorage.
  */
 export async function detectActiveUserSession({ force = false } = {}) {
-    if (!force && currentUserCache) {
+    if (!force && currentUserCache && currentUserCache.id) {
         window.__PORTAL_SESSION = currentUserCache;
         return currentUserCache;
     }
 
     const result = await portalApiRequest('/api/auth/me');
-    const user = result.error ? null : result.data;
+    const user = (result.error || !result.data || !result.data.id) ? null : result.data;
     // START SERVER-AUTH-ONLY SESSION
     // The browser cache is display state only; it must never recreate a revoked or idle session.
-    saveSession(user || null);
+    saveSession(user);
     // END SERVER-AUTH-ONLY SESSION
-    return user || null;
+    return user;
 }
 
 export async function refreshPortalSession() {
     const result = await portalApiRequest('/api/auth/me');
-    if (result.error || !result.data) {
-        saveSession(null);
-        return null;
-    }
-    saveSession(result.data);
-    return result.data;
+    const user = (result.error || !result.data || !result.data.id) ? null : result.data;
+    saveSession(user);
+    return user;
 }
 export async function getCurrentUser(options = {}) {
     return detectActiveUserSession(options);
@@ -204,7 +202,7 @@ import { authStorage } from '../../scripts/modules/storage.js';
 import { resetAnnouncementDismissal } from '../../scripts/modules/announcement-banner.js';
 
 export function saveSession(user) {
-    currentUserCache = user || null;
+    currentUserCache = (user && user.id) ? user : null;
     if (currentUserCache) {
         window.__PORTAL_SESSION = currentUserCache;
         authStorage.setUserSession(currentUserCache);
@@ -223,4 +221,36 @@ export async function logout() {
     resetAnnouncementDismissal();
     return { error: result.error };
 }
+
+/* START FORGOT PASSWORD API HELPERS */
+export const requestForgotPasswordOtp = async (phone) => {
+    const result = await portalApiRequest('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'send_otp', phone })
+    });
+    if (result.error) return { error: result.error };
+    const payload = result.data || {};
+    return { ...payload, error: null };
+};
+
+export const verifyForgotPasswordOtp = async (phone, otp, challenge) => {
+    const result = await portalApiRequest('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'verify_otp', phone, otp, challenge })
+    });
+    if (result.error) return { error: result.error };
+    const payload = result.data || {};
+    return { ...payload, error: null };
+};
+
+export const resetPasswordWithToken = async (resetToken, newPassword) => {
+    const result = await portalApiRequest('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'reset_password', resetToken, newPassword })
+    });
+    if (result.error) return { error: result.error };
+    const payload = result.data || {};
+    return { ...payload, error: null };
+};
+/* END FORGOT PASSWORD API HELPERS */
 /* END BACKEND COOKIE AUTH CLIENT */

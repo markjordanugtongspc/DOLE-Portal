@@ -136,9 +136,10 @@ function localApiMiddleware() {
           handlerPath = path.resolve(__dirname, 'api/sso/authorize.js');
         } else if (url.pathname === '/api/sso/consume') {
           handlerPath = path.resolve(__dirname, 'api/sso/consume.js');
-        // } else if (url.pathname === '/api/sms' || url.pathname === '/api/sms/send') {
-        //   // SMSAPI Gateway serverless endpoint proxy for local Vite dev server
-        //   handlerPath = path.resolve(__dirname, 'api/sms/send.js');
+        } else if (url.pathname === '/api/auth/forgot-password') {
+          handlerPath = path.resolve(__dirname, 'api/auth/forgot-password.js');
+        } else if (url.pathname === '/api/sms' || url.pathname === '/api/sms/send') {
+          handlerPath = path.resolve(__dirname, 'api/sms/send.js');
         }
 
         if (!handlerPath || !fs.existsSync(handlerPath)) return next();

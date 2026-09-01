@@ -356,24 +356,24 @@ const createSettingsModal = () => {
                         <!-- Fields Grid -->
                         <div class="space-y-3 sm:space-y-4">
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                ${settingsField('full_name', 'Full Name', 'text', 'autocomplete="name" required maxlength="160"')}
+                                ${settingsField('full_name', 'Full Name', 'text', 'autocomplete="name" maxlength="160"')}
                                 ${settingsField('birthday', 'Birthday', 'date', 'autocomplete="bday"')}
                             </div>
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                ${settingsField('username', 'Username', 'text', 'autocomplete="username" required maxlength="80"')}
-                                ${settingsField('email', 'Email', 'email', 'autocomplete="email" required maxlength="180"')}
+                                ${settingsField('username', 'Username', 'text', 'autocomplete="username" maxlength="80"')}
+                                ${settingsField('email', 'Email', 'email', 'autocomplete="email" maxlength="180"')}
                             </div>
                             ${settingsField('phone', 'Phone Number', 'tel', 'autocomplete="tel" maxlength="40"')}
 
                             <!-- Change Password Section -->
                             <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/60 dark:bg-amber-950/20">
                                 <h3 class="text-xs font-extrabold text-amber-900 dark:text-amber-200">Change Password</h3>
-                                <p class="mt-0.5 text-[11px] text-amber-800 dark:text-amber-300">Leave all four fields empty to keep your current password.</p>
+                                <p class="mt-0.5 text-[11px] text-amber-800 dark:text-amber-300">Type your current password to begin changing your password.</p>
                                 <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    ${settingsField('current_password', 'Current Password', 'password', 'autocomplete="current-password" minlength="1"')}
-                                    ${settingsField('current_password_confirm', 'Confirm Current', 'password', 'autocomplete="current-password" minlength="1"')}
-                                    ${settingsField('new_password', 'New Password', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
-                                    ${settingsField('new_password_confirm', 'Confirm New', 'password', 'autocomplete="new-password" minlength="12" maxlength="256"')}
+                                    ${settingsField('current_password', 'Current Password', 'password', 'autocomplete="current-password" placeholder="Enter current password"')}
+                                    ${settingsField('current_password_confirm', 'Confirm Current', 'password', 'autocomplete="current-password" disabled placeholder="Confirm current password"')}
+                                    ${settingsField('new_password', 'New Password', 'password', 'autocomplete="new-password" disabled minlength="8" maxlength="256" placeholder="Enter new password"')}
+                                    ${settingsField('new_password_confirm', 'Confirm New', 'password', 'autocomplete="new-password" disabled minlength="8" maxlength="256" placeholder="Confirm new password"')}
                                 </div>
                             </div>
 
@@ -425,28 +425,122 @@ export const initSettingsModal = () => {
         onShow: () => window.dispatchEvent(new CustomEvent('portal:modal-open')),
         onHide: () => window.dispatchEvent(new CustomEvent('portal:modal-close'))
     });
+
+    const setFieldDisabled = (field, disabled) => {
+        if (!field) return;
+        field.disabled = disabled;
+        if (disabled) {
+            field.value = '';
+            field.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-800');
+            field.classList.remove('bg-gray-50', 'dark:bg-gray-700');
+        } else {
+            field.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-100', 'dark:bg-gray-800');
+            field.classList.add('bg-gray-50', 'dark:bg-gray-700');
+        }
+    };
+
+    const resetPasswordFields = () => {
+        const currentPwd = modal.querySelector('#current_password');
+        const currentConfirm = modal.querySelector('#current_password_confirm');
+        const newPwd = modal.querySelector('#new_password');
+        const newConfirm = modal.querySelector('#new_password_confirm');
+        if (currentPwd) currentPwd.value = '';
+        setFieldDisabled(currentConfirm, true);
+        setFieldDisabled(newPwd, true);
+        setFieldDisabled(newConfirm, true);
+    };
+
+    const setupPasswordSequence = () => {
+        const currentPwd = modal.querySelector('#current_password');
+        const currentConfirm = modal.querySelector('#current_password_confirm');
+        const newPwd = modal.querySelector('#new_password');
+        const newConfirm = modal.querySelector('#new_password_confirm');
+
+        const updateState = () => {
+            const currentVal = (currentPwd?.value || '').trim();
+            const currentConfirmVal = (currentConfirm?.value || '').trim();
+            const newVal = (newPwd?.value || '').trim();
+
+            if (currentVal.length > 0) {
+                setFieldDisabled(currentConfirm, false);
+            } else {
+                setFieldDisabled(currentConfirm, true);
+                setFieldDisabled(newPwd, true);
+                setFieldDisabled(newConfirm, true);
+                return;
+            }
+
+            if (currentConfirmVal.length > 0 && currentConfirmVal === currentVal) {
+                setFieldDisabled(newPwd, false);
+            } else {
+                setFieldDisabled(newPwd, true);
+                setFieldDisabled(newConfirm, true);
+                return;
+            }
+
+            if (newVal.length >= 8) {
+                setFieldDisabled(newConfirm, false);
+            } else {
+                setFieldDisabled(newConfirm, true);
+            }
+        };
+
+        [currentPwd, currentConfirm, newPwd].forEach((input) => {
+            input?.addEventListener('input', updateState);
+        });
+
+        resetPasswordFields();
+    };
+
+    setupPasswordSequence();
+
     modal.querySelectorAll('[data-settings-modal-close]').forEach((button) => {
         button.addEventListener('click', () => {
             document.activeElement?.blur();
+            resetPasswordFields();
+            setSettingsStatus('');
             settingsModalInstance?.hide();
         });
     });
+
     document.getElementById('settings-avatar-file')?.addEventListener('change', (event) => {
         settingsAvatarFile = event.target.files?.[0] || null;
         if (settingsAvatarFile) document.getElementById('settings-avatar-preview').src = URL.createObjectURL(settingsAvatarFile);
     });
+
     document.getElementById('global-settings-form')?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
         const saveButton = document.getElementById('settings-save-button');
         const data = Object.fromEntries(new FormData(form).entries());
-        const passwordFields = ['current_password', 'current_password_confirm', 'new_password', 'new_password_confirm'];
-        const hasPasswordInput = passwordFields.some((field) => data[field]);
-        if (hasPasswordInput && data.current_password !== data.current_password_confirm) return setSettingsStatus('Current password and confirmation must match.');
-        if (hasPasswordInput && data.new_password !== data.new_password_confirm) return setSettingsStatus('New password and confirmation must match.');
-        if (hasPasswordInput && String(data.new_password || '').length < 12) return setSettingsStatus('The new password must be at least 12 characters long.');
+
+        const currentPassword = String(data.current_password || '').trim();
+        const currentPasswordConfirm = String(data.current_password_confirm || '').trim();
+        const newPassword = String(data.new_password || '').trim();
+        const newPasswordConfirm = String(data.new_password_confirm || '').trim();
+
+        // Password change is strictly validated only when user initiates it by typing in current_password
+        if (currentPassword) {
+            if (!currentPasswordConfirm || currentPassword !== currentPasswordConfirm) {
+                return setSettingsStatus('Please confirm your current password correctly.');
+            }
+            if (!newPassword || newPassword.length < 8) {
+                return setSettingsStatus('The new password must be at least 8 characters long.');
+            }
+            if (!newPasswordConfirm || newPassword !== newPasswordConfirm) {
+                return setSettingsStatus('New password and confirmation must match.');
+            }
+        } else {
+            // Remove password fields from submission payload
+            delete data.current_password;
+            delete data.current_password_confirm;
+            delete data.new_password;
+            delete data.new_password_confirm;
+        }
+
         saveButton.disabled = true;
         setSettingsStatus('Saving your settings...', 'success');
+
         if (settingsAvatarFile) {
             const upload = await uploadUserAvatar(settingsAvatarFile, settingsProfile?.id);
             if (upload.error) { saveButton.disabled = false; return setSettingsStatus(upload.error); }
@@ -454,15 +548,25 @@ export const initSettingsModal = () => {
         } else {
             data.avatar_url = settingsProfile?.avatar_url || null;
         }
+
         const result = await updateCurrentProfile(data);
         saveButton.disabled = false;
         if (result.error) return setSettingsStatus(result.error);
+
         populateSettings(result.data);
         settingsAvatarFile = null;
+        resetPasswordFields();
         setSettingsStatus('Settings saved successfully.', 'success');
+
         window.setTimeout(() => {
             document.activeElement?.blur();
             settingsModalInstance?.hide();
+
+            // Check if user was guided by the forgot-password tour
+            if (sessionStorage.getItem('dole_forgot_pwd_tour_step') === 'awaiting_profile_save') {
+                sessionStorage.removeItem('dole_forgot_pwd_tour_step');
+                window.dispatchEvent(new CustomEvent('portal:tour-profile-saved'));
+            }
         }, 700);
     });
 
@@ -473,6 +577,7 @@ export const initSettingsModal = () => {
         trigger.blur();
         window.DEBUG?.event('SETTINGS', 'Settings modal trigger clicked', { id: trigger.id || null });
         settingsAvatarFile = null;
+        resetPasswordFields();
         setSettingsStatus('Loading your profile...', 'success');
         settingsModalInstance.show();
         const result = await fetchCurrentProfile();
