@@ -587,6 +587,9 @@ const setupDynamicSidebar = () => {
         versionEl.textContent = `v${pkg.version}`;
     }
 
+    // Setup interactive footer user card dropdown (smooth hover + click toggle + localStorage persistence)
+    setupSidebarUserCardDropdown(isPublic);
+
     // Populate user profile info dynamically from session if authenticated
     if (!isPublic && sessionUser) {
         const userNameEl = document.getElementById('sidebar-user-name');
@@ -594,11 +597,20 @@ const setupDynamicSidebar = () => {
         const userRoleEl = document.getElementById('sidebar-user-role-pill');
         const userAvatarEl = document.getElementById('sidebar-user-avatar');
 
-        if (userNameEl) userNameEl.textContent = sessionUser.full_name || sessionUser.username || 'System User';
-        if (userSubtitleEl) userSubtitleEl.textContent = sessionUser.email || 'portal@dole.local';
+        const fullName = sessionUser.full_name || sessionUser.username || 'System User';
+        const userEmail = sessionUser.email || 'portal@dole.local';
+
+        if (userNameEl) {
+            userNameEl.textContent = fullName;
+            userNameEl.title = fullName; // Native full-name tooltip
+        }
+        if (userSubtitleEl) {
+            userSubtitleEl.textContent = userEmail;
+            userSubtitleEl.title = userEmail;
+        }
         if (userRoleEl) userRoleEl.textContent = role === 'admin' ? 'Admin' : role === 'hr' ? 'HR' : 'Staff';
         if (userAvatarEl) {
-            const initials = (sessionUser.full_name || sessionUser.username || 'SU')
+            const initials = fullName
                 .split(' ')
                 .map(n => n[0])
                 .join('')
@@ -622,6 +634,61 @@ const setupDynamicSidebar = () => {
     }
 };
 /* END DYNAMIC ROLE-BASED SIDEBAR SYSTEM */
+
+/* START SETUP SIDEBAR USER CARD DROPDOWN - Handles smooth accordion hover reveal, click toggle, and localStorage preference */
+const SIDEBAR_USER_ACTIONS_STORAGE_KEY = 'portal_sidebar_user_actions_open';
+
+const setupSidebarUserCardDropdown = (isPublic) => {
+    if (isPublic) return;
+    const cardEl = document.getElementById('sidebar-user-card');
+    const triggerBtn = document.getElementById('sidebar-user-profile-info');
+    const containerEl = document.getElementById('sidebar-user-actions-container');
+    const chevronEl = document.getElementById('sidebar-user-chevron');
+
+    if (!cardEl || !triggerBtn || !containerEl) return;
+
+    // Check saved state from localStorage
+    let isActionsOpen = localStorage.getItem(SIDEBAR_USER_ACTIONS_STORAGE_KEY) === 'true';
+
+    const renderActionsVisibility = (open) => {
+        if (open) {
+            containerEl.classList.remove('grid-rows-[0fr]', 'opacity-0', 'mt-0', 'border-t-0');
+            containerEl.classList.add('grid-rows-[1fr]', 'opacity-100', 'mt-2.5', 'border-t');
+            triggerBtn.setAttribute('aria-expanded', 'true');
+            if (chevronEl) chevronEl.classList.add('rotate-180');
+        } else {
+            containerEl.classList.remove('grid-rows-[1fr]', 'opacity-100', 'mt-2.5', 'border-t');
+            containerEl.classList.add('grid-rows-[0fr]', 'opacity-0', 'mt-0', 'border-t-0');
+            triggerBtn.setAttribute('aria-expanded', 'false');
+            if (chevronEl) chevronEl.classList.remove('rotate-180');
+        }
+    };
+
+    // Apply initial state
+    renderActionsVisibility(isActionsOpen);
+
+    // Click trigger - toggles permanently and saves to localStorage
+    triggerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        isActionsOpen = !isActionsOpen;
+        localStorage.setItem(SIDEBAR_USER_ACTIONS_STORAGE_KEY, String(isActionsOpen));
+        renderActionsVisibility(isActionsOpen);
+    });
+
+    // Hover trigger - smooth accordion expand on hover if currently closed
+    cardEl.addEventListener('mouseenter', () => {
+        if (isActionsOpen) return;
+        renderActionsVisibility(true);
+    });
+
+    // Mouse leave - smooth accordion collapse if not toggled permanently via click
+    cardEl.addEventListener('mouseleave', () => {
+        if (!isActionsOpen) {
+            renderActionsVisibility(false);
+        }
+    });
+};
+/* END SETUP SIDEBAR USER CARD DROPDOWN */
 
 /* START LIVE PROFILE AVATAR REFRESH */
 window.addEventListener('portal:profile-updated', (event) => {

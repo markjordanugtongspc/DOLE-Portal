@@ -256,6 +256,49 @@ export class DoleChatbotController {
             _resizeFabTimer = setTimeout(() => this.applyFabPositionMode(), 150);
         }, { passive: true });
 
+        // Topic selector horizontal drag & wheel scrolling
+        const topicBar = document.getElementById('dole-chatbot-topic-bar');
+        if (topicBar) {
+            let isDown = false;
+            let startX = 0;
+            let scrollLeft = 0;
+            let hasDragged = false;
+
+            topicBar.addEventListener('mousedown', (e) => {
+                isDown = true;
+                hasDragged = false;
+                startX = e.pageX - topicBar.offsetLeft;
+                scrollLeft = topicBar.scrollLeft;
+            });
+
+            topicBar.addEventListener('mouseleave', () => {
+                isDown = false;
+            });
+
+            topicBar.addEventListener('mouseup', () => {
+                isDown = false;
+            });
+
+            topicBar.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - topicBar.offsetLeft;
+                const walk = (x - startX) * 1.5;
+                if (Math.abs(walk) > 4) {
+                    hasDragged = true;
+                }
+                topicBar.scrollLeft = scrollLeft - walk;
+            });
+
+            // Convert mouse vertical wheel to smooth horizontal scroll
+            topicBar.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    topicBar.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
+
         // Topic selector pill clicks
         topicPills.forEach((pill) => {
             pill.addEventListener('click', (e) => {
@@ -986,10 +1029,8 @@ export class ChatbotUI {
         bubble.className = 'flex gap-3 text-sm flex-1';
         bubble.innerHTML = `
             <span class="relative flex shrink-0 overflow-hidden rounded-full w-8 h-8 self-start">
-                <div class="rounded-full bg-blue-100 dark:bg-blue-900/60 border border-blue-200 dark:border-blue-700 p-1.5 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-blue-700 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
-                    </svg>
+                <div class="rounded-full bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 p-1 flex items-center justify-center w-full h-full">
+                    <img src="/src/assets/logos/dole_logo.png" alt="DOLE Logo" class="w-full h-full object-contain block drop-shadow-xs" />
                 </div>
             </span>
             <div class="space-y-1 max-w-[85%]">
@@ -1042,10 +1083,8 @@ export class ChatbotUI {
         this.messagesContainer.innerHTML = `
             <div class="flex gap-3 text-sm flex-1">
                 <span class="relative flex shrink-0 overflow-hidden rounded-full w-8 h-8 self-start">
-                    <div class="rounded-full bg-blue-100 dark:bg-blue-900/60 border border-blue-200 dark:border-blue-700 p-1.5 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-blue-700 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
-                        </svg>
+                    <div class="rounded-full bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 p-1 flex items-center justify-center w-full h-full">
+                        <img src="/src/assets/logos/dole_logo.png" alt="DOLE Logo" class="w-full h-full object-contain block drop-shadow-xs" />
                     </div>
                 </span>
                 <div class="space-y-1.5 max-w-[85%]">

@@ -201,6 +201,7 @@ export async function getCurrentUser(options = {}) {
 }
 
 import { authStorage } from '../../scripts/modules/storage.js';
+import { resetAnnouncementDismissal } from '../../scripts/modules/announcement-banner.js';
 
 export function saveSession(user) {
     currentUserCache = user || null;
@@ -219,6 +220,7 @@ export function saveSession(user) {
 export async function logout() {
     const result = await portalApiRequest('/api/auth/logout', { method: 'POST' });
     saveSession(null);
+    resetAnnouncementDismissal();
     return { error: result.error };
 }
 /* END BACKEND COOKIE AUTH CLIENT */

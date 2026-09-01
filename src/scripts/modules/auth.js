@@ -5,6 +5,7 @@ import {
     loginWithEmail,
     loginWithPhone,
     loginWithUsername,
+    logout,
     registerPendingUser,
     saveSession
 } from '@/backend/api/auth.api.js';
@@ -551,8 +552,8 @@ const triggerResendOtp = async (prefix) => {
 };
 
 const setupAuthMethodSwitcher = () => {
-    const SVG_EMAIL = `<svg class="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>`;
-    const SVG_PHONE = `<svg class="w-4 h-4 mr-2 text-violet-600 dark:text-violet-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>`;
+    const SVG_EMAIL = `<svg class="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>`;
+    const SVG_PHONE = `<svg class="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>`;
     const SVG_USER = `<svg class="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>`;
 
     const originalPasswordHTML = {
@@ -617,13 +618,7 @@ const setupAuthMethodSwitcher = () => {
         const btn = document.createElement('button');
         btn.id = id;
         btn.type = 'button';
-        const isEmail = text.toLowerCase() === 'email';
-        const isPhone = text.toLowerCase() === 'phone';
-        const hoverColorClasses = isEmail
-            ? 'hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800 hover:text-emerald-700 dark:hover:text-emerald-400'
-            : isPhone
-                ? 'hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400'
-                : 'hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-700 dark:hover:text-blue-400';
+        const hoverColorClasses = 'hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-700 dark:hover:text-blue-400';
         btn.className = `cursor-pointer w-full text-gray-900 bg-white border border-gray-300 ${hoverColorClasses} font-bold ${roundedClass} text-xs px-3 py-2.5 text-center inline-flex items-center justify-center dark:bg-gray-800 dark:text-white dark:border-gray-600 shadow-sm transition-all hover:shadow-md`;
         btn.innerHTML = `${svg}${text}`;
         btn.addEventListener('click', onClick);
@@ -1401,52 +1396,68 @@ const setupLoginForms = () => {
                 setLoading(form, false, 'SIGNING IN...', mode === 'phone' ? 'SUBMIT' : 'SIGN IN');
             }
         });
-        // Keyboard TAB sequence: Username/Identity -> Password/OTP -> SIGN IN / SUBMIT button
-        form?.addEventListener('keydown', (e) => {
-            if (e.key !== 'Tab') return;
-
-            const identity = form.querySelector('[id$="-username"]');
-            const credential = form.querySelector('[id$="-password"]') || form.querySelector('[id$="-otp"]');
-            const submitBtn = form.querySelector('button[type="submit"]');
-
-            if (!e.shiftKey) {
-                // Forward Tab
-                if (document.activeElement === identity && credential && !credential.closest('.hidden')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    credential.focus();
-                } else if (document.activeElement === identity && submitBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    submitBtn.focus();
-                } else if (document.activeElement === credential && submitBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    submitBtn.focus();
-                }
-            } else {
-                // Shift + Tab (Backward)
-                if (document.activeElement === submitBtn && credential && !credential.closest('.hidden')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    credential.focus();
-                } else if (document.activeElement === submitBtn && identity) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    identity.focus();
-                } else if (document.activeElement === credential && identity) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    identity.focus();
-                }
-            }
-        });
     };
 
     bindForm('desktop');
     bindForm('mobile');
 };
 /* END SETUP LOGIN FORMS */
+
+/* START SETUP INACTIVITY AUTO LOGOUT - Automatically logs out based on remember state and weekend schedule */
+let inactivityTimer = null;
+
+const getClientInactivityTimeoutMs = () => {
+    const isRemembered = Boolean(getRememberedLogin());
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const isWeekend = day === 0 || day === 6;
+
+    if (!isRemembered) {
+        // Strict unremembered session: 15 minutes
+        return { timeoutMs: 15 * 60 * 1000, label: '15 minutes of inactivity' };
+    }
+
+    if (isWeekend) {
+        // Remembered session on Weekends (Saturday & Sunday): 30 minutes
+        return { timeoutMs: 30 * 60 * 1000, label: '30 minutes of weekend inactivity' };
+    }
+
+    // Remembered session on Weekdays (Mon - Fri): 12 hours relaxed workday session
+    return { timeoutMs: 12 * 60 * 60 * 1000, label: '12 hours of inactivity' };
+};
+
+const resetInactivityTimer = () => {
+    if (!isProtectedPage()) return;
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+
+    const { timeoutMs, label } = getClientInactivityTimeoutMs();
+
+    inactivityTimer = setTimeout(async () => {
+        const user = window.__PORTAL_SESSION || (await getCurrentUser());
+        if (user) {
+            if (window.DEBUG) window.DEBUG.warn('AUTH', `Idle inactivity timeout (${label}) reached. Logging out user...`);
+            await logout();
+            showAuthNotice({
+                title: 'Session Expired',
+                message: `You have been automatically logged out due to ${label} for your account security.`,
+                autoCloseMs: 3000,
+                onAction: () => {
+                    window.location.replace('/?auth=session_expired');
+                }
+            });
+        }
+    }, timeoutMs);
+};
+
+const setupInactivityAutoLogout = () => {
+    if (!isProtectedPage()) return;
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach((evt) => {
+        window.addEventListener(evt, resetInactivityTimer, { passive: true });
+    });
+    resetInactivityTimer();
+};
+/* END SETUP INACTIVITY AUTO LOGOUT */
 
 /* START INITIALIZE AUTH - Boots route guard, login fields, register transition, and submit handlers */
 const initializeAuth = async () => {
@@ -1458,6 +1469,7 @@ const initializeAuth = async () => {
     setupAuthMethodSwitcher();
     applyRememberedLogin();
     setupLoginForms();
+    setupInactivityAutoLogout();
     document.getElementById('hero-register-btn')?.addEventListener('click', () => {
         const nextMode = authViewMode === 'login' ? 'register' : 'login';
         setAuthViewMode(nextMode);

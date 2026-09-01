@@ -32,6 +32,9 @@
 
     <!-- Main Content -->
     <main class="flex-1 p-6 md:p-8 space-y-6">
+      <!-- Flowbite Announcement CTA Banner Slot -->
+      <div id="announcement-banner-slot"></div>
+
       <!-- Image Banner Header -->
       <div class="relative w-full rounded-2xl overflow-hidden shadow-md h-28 sm:h-32 flex items-center justify-between px-6 sm:px-8 text-white"
         style="background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 60%, #312e81 100%);">
@@ -195,13 +198,13 @@
       </div>
 
       <!-- Toggle Button (Moved Outside) -->
-      <div class="flex justify-end mt-4 mb-2">
+      <div class="flex justify-center sm:justify-end mt-4 mb-2 w-full">
         <div
-          class="flex items-center bg-gray-100 dark:bg-gray-800 rounded p-1 shadow-inner border border-gray-200 dark:border-gray-700 h-[38px]">
+          class="flex items-center w-full sm:w-auto bg-gray-100 dark:bg-gray-800 rounded p-1 shadow-inner border border-gray-200 dark:border-gray-700 h-[40px] sm:h-[38px]">
           <button id="btn-toggle-stats"
-            class="px-3 py-1.5 text-xs font-bold rounded shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer select-none">STATS</button>
+            class="flex-1 sm:flex-initial text-center px-4 sm:px-3 py-2 sm:py-1.5 text-xs font-bold rounded shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer select-none">STATS</button>
           <button id="btn-toggle-quick"
-            class="px-3 py-1.5 text-xs font-bold rounded text-gray-500 dark:bg-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer select-none transition-colors">QUICK</button>
+            class="flex-1 sm:flex-initial text-center px-4 sm:px-3 py-2 sm:py-1.5 text-xs font-bold rounded text-gray-500 dark:bg-gray-800 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer select-none transition-colors">QUICK</button>
         </div>
       </div>
 

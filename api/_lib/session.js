@@ -3,13 +3,34 @@ import { randomToken, sha256 } from './security.js';
 
 const COOKIE_NAME = 'portal_session';
 const DEFAULT_TTL_HOURS = 8;
-const DEFAULT_REMEMBER_TTL_HOURS = 24 * 7;
-const DEFAULT_INACTIVITY_HOURS = 2;
+const DEFAULT_REMEMBER_TTL_HOURS = 24 * 6; // 6 Days
+const DEFAULT_INACTIVITY_HOURS = 0.25; // 15 minutes idle timeout (standard/unremembered)
 
 const numberEnvironment = (name, fallback) => {
     const value = Number(process.env[name]);
     return Number.isFinite(value) && value > 0 ? value : fallback;
 };
+
+/* START CALCULATE INACTIVITY TIMEOUT - Computes idle timeout based on remember state and weekday/weekend schedule */
+const getInactivityTimeoutMs = (isRemembered) => {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const isWeekend = day === 0 || day === 6;
+
+    if (!isRemembered) {
+        // Strict unremembered session: 15 minutes
+        return 15 * 60 * 1000;
+    }
+
+    if (isWeekend) {
+        // Remembered session on Weekends (Saturday & Sunday): 30 minutes
+        return 30 * 60 * 1000;
+    }
+
+    // Remembered session on Weekdays (Mon - Fri): 12 hours relaxed workday timeout
+    return 12 * 60 * 60 * 1000;
+};
+/* END CALCULATE INACTIVITY TIMEOUT */
 
 const safeUser = (user = {}) => ({
     id: Number(user.id), role_id: Number(user.role_id), office_id: user.office_id === null ? null : Number(user.office_id),
@@ -96,10 +117,13 @@ export const getPortalSession = async (req, admin) => {
     if (error || !data) return null;
 
     const now = Date.now();
-    const inactivityHours = numberEnvironment('PORTAL_INACTIVITY_TIMEOUT_HOURS', DEFAULT_INACTIVITY_HOURS);
-    const inactivityCutoff = now - inactivityHours * 60 * 60 * 1000;
     const expiresAt = new Date(data.expires_at || 0).getTime();
     const lastActivityAt = new Date(data.last_activity_at || 0).getTime();
+
+    // Determine if this session was issued with a long remember validity (> 24 hours)
+    const isRemembered = Number.isFinite(expiresAt) && (expiresAt - lastActivityAt > 24 * 60 * 60 * 1000);
+    const inactivityTimeoutMs = getInactivityTimeoutMs(isRemembered);
+    const inactivityCutoff = now - inactivityTimeoutMs;
 
     const isGipToken = token.startsWith('gip:');
     const gipId = isGipToken ? Number(token.split(':')[1]) : null;

@@ -10,30 +10,19 @@
   aria-expanded="false"
   aria-controls="dole-chatbot-window"
   aria-label="Open DOLE Support Chatbot"
-  class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[70] inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white shadow-xl hover:shadow-2xl cursor-pointer border border-blue-600/30 dark:border-blue-500/30 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 group select-none">
+  class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[70] inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl cursor-pointer border border-gray-200/80 dark:border-gray-700/80 p-2.5 sm:p-3 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 group select-none">
   
-  <!-- Static Brain Outline SVG Icon (Always visible) -->
-  <svg
+  <!-- DOLE Logo Image (With clean breathing space gap) -->
+  <img
     id="dole-chatbot-fab-static-icon"
-    class="w-7 h-7 text-white block transition-transform duration-200"
-    aria-hidden="true"
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    fill="none"
-    viewBox="0 0 24 24">
-    <path
-      stroke="currentColor"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 18.5A2.493 2.493 0 0 1 7.51 20H7.5a2.468 2.468 0 0 1-2.4-3.154 2.98 2.98 0 0 1-.85-5.274 2.468 2.468 0 0 1 .92-3.182 2.477 2.477 0 0 1 1.876-3.344 2.5 2.5 0 0 1 3.41-1.856A2.5 2.5 0 0 1 12 5.5m0 13v-13m0 13a2.493 2.493 0 0 0 4.49 1.5h.01a2.468 2.468 0 0 0 2.403-3.154 2.98 2.98 0 0 0 .847-5.274 2.468 2.468 0 0 0-.921-3.182 2.477 2.477 0 0 0-1.875-3.344A2.5 2.5 0 0 0 14.5 3 2.5 2.5 0 0 0 12 5.5m-8 5a2.5 2.5 0 0 1 3.48-2.3m-.28 8.551a3 3 0 0 1-2.953-5.185M20 10.5a2.5 2.5 0 0 0-3.481-2.3m.28 8.551a3 3 0 0 0 2.954-5.185" />
-  </svg>
+    src="/src/assets/logos/dole_logo.png"
+    alt="DOLE Support Chatbot"
+    class="w-full h-full object-contain block transition-transform duration-200 group-hover:scale-110 drop-shadow-xs" />
 
-  <!-- Online Pulse Dot -->
-  <span class="absolute top-0 right-0 flex h-3.5 w-3.5 -mt-0.5 -mr-0.5">
+  <!-- Online Pulse Dot (In front of and overlapping the top-right corner) -->
+  <span class="absolute top-0.5 right-0.5 z-30 flex h-3.5 w-3.5 pointer-events-none">
     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-gray-900"></span>
+    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-gray-900 shadow-xs"></span>
   </span>
 </button>
 
@@ -48,11 +37,9 @@
   <!-- Chat Header -->
   <div class="px-5 py-4 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white flex items-center justify-between border-b border-blue-600/30 dark:border-gray-800 shrink-0">
     <div class="flex items-center space-x-3 min-w-0">
-      <div class="relative shrink-0 w-10 h-10 rounded-full bg-white/10 dark:bg-gray-800 p-1.5 flex items-center justify-center border border-white/20">
-        <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M11 21V2.352A3.451 3.451 0 0 0 9.5 2a3.5 3.5 0 0 0-3.261 2.238A3.5 3.5 0 0 0 4.04 8.015a3.518 3.518 0 0 0-.766 1.128c-.042.1-.064.209-.1.313a3.34 3.34 0 0 0-.106.344 3.463 3.463 0 0 0 .02 1.468A4.017 4.017 0 0 0 2.3 12.5l-.015.036a3.861 3.861 0 0 0-.216.779A3.968 3.968 0 0 0 2 14c.003.24.027.48.072.716a4 4 0 0 0 .235.832c.006.014.015.027.021.041a3.85 3.85 0 0 0 .417.727c.105.146.219.285.342.415.072.076.148.146.225.216.1.091.205.179.315.26.11.081.2.14.308.2.02.013.039.028.059.04v.053a3.506 3.506 0 0 0 3.03 3.469 3.426 3.426 0 0 0 4.154.577A.972.972 0 0 1 11 21Zm10.934-7.68a3.956 3.956 0 0 0-.215-.779l-.017-.038a4.016 4.016 0 0 0-.79-1.235 3.417 3.417 0 0 0 .017-1.468 3.387 3.387 0 0 0-.1-.333c-.034-.108-.057-.22-.1-.324a3.517 3.517 0 0 0-.766-1.128 3.5 3.5 0 0 0-2.202-3.777A3.5 3.5 0 0 0 14.5 2a3.451 3.451 0 0 0-1.5.352V21a.972.972 0 0 1-.184.546 3.426 3.426 0 0 0 4.154-.577A3.506 3.506 0 0 0 20 17.5v-.049c.02-.012.039-.027.059-.04.106-.064.208-.13.308-.2s.214-.169.315-.26c.077-.07.153-.14.225-.216a4.007 4.007 0 0 0 .459-.588c.115-.176.215-.361.3-.554.006-.014.015-.027.021-.041.087-.213.156-.434.205-.659.013-.057.024-.115.035-.173.046-.237.07-.478.073-.72a3.948 3.948 0 0 0-.066-.68Z" />
-        </svg>
-        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-blue-900"></span>
+      <div class="relative shrink-0 w-10 h-10 rounded-full bg-white dark:bg-gray-800 p-1.5 flex items-center justify-center border border-white/20">
+        <img src="/src/assets/logos/dole_logo.png" alt="DOLE Logo" class="w-full h-full object-contain block drop-shadow-xs" />
+        <span class="absolute -bottom-0.5 -right-0.5 z-10 w-3 h-3 rounded-full bg-emerald-400 border-2 border-blue-900 shadow-xs"></span>
       </div>
       <div class="truncate">
         <div class="flex items-center gap-1.5">
@@ -94,14 +81,14 @@
   </div>
 
   <!-- Topic Selector Quick Bar -->
-  <div class="px-4 py-2 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-800 flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0 text-xs">
-    <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider shrink-0 me-1">Topic:</span>
-    <button type="button" data-chatbot-topic="portal" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border border-blue-300 dark:border-blue-700 transition-colors whitespace-nowrap cursor-pointer">Portal Guide</button>
-    <button type="button" data-chatbot-topic="spes" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer">SPES</button>
-    <button type="button" data-chatbot-topic="gip" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer">GIP</button>
-    <button type="button" data-chatbot-topic="dole_programs" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer">TUPAD &amp; DILP</button>
-    <button type="button" data-chatbot-topic="dole_office" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer">DOLE Office</button>
-    <button type="button" data-chatbot-topic="other" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer">Other</button>
+  <div id="dole-chatbot-topic-bar" class="chatbot-horizontal-scroll px-4 py-2 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-800 flex items-center gap-1.5 shrink-0 text-xs">
+    <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider shrink-0 me-1 select-none pointer-events-none">Topic:</span>
+    <button type="button" data-chatbot-topic="portal" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border border-blue-300 dark:border-blue-700 transition-colors whitespace-nowrap cursor-pointer shrink-0">Portal Guide</button>
+    <button type="button" data-chatbot-topic="spes" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer shrink-0">SPES</button>
+    <button type="button" data-chatbot-topic="gip" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer shrink-0">GIP</button>
+    <button type="button" data-chatbot-topic="dole_programs" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer shrink-0">TUPAD &amp; DILP</button>
+    <button type="button" data-chatbot-topic="dole_office" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer shrink-0">DOLE Office</button>
+    <button type="button" data-chatbot-topic="other" class="chatbot-topic-pill px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors whitespace-nowrap cursor-pointer shrink-0">Other</button>
   </div>
 
   <!-- Security Lockdown Alert Banner -->
@@ -123,10 +110,8 @@
     <!-- Welcome message bubble -->
     <div class="flex gap-3 text-sm flex-1">
       <span class="relative flex shrink-0 overflow-hidden rounded-full w-8 h-8 self-start">
-        <div class="rounded-full bg-blue-100 dark:bg-blue-900/60 border border-blue-200 dark:border-blue-700 p-1.5 flex items-center justify-center">
-          <svg class="w-4 h-4 text-blue-700 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path>
-          </svg>
+        <div class="rounded-full bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 p-1 flex items-center justify-center w-full h-full">
+          <img src="/src/assets/logos/dole_logo.png" alt="DOLE Logo" class="w-full h-full object-contain block drop-shadow-xs" />
         </div>
       </span>
       <div class="space-y-1.5 max-w-[85%]">

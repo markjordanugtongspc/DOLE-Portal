@@ -216,6 +216,25 @@ th.text-left .datatable-sorter {
   scrollbar-color: rgba(156, 163, 175, 0.15) transparent;
 }
 
+/* Chatbot topic horizontal scrollbar (hidden native bar, mouse drag enabled) */
+.chatbot-horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.chatbot-horizontal-scroll:active {
+  cursor: grabbing;
+}
+
+.chatbot-horizontal-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 #sidebar-logout-confirmation {
   animation: sidebar-logout-fade-in 180ms ease-out;
 }

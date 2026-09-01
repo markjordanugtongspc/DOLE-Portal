@@ -251,8 +251,8 @@
                     </div>
                 </div>
             </div>            <!-- VIEW 2: Dynamic Chat Messenger View Container -->
-            <div id="chat-view-container" class="flex flex-col xl:flex-row gap-5 relative items-stretch min-h-[calc(100vh-170px)]">
-                <aside id="chat-tickets-drawer" class="w-full xl:w-80 xl:flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col overflow-hidden h-[580px]">
+            <div id="chat-view-container" class="flex flex-col xl:flex-row gap-5 relative items-stretch h-auto min-h-[640px] xl:h-[calc(100vh-140px)] xl:min-h-[740px]">
+                <aside id="chat-tickets-drawer" class="w-full xl:w-80 xl:flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm flex flex-col overflow-hidden h-[500px] xl:h-full">
                     <div class="border-b border-gray-100 dark:border-gray-800 pb-4 mb-4">
                         <div class="flex items-start justify-between gap-3">
                             <div>
@@ -281,23 +281,23 @@
                     </div>
                 </aside>
 
-                <section class="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm h-[580px] flex flex-col overflow-hidden relative">
+                <section class="flex-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm flex flex-col overflow-hidden relative min-h-[640px] xl:min-h-0 xl:h-full">
                     <!-- Improved Staff Chat Header inside section -->
-                    <div id="staff-chat-header" class="hidden items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50/40 dark:bg-gray-900/40 backdrop-blur-sm z-10">
-                        <div class="flex items-center gap-3 min-w-0">
+                    <div id="staff-chat-header" class="hidden flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-800 px-5 md:px-6 py-3.5 bg-gray-50/70 dark:bg-gray-900/60 backdrop-blur-md z-10">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
                             <!-- Ticket ID badge -->
-                            <span id="staff-chat-header-id" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50"></span>
+                            <span id="staff-chat-header-id" class="shrink-0 text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 shadow-2xs"></span>
                             <!-- Ticket Subject Title with Underline Gradient Highlight -->
-                            <div class="relative min-w-0 pb-1.5 inline-block">
-                                <h2 id="staff-chat-header-subject" class="text-base font-extrabold text-gray-900 dark:text-white truncate"></h2>
-                                <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full"></div>
+                            <div class="min-w-0 flex-1 relative pb-1">
+                                <h2 id="staff-chat-header-subject" class="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate" title=""></h2>
+                                <div class="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-blue-600 via-emerald-500 to-teal-400 rounded-full"></div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                             <!-- Category Badge -->
-                            <span id="staff-chat-header-category" class="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-md"></span>
+                            <span id="staff-chat-header-category" class="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-700/60 px-2.5 py-1 rounded-md"></span>
                             <!-- Priority Badge -->
-                            <div id="staff-chat-header-priority"></div>
+                            <div id="staff-chat-header-priority" class="shrink-0"></div>
                         </div>
                     </div>
                     <div id="chat-messages-viewport" class="flex-1 p-5 md:p-6 overflow-y-auto space-y-4 bg-gray-50/30 dark:bg-gray-900/20 custom-scrollbar">
@@ -321,38 +321,30 @@
                         </div>
                     </div>
 
-                    <div id="chat-composer-shell" class="hidden border-t border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 p-4 transition-all duration-200">
-                                                <form id="chat-input-form">
-                                                    <input type="file" id="chat-image-upload" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" class="hidden" />
-                            <div class="w-full border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 shadow-xs overflow-hidden">
-                                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-                                    <div class="flex flex-wrap items-center divide-gray-200 dark:divide-gray-600 sm:divide-x sm:rtl:divide-x-reverse">
-                                        <div class="flex items-center space-x-1 rtl:space-x-reverse sm:pe-4">
-                                            <button id="btn-upload-file" type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" title="Attach file">
-                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8"/></svg>
-                                                <span class="sr-only">Attach file</span>
-                                            </button>
-                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
-                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h.01M8.99 9H9m12 3a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM6.6 13a5.5 5.5 0 0 0 10.81 0H6.6Z"/></svg>
-                                                <span class="sr-only">Add emoji</span>
-                                            </button>
-                                            <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600">
-                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
-                                                <span class="sr-only">Voice note</span>
-                                            </button>
-                                        </div>
-                                        <div class="flex flex-wrap items-center space-x-1 rtl:space-x-reverse sm:ps-4">
-                                            <button id="btn-upload-image" type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" title="Upload image">
-                                                <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M16 18H8l2.5-6 2 4 1.5-2 2 4Zm-1-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 18h8l-2-4-1.5 2-2-4L8 18Zm7-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></svg>
-                                                <span class="sr-only">Upload image</span>
-                                            </button>
-                                        </div>
+                    <div id="chat-composer-shell" class="hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 p-4 sm:p-5 transition-all duration-200">
+                        <form id="chat-input-form">
+                            <input type="file" id="chat-image-upload" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" class="hidden" />
+                            <div class="w-full border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/90 shadow-xs overflow-hidden focus-within:border-blue-500 dark:focus-within:border-blue-500 transition-colors">
+                                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200/80 dark:border-gray-700/80 bg-gray-100/60 dark:bg-gray-800/60">
+                                    <div class="flex flex-wrap items-center space-x-1 rtl:space-x-reverse">
+                                        <button id="btn-upload-file" type="button" disabled class="p-2 text-gray-400 dark:text-gray-500 rounded-lg cursor-not-allowed opacity-50 select-none" title="Attach document or file (Coming Soon)">
+                                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8v8a5 5 0 1 0 10 0V6.5a3.5 3.5 0 1 0-7 0V15a2 2 0 0 0 4 0V8"/></svg>
+                                            <span class="sr-only">Attach file (Coming Soon)</span>
+                                        </button>
+                                        <button id="btn-upload-image" type="button" class="p-2 text-gray-600 rounded-lg cursor-pointer hover:text-blue-600 hover:bg-white dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors" title="Upload screenshot or image">
+                                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M16 18H8l2.5-6 2 4 1.5-2 2 4Zm-1-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m14-4v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1ZM8 18h8l-2-4-1.5 2-2-4L8 18Zm7-8.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/></svg>
+                                            <span class="sr-only">Upload image</span>
+                                        </button>
+                                        <button type="button" disabled class="p-2 text-gray-400 dark:text-gray-500 rounded-lg cursor-not-allowed opacity-50 select-none" title="Record voice note (Coming Soon)">
+                                            <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+                                            <span class="sr-only">Voice note (Coming Soon)</span>
+                                        </button>
                                     </div>
                                 </div>
-                                <div id="attachment-preview-container" class="hidden flex-wrap gap-2 px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-150 dark:border-gray-800"></div>
-                                <div class="px-4 py-2 bg-white dark:bg-gray-900">
+                                <div id="attachment-preview-container" class="hidden flex-wrap gap-2 px-4 py-2.5 bg-white dark:bg-gray-900 border-b border-gray-150 dark:border-gray-800"></div>
+                                <div class="px-4 py-3 bg-white dark:bg-gray-900">
                                     <label for="chat-editor" class="sr-only">Message</label>
-                                    <textarea id="chat-editor" rows="2" class="block w-full px-0 text-sm text-gray-900 bg-white border-0 dark:bg-gray-900 focus:ring-0 dark:text-white dark:placeholder-gray-500 resize-y min-h-[38px] max-h-[200px] outline-none" placeholder="Type your reply here..." required></textarea>
+                                    <textarea id="chat-editor" rows="3" class="block w-full px-0 text-sm text-gray-900 bg-white border-0 dark:bg-gray-900 focus:ring-0 dark:text-white dark:placeholder-gray-500 resize-y min-h-[52px] max-h-[240px] outline-none leading-relaxed" placeholder="Type your reply here..." required></textarea>
                                 </div>
                             </div>
                             <div class="flex justify-end mt-3">

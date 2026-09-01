@@ -1223,7 +1223,10 @@ class TicketSupportApp {
                 const headerPriority = document.getElementById('staff-chat-header-priority');
 
                 if (headerId) headerId.textContent = ticket.id;
-                if (headerSubject) headerSubject.textContent = ticket.subject;
+                if (headerSubject) {
+                    headerSubject.textContent = ticket.subject;
+                    headerSubject.title = ticket.subject;
+                }
                 if (headerCategory) headerCategory.textContent = ticket.category;
                 if (headerPriority && this.table) {
                     headerPriority.innerHTML = this.table.getPriorityBadge(ticket.priority);
@@ -2840,11 +2843,32 @@ class TicketTable {
     }
 }
 
+/* START HIGHLIGHT CHAT VIEW - Detects ?highlight=chat URL param and animates container */
+const setupTicketChatHighlight = () => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('highlight')) return;
+
+    const chatContainer = document.getElementById('chat-view-container') || document.getElementById('table-view-container');
+    if (!chatContainer) return;
+
+    // Scroll into view
+    setTimeout(() => {
+        chatContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        chatContainer.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500', 'rounded-2xl', 'transition-all', 'duration-500');
+
+        setTimeout(() => {
+            chatContainer.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
+        }, 4500);
+    }, 400);
+};
+/* END HIGHLIGHT CHAT VIEW */
+
 const initTicketApp = () => {
-    if (document.getElementById('category-drawer') || document.getElementById('tickets-table-body')) {
+    if (document.getElementById('category-drawer') || document.getElementById('tickets-table-body') || document.getElementById('chat-view-container')) {
         const app = new TicketSupportApp();
         app.init();
         window.TicketSupportAppInstance = app;
+        setupTicketChatHighlight();
     }
 };
 

@@ -7,6 +7,7 @@ import { fetchSystems } from '@/backend/api/systems.api.js';
 import { fetchTickets } from '@/backend/api/tickets.api.js';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
 import { countGipsByStaff, fetchGipsByStaff } from '@/backend/api/gips.api.js';
+import { initAnnouncementBanner } from './announcement-banner.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -113,6 +114,9 @@ class AdminDashboardController {
         };
 
         if (!Object.values(this.metricEls).some(Boolean)) return;
+
+        // Flowbite Marketing Announcement CTA Banner on top of Image Banner Header
+        initAnnouncementBanner('#announcement-banner-slot');
 
         this.renderUserMetrics();
         this.renderTicketMetrics();
@@ -371,6 +375,9 @@ class StaffDashboardController {
         // Initialize Flowbite Modal for Intruder Detection
         const modalEl = document.getElementById('intruder-modal');
         this.intruderModal = modalEl ? new Modal(modalEl) : null;
+        // Flowbite Marketing Announcement CTA Banner on top of Image Banner Header
+        initAnnouncementBanner('#announcement-banner-slot');
+
         this.initEvents();
         this.loadSystems();
         this.initNetworkChart();
