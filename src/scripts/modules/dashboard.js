@@ -564,7 +564,13 @@ class StaffDashboardController {
     createSystemCardHtml(sys) {
         const card = document.createElement('div');
         const sysColor = sys.color || '#3b82f6';
-        card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)]';
+        if (isGipRestricted) {
+            card.className = 'system-card disabled-state cursor-not-allowed opacity-65 grayscale-[30%] border border-rose-500/40 flex flex-col justify-between transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)] select-none';
+            card.setAttribute('data-disabled', 'true');
+            card.setAttribute('title', 'Exclusive only for LDNPFO (Iligan) personnel');
+        } else {
+            card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)]';
+        }
         card.style.setProperty('--sys-color', sysColor);
         card.setAttribute('data-url', sys.systemUrl);
         card.setAttribute('data-has-link', sys.systemUrl ? 'true' : 'false');
@@ -588,7 +594,13 @@ class StaffDashboardController {
                 <div class="p-6 flex-1 flex flex-col justify-between">
                     <div>
                         <div class="flex items-start justify-between gap-3 mb-2">
-                            <h3 class="text-lg font-bold text-white transition-colors">${this.escapeHtml(sys.title)}</h3>
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-lg font-bold text-white transition-colors">${this.escapeHtml(sys.title)}</h3>
+                                    ${isGipRestricted ? '<span class="inline-flex items-center text-[9px] font-black uppercase tracking-wider text-rose-300 bg-rose-950/80 px-1.5 py-0.5 border border-rose-500/40">Restricted</span>' : ''}
+                                </div>
+                                ${isGipRestricted ? '<p class="text-[11px] font-bold text-rose-300 dark:text-rose-400 leading-tight">Notice: Exclusive for LDNPFO (Iligan) use only.</p>' : ''}
+                            </div>
                             <span class="shrink-0 whitespace-nowrap text-[10px] bg-white/20 px-2 py-0.5 font-extrabold uppercase" id="click-counter-${sys.id}">CLICKS ${parseInt(localStorage.getItem(`system_clicks_${sys.id}`) || '0', 10)}</span>
                         </div>
                         <p class="text-xs font-semibold text-white/70">${this.escapeHtml(sys.description)}</p>
@@ -608,6 +620,13 @@ class StaffDashboardController {
             const system = this.systems.find((item) => String(item.id) === String(sysId));
             const title = String(system?.title || '').toLowerCase();
             const systemKey = title.includes('spes') ? 'SPES' : title.includes('gip') ? 'GIP' : null;
+            const currentUser = getCachedCurrentUser();
+            const roleId = Number(currentUser?.role_id);
+            const isGip = title.includes('gip') || String(sysId) === '2' || String(url).toLowerCase().includes('gip');
+            
+            if (isGip && roleId > 2) {
+                return;
+            }
             const openInNewTab = Boolean(e.ctrlKey || e.metaKey || e.button === 1);
 
             // Increment click counter
