@@ -9,6 +9,13 @@ import { Modal } from 'flowbite';
 /* START ANNOUNCEMENT DATA LIST - Top items are prioritized and sequenced first */
 export const PORTAL_ANNOUNCEMENTS = [
     {
+        id: 'announcement-draggable-chatbot-2026',
+        text: 'The DOLE Chatbot is now draggable anywhere on mobile with automatic magnetic edge snapping. Tap and place it wherever convenient!',
+        ctaText: 'Try Chatbot',
+        ctaUrl: '#',
+        actionType: 'open-chatbot'
+    },
+    {
         id: 'announcement-forgot-password-sms-2026',
         text: 'You can now reset your password via SMS OTP if you forgot it. Ensure your mobile number is updated in Profile Settings!',
         ctaText: 'Try It Out',
@@ -46,6 +53,29 @@ let currentAnnouncementIndex = 0;
 let isBannerPaused = false;
 let forgotTourModalInstance = null;
 
+/* START ENSURE MOBILE SIDEBAR OPEN - Opens Flowbite sidebar drawer on mobile/tablet so tour and highlight elements are visible */
+export const ensureMobileSidebarOpen = () => {
+    const isMobileOrTablet = window.innerWidth < 1024 || window.matchMedia('(max-width: 1023px)').matches;
+    const sidebarEl = document.getElementById('default-sidebar');
+    if (!sidebarEl) return false;
+
+    // Check if sidebar is currently closed / hidden off-screen
+    const isSidebarClosed = sidebarEl.classList.contains('-translate-x-full') || 
+                            sidebarEl.classList.contains('translate-x-full') ||
+                            sidebarEl.getAttribute('aria-hidden') === 'true';
+
+    if (isMobileOrTablet || isSidebarClosed) {
+        const toggleBtn = document.querySelector('[data-drawer-toggle="default-sidebar"]') ||
+                          document.querySelector('[data-drawer-target="default-sidebar"]');
+        if (toggleBtn) {
+            toggleBtn.click();
+            return true;
+        }
+    }
+    return false;
+};
+/* END ENSURE MOBILE SIDEBAR OPEN */
+
 /* START FORGOT PASSWORD INTERACTIVE TOUR SYSTEM */
 const updateTourUrlParam = (step) => {
     const url = new URL(window.location.href);
@@ -58,113 +88,123 @@ const updateTourUrlParam = (step) => {
 };
 
 export const startProfilePhoneTour = () => {
-    const userCard = document.getElementById('sidebar-user-card');
-    const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
-    const settingsBtn = document.getElementById('sidebar-profile-settings-btn');
-    if (!userCard) return;
+    const wasClosed = ensureMobileSidebarOpen();
+    const delay = wasClosed ? 350 : 0;
 
-    // STEP 1: Highlight the user profile dropdown card alone
-    updateTourUrlParam('profile-dropdown');
-    userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    userCard.classList.add('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
-
-    // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Settings button
     setTimeout(() => {
-        userCard.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
-        
-        const container = document.getElementById('sidebar-user-actions-container');
-        const isClosed = container?.classList.contains('grid-rows-[0fr]');
-        if (isClosed && profileInfoBtn) {
-            profileInfoBtn.click();
-        }
+        const userCard = document.getElementById('sidebar-user-card');
+        const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
+        const settingsBtn = document.getElementById('sidebar-profile-settings-btn');
+        if (!userCard) return;
 
-        updateTourUrlParam('profile-settings');
-        if (settingsBtn) {
-            settingsBtn.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
-        }
+        // STEP 1: Highlight the user profile dropdown card alone
+        updateTourUrlParam('profile-dropdown');
+        userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        userCard.classList.add('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
 
-        // STEP 3: After 2.0s, remove Settings button highlight and open the Settings Modal
+        // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Settings button
         setTimeout(() => {
-            if (settingsBtn) {
-                settingsBtn.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
-                settingsBtn.click();
+            userCard.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
+            
+            const container = document.getElementById('sidebar-user-actions-container');
+            const isClosed = container?.classList.contains('grid-rows-[0fr]');
+            if (isClosed && profileInfoBtn) {
+                profileInfoBtn.click();
             }
 
-            // STEP 4: Inside Modal, highlight ONLY the Phone Number input field first
-            setTimeout(() => {
-                updateTourUrlParam('phone-number-field');
-                const phoneInput = document.getElementById('phone') || document.getElementById('settings-phone');
-                const saveBtn = document.getElementById('settings-save-button');
+            updateTourUrlParam('profile-settings');
+            if (settingsBtn) {
+                settingsBtn.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
+            }
 
-                if (phoneInput) {
-                    phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    phoneInput.focus();
-                    phoneInput.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+            // STEP 3: After 2.0s, remove Settings button highlight and open the Settings Modal
+            setTimeout(() => {
+                if (settingsBtn) {
+                    settingsBtn.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
+                    settingsBtn.click();
                 }
 
-                // STEP 5: After 2.5s on the Phone field, remove Phone highlight and highlight ONLY the Save Settings button
+                // STEP 4: Inside Modal, highlight ONLY the Phone Number input field first
                 setTimeout(() => {
+                    updateTourUrlParam('phone-number-field');
+                    const phoneInput = document.getElementById('phone') || document.getElementById('settings-phone');
+                    const saveBtn = document.getElementById('settings-save-button');
+
                     if (phoneInput) {
-                        phoneInput.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                        phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        phoneInput.focus();
+                        phoneInput.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
                     }
 
-                    updateTourUrlParam('save-settings');
-                    sessionStorage.setItem('dole_forgot_pwd_tour_step', 'awaiting_profile_save');
+                    // STEP 5: After 2.5s on the Phone field, remove Phone highlight and highlight ONLY the Save Settings button
+                    setTimeout(() => {
+                        if (phoneInput) {
+                            phoneInput.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                        }
 
-                    if (saveBtn) {
-                        saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        saveBtn.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
-                    }
-                }, 2500);
-            }, 500);
-        }, 2000);
-    }, 1500);
+                        updateTourUrlParam('save-settings');
+                        sessionStorage.setItem('dole_forgot_pwd_tour_step', 'awaiting_profile_save');
+
+                        if (saveBtn) {
+                            saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            saveBtn.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                        }
+                    }, 2500);
+                }, 500);
+            }, 2000);
+        }, 1500);
+    }, delay);
 };
 
 export const startLogoutTour = () => {
     sessionStorage.setItem('dole_forgot_pwd_tour', 'active');
-    const userCard = document.getElementById('sidebar-user-card');
-    const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
-    const logoutBtn = document.getElementById('sidebar-profile-logout-btn');
-    if (!userCard) return;
+    const wasClosed = ensureMobileSidebarOpen();
+    const delay = wasClosed ? 350 : 0;
 
-    // STEP 1: Highlight the profile dropdown card alone
-    updateTourUrlParam('logout-dropdown');
-    userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    userCard.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
-
-    // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Logout button
     setTimeout(() => {
-        userCard.classList.remove('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
+        const userCard = document.getElementById('sidebar-user-card');
+        const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
+        const logoutBtn = document.getElementById('sidebar-profile-logout-btn');
+        if (!userCard) return;
 
-        const container = document.getElementById('sidebar-user-actions-container');
-        const isClosed = container?.classList.contains('grid-rows-[0fr]');
-        if (isClosed && profileInfoBtn) {
-            profileInfoBtn.click();
-        }
+        // STEP 1: Highlight the profile dropdown card alone
+        updateTourUrlParam('logout-dropdown');
+        userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        userCard.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
 
-        updateTourUrlParam('logout-button');
-        if (logoutBtn) {
-            logoutBtn.classList.add('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
-        }
-
-        // STEP 3: After 2.0s, remove Logout button highlight and open the Logout Confirmation Modal
+        // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Logout button
         setTimeout(() => {
-            if (logoutBtn) {
-                logoutBtn.classList.remove('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
-                logoutBtn.click();
+            userCard.classList.remove('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
+
+            const container = document.getElementById('sidebar-user-actions-container');
+            const isClosed = container?.classList.contains('grid-rows-[0fr]');
+            if (isClosed && profileInfoBtn) {
+                profileInfoBtn.click();
             }
 
-            // STEP 4: Inside Modal, highlight ONLY the Confirm Logout button
+            updateTourUrlParam('logout-button');
+            if (logoutBtn) {
+                logoutBtn.classList.add('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
+            }
+
+            // STEP 3: After 2.0s, remove Logout button highlight and open the Logout Confirmation Modal
             setTimeout(() => {
-                updateTourUrlParam('confirm-logout');
-                const confirmLogoutBtn = document.getElementById('sidebar-logout-confirm-btn');
-                if (confirmLogoutBtn) {
-                    confirmLogoutBtn.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                if (logoutBtn) {
+                    logoutBtn.classList.remove('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
+                    logoutBtn.click();
                 }
-            }, 500);
-        }, 2000);
-    }, 1500);
+
+                // STEP 4: Inside Modal, highlight ONLY the Confirm Logout button
+                setTimeout(() => {
+                    updateTourUrlParam('confirm-logout');
+                    const confirmLogoutBtn = document.getElementById('sidebar-logout-confirm-btn');
+                    if (confirmLogoutBtn) {
+                        confirmLogoutBtn.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                    }
+                }, 500);
+            }, 2000);
+        }, 1500);
+    }, delay);
 };
 
 // Listen for successful profile save during tour to transition into logout phase
@@ -194,7 +234,7 @@ export const showForgotPasswordTourModal = () => {
                         <div class="flex items-center gap-2.5">
                             <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-xs text-white shadow-xs shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                 </svg>
                             </span>
                             <div>
@@ -266,56 +306,66 @@ export const showForgotPasswordTourModal = () => {
 
 /* START HIGHLIGHT PROFILE SETTINGS - Pulses emerald border and auto-toggles card preview twice */
 const triggerSettingsHighlight = () => {
-    const userCard = document.getElementById('sidebar-user-card');
-    const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
-    if (!userCard) return;
-
-    userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    userCard.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
-
-    if (profileInfoBtn) {
-        setTimeout(() => {
-            profileInfoBtn.click();
-        }, 400);
-
-        setTimeout(() => {
-            profileInfoBtn.click();
-        }, 1800);
-
-        setTimeout(() => {
-            profileInfoBtn.click();
-        }, 2600);
-
-        setTimeout(() => {
-            profileInfoBtn.click();
-        }, 4000);
-    }
+    const wasClosed = ensureMobileSidebarOpen();
+    const delay = wasClosed ? 350 : 0;
 
     setTimeout(() => {
-        userCard.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
-    }, 4500);
+        const userCard = document.getElementById('sidebar-user-card');
+        const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
+        if (!userCard) return;
+
+        userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        userCard.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
+
+        if (profileInfoBtn) {
+            setTimeout(() => {
+                profileInfoBtn.click();
+            }, 400);
+
+            setTimeout(() => {
+                profileInfoBtn.click();
+            }, 1800);
+
+            setTimeout(() => {
+                profileInfoBtn.click();
+            }, 2600);
+
+            setTimeout(() => {
+                profileInfoBtn.click();
+            }, 4000);
+        }
+
+        setTimeout(() => {
+            userCard.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
+        }, 4500);
+    }, delay);
 };
 /* END HIGHLIGHT PROFILE SETTINGS */
 
 /* START HIGHLIGHT TICKETS - Directs user to the appropriate tickets page and triggers target highlight */
 const triggerTicketsHighlight = () => {
-    const isAdminOrHr = window.location.pathname.includes('/admin/') || 
-                        window.__PORTAL_SESSION?.roles?.name?.toLowerCase() === 'admin' || 
-                        window.__PORTAL_SESSION?.roles?.name?.toLowerCase() === 'hr';
+    const wasClosed = ensureMobileSidebarOpen();
+    const delay = wasClosed ? 350 : 0;
 
-    const targetUrl = isAdminOrHr
-        ? '/src/pages/user/admin/tickets/?highlight=chat'
-        : '/src/pages/user/staff/tickets/?highlight=chat';
+    setTimeout(() => {
+        const isAdminOrHr = window.location.pathname.includes('/admin/') || 
+                            window.__PORTAL_SESSION?.roles?.name?.toLowerCase() === 'admin' || 
+                            window.__PORTAL_SESSION?.roles?.name?.toLowerCase() === 'hr';
 
-    const ticketNavBtn = document.querySelector('a[data-nav-id="tickets"]') || document.querySelector('a[href*="/tickets/"]');
-    if (ticketNavBtn) {
-        ticketNavBtn.classList.add('ring-4', 'ring-emerald-500', 'animate-pulse', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'border', 'border-emerald-400');
-        setTimeout(() => {
+        const targetUrl = isAdminOrHr
+            ? '/src/pages/user/admin/tickets/?highlight=chat'
+            : '/src/pages/user/staff/tickets/?highlight=chat';
+
+        const ticketNavBtn = document.querySelector('a[data-nav-id="tickets"]') || document.querySelector('a[href*="/tickets/"]');
+        if (ticketNavBtn) {
+            ticketNavBtn.classList.add('ring-4', 'ring-emerald-500', 'animate-pulse', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'border', 'border-emerald-400');
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 600);
+        } else {
             window.location.href = targetUrl;
-        }, 600);
-    } else {
-        window.location.href = targetUrl;
-    }
+        }
+    }, delay);
 };
 /* END HIGHLIGHT TICKETS */
 
@@ -337,17 +387,22 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
     bannerWrapper.innerHTML = `
         <div class="min-h-0 overflow-hidden">
             <div id="marketing-banner" class="w-full flex flex-col md:flex-row items-center justify-between p-3.5 sm:p-4 bg-white dark:bg-gray-900 border border-blue-200 dark:border-blue-900/60 rounded-2xl shadow-xs transition-all duration-300 hover:border-blue-300 dark:hover:border-blue-800">
-                <div class="flex items-center w-full min-w-0 mb-3 md:mb-0 md:me-4 gap-3">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                <div id="announcement-content-box" class="flex items-center w-full min-w-0 mb-3 md:mb-0 md:me-4 gap-2.5 sm:gap-3 cursor-pointer group select-none">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0 transition-transform group-hover:scale-105">
                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 9h6m-6 3h6m-6 3h6M6.996 9h.01m-.01 3h.01m-.01 3h.01M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/>
                         </svg>
                     </span>
-                    <div class="min-w-0 flex-1 overflow-hidden">
-                        <p id="announcement-text" class="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 transition-opacity duration-300 truncate sm:whitespace-normal">
+                    <div class="min-w-0 flex-1 overflow-hidden transition-all duration-300 ease-in-out">
+                        <p id="announcement-text" class="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 transition-all duration-300 line-clamp-1 sm:line-clamp-none leading-relaxed">
                             ${PORTAL_ANNOUNCEMENTS[0].text}
                         </p>
                     </div>
+                    <span id="announcement-expand-icon" class="sm:hidden text-gray-400 dark:text-gray-500 transition-transform duration-300 shrink-0 p-1" title="Tap to expand or collapse">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </span>
                 </div>
                 <div class="flex items-center justify-between sm:justify-end w-full md:w-auto shrink-0 gap-2 border-t md:border-t-0 border-gray-100 dark:border-gray-800 pt-2.5 md:pt-0">
                     <a id="announcement-cta" href="${PORTAL_ANNOUNCEMENTS[0].ctaUrl}" class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900/50 shadow-xs font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all select-none">
@@ -369,7 +424,28 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
     const ctaBtn = bannerWrapper.querySelector('#announcement-cta');
     const dismissBtn = bannerWrapper.querySelector('#btn-dismiss-announcement');
     const textEl = bannerWrapper.querySelector('#announcement-text');
+    const contentBox = bannerWrapper.querySelector('#announcement-content-box');
+    const expandIcon = bannerWrapper.querySelector('#announcement-expand-icon');
     const bannerBox = bannerWrapper.querySelector('#marketing-banner');
+
+    let isExpanded = false;
+
+    // Mobile tap-to-toggle expandable text wrap with smooth animation
+    if (contentBox && textEl) {
+        contentBox.addEventListener('click', (e) => {
+            // Ignore click if user clicked on a link or button
+            if (e.target.closest('a, button')) return;
+
+            isExpanded = !isExpanded;
+            if (isExpanded) {
+                textEl.classList.remove('line-clamp-1');
+                expandIcon?.classList.add('rotate-180');
+            } else {
+                textEl.classList.add('line-clamp-1');
+                expandIcon?.classList.remove('rotate-180');
+            }
+        });
+    }
 
     const updateBannerContent = (index) => {
         const item = PORTAL_ANNOUNCEMENTS[index];
@@ -431,7 +507,10 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
                 return;
             }
 
-            if (currentItem.actionType === 'forgot-password-guide') {
+            if (currentItem.actionType === 'open-chatbot') {
+                e.preventDefault();
+                document.getElementById('dole-chatbot-fab')?.click();
+            } else if (currentItem.actionType === 'forgot-password-guide') {
                 e.preventDefault();
                 showForgotPasswordTourModal();
             } else if (currentItem.actionType === 'settings-highlight') {

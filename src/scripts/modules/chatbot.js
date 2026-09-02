@@ -65,6 +65,7 @@ export class DoleChatbotController {
         this.isProcessing = false;
         this.isOpen = false;
         this.lastUserScope = null;
+        this._mobileFabPosition = null;
 
         // Instantiate subchild modules
         this.storage = new ChatbotStorage(this);
@@ -85,6 +86,9 @@ export class DoleChatbotController {
         // Initialize UI DOM references and bind event listeners
         this.ui.initElements();
         this.bindEvents();
+
+        // Enable touch and pointer dragging for mobile responsive view
+        this.setupDraggableFab();
 
         // Observe modals and drawers to automatically hide FAB while overlays are active
         this.ui.setupOverlayObserver();
@@ -125,6 +129,7 @@ export class DoleChatbotController {
     /* START bindEvents METHOD */
     bindEvents() {
         const fab = document.getElementById('dole-chatbot-fab');
+        const backBtn = document.getElementById('dole-chatbot-back-btn');
         const closeBtn = document.getElementById('dole-chatbot-close-btn');
         const clearBtn = document.getElementById('dole-chatbot-clear-btn');
         const form = document.getElementById('dole-chatbot-form');
@@ -133,6 +138,10 @@ export class DoleChatbotController {
 
         if (fab) {
             fab.addEventListener('click', () => this.toggleWindow());
+        }
+
+        if (backBtn) {
+            backBtn.addEventListener('click', () => this.closeWindow());
         }
 
         if (closeBtn) {
@@ -330,6 +339,17 @@ export class DoleChatbotController {
             this.closeWindow();
         });
 
+        // Dismiss software mobile keyboard when user taps or scrolls messages container
+        const messagesEl = document.getElementById('dole-chatbot-messages');
+        if (messagesEl) {
+            messagesEl.addEventListener('pointerdown', () => {
+                input?.blur();
+            });
+            messagesEl.addEventListener('touchstart', () => {
+                input?.blur();
+            }, { passive: true });
+        }
+
         // Quick prompt chips
         document.addEventListener('click', (e) => {
             const promptBtn = e.target.closest('.chatbot-quick-prompt');
@@ -375,6 +395,9 @@ export class DoleChatbotController {
 
     closeWindow() {
         this.isOpen = false;
+        const input = document.getElementById('dole-chatbot-input');
+        input?.blur();
+        document.activeElement?.blur();
         this.ui.hideWindow();
         if (window.DEBUG) window.DEBUG.flow('CHATBOT', 'Chatbot window closed.');
     }
@@ -427,7 +450,164 @@ export class DoleChatbotController {
     }
     /* END restoreSession METHOD */
 
-    /* START applyFabPositionMode METHOD - Repositions FAB on mobile based on auth state */
+    /* START setupDraggableFab METHOD - Enables smooth dragging with tactile shrink on mobile */
+    setupDraggableFab() {
+        const fab = document.getElementById('dole-chatbot-fab');
+        if (!fab) return;
+
+        fab.style.touchAction = 'none';
+
+        let isDragging = false;
+        let hasMoved = false;
+        let startPointerX = 0;
+        let startPointerY = 0;
+        let startFabLeft = 0;
+        let startFabTop = 0;
+        const dragThreshold = 6;
+
+        // Block background page scrolling while interacting with the FAB
+        fab.addEventListener('touchstart', (e) => {
+            const isMobile = window.matchMedia('(max-width: 639px)').matches;
+            if (isMobile) {
+                e.stopPropagation();
+            }
+        }, { passive: true });
+
+        fab.addEventListener('touchmove', (e) => {
+            const isMobile = window.matchMedia('(max-width: 639px)').matches;
+            if (isMobile && isDragging) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { passive: false });
+
+        const onPointerDown = (e) => {
+            if (e.button && e.button !== 0) return;
+            const isMobile = window.matchMedia('(max-width: 639px)').matches;
+            if (!isMobile) return;
+
+            const rect = fab.getBoundingClientRect();
+            isDragging = true;
+            hasMoved = false;
+            startPointerX = e.clientX;
+            startPointerY = e.clientY;
+            startFabLeft = rect.left;
+            startFabTop = rect.top;
+
+            // Tactile feedback: shrink FAB slightly while holding/dragging
+            fab.classList.add('scale-90');
+            fab.style.transition = 'none';
+
+            try {
+                fab.setPointerCapture(e.pointerId);
+            } catch {}
+
+            window.addEventListener('pointermove', onPointerMove, { passive: false });
+            window.addEventListener('pointerup', onPointerUp, { passive: false });
+            window.addEventListener('pointercancel', onPointerUp, { passive: false });
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.clientX - startPointerX;
+            const deltaY = e.clientY - startPointerY;
+            const distance = Math.hypot(deltaX, deltaY);
+
+            if (distance > dragThreshold) {
+                hasMoved = true;
+                if (e.cancelable) e.preventDefault();
+
+                const fabWidth = fab.offsetWidth || 48;
+                const fabHeight = fab.offsetHeight || 48;
+                const safePadding = 12;
+
+                const minX = safePadding;
+                const maxX = window.innerWidth - fabWidth - safePadding;
+                const minY = safePadding;
+                const maxY = window.innerHeight - fabHeight - safePadding;
+
+                let nextLeft = startFabLeft + deltaX;
+                let nextTop = startFabTop + deltaY;
+
+                nextLeft = Math.max(minX, Math.min(maxX, nextLeft));
+                nextTop = Math.max(minY, Math.min(maxY, nextTop));
+
+                fab.style.setProperty('left', `${nextLeft}px`, 'important');
+                fab.style.setProperty('top', `${nextTop}px`, 'important');
+                fab.style.setProperty('right', 'auto', 'important');
+                fab.style.setProperty('bottom', 'auto', 'important');
+                fab.classList.remove('bottom-4', 'sm:bottom-6', 'right-4', 'sm:right-6');
+            }
+        };
+
+        const onPointerUp = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            // Remove scale tactile state
+            fab.classList.remove('scale-90');
+
+            try {
+                fab.releasePointerCapture(e.pointerId);
+            } catch {}
+
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('pointercancel', onPointerUp);
+
+            if (hasMoved) {
+                const rect = fab.getBoundingClientRect();
+                this.snapFabToNearestEdge(fab, rect.left, rect.top);
+            }
+        };
+
+        fab.addEventListener('pointerdown', onPointerDown);
+
+        // Prevent opening window if the gesture was a drag gesture
+        fab.addEventListener('click', (e) => {
+            if (hasMoved) {
+                e.stopImmediatePropagation();
+                e.preventDefault();
+                hasMoved = false;
+            }
+        }, true);
+    }
+    /* END setupDraggableFab METHOD */
+
+    /* START snapFabToNearestEdge METHOD - Smoothly animates FAB to snap magnetically to the left or right edge */
+    snapFabToNearestEdge(fab, currentLeft, currentTop) {
+        if (!fab) return;
+        const fabWidth = fab.offsetWidth || 48;
+        const fabHeight = fab.offsetHeight || 48;
+        const safePadding = 12;
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        // Determine if FAB center is biased towards the left or right half of the screen
+        const fabCenterX = currentLeft + fabWidth / 2;
+        const isLeftSide = fabCenterX < screenWidth / 2;
+
+        const targetLeft = isLeftSide ? safePadding : (screenWidth - fabWidth - safePadding);
+        const clampedTop = Math.max(safePadding, Math.min(screenHeight - fabHeight - safePadding, currentTop));
+
+        // Smooth spring-like floating/jumping bounce animation to the nearest edge
+        fab.style.transition = 'left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.3s ease-out, transform 0.2s ease-out';
+        fab.style.setProperty('left', `${targetLeft}px`, 'important');
+        fab.style.setProperty('top', `${clampedTop}px`, 'important');
+        fab.style.setProperty('right', 'auto', 'important');
+        fab.style.setProperty('bottom', 'auto', 'important');
+        fab.classList.remove('bottom-4', 'sm:bottom-6', 'right-4', 'sm:right-6');
+
+        this._mobileFabPosition = { left: targetLeft, top: clampedTop, isLeftSide };
+
+        setTimeout(() => {
+            if (fab) fab.style.transition = '';
+        }, 400);
+    }
+    /* END snapFabToNearestEdge METHOD */
+
+    /* START applyFabPositionMode METHOD - Repositions FAB on mobile based on auth state and drag position */
     applyFabPositionMode() {
         const fab = document.getElementById('dole-chatbot-fab');
         const windowEl = document.getElementById('dole-chatbot-window');
@@ -442,25 +622,32 @@ export class DoleChatbotController {
         );
         const isMobile = window.matchMedia('(max-width: 639px)').matches;
 
-        if (!isAuthenticated && isMobile) {
-            // Unauthenticated + mobile: position FAB above the white login card
-            // Use ResizeObserver to track card height dynamically
+        if (isMobile && this._mobileFabPosition) {
+            // If user previously dragged FAB on mobile, snap to its registered side
+            const fabWidth = fab.offsetWidth || 48;
+            const safePadding = 12;
+            const targetLeft = this._mobileFabPosition.isLeftSide ? safePadding : (window.innerWidth - fabWidth - safePadding);
+            const clampedTop = Math.max(safePadding, Math.min(window.innerHeight - (fab.offsetHeight || 48) - safePadding, this._mobileFabPosition.top));
+
+            fab.style.setProperty('left', `${targetLeft}px`, 'important');
+            fab.style.setProperty('top', `${clampedTop}px`, 'important');
+            fab.style.setProperty('right', 'auto', 'important');
+            fab.style.setProperty('bottom', 'auto', 'important');
+            fab.classList.remove('bottom-4', 'sm:bottom-6', 'right-4', 'sm:right-6');
+        } else if (!isAuthenticated && isMobile) {
+            // Unauthenticated + mobile: position FAB above the white landing card by default
+            fab.style.removeProperty('left');
+            fab.style.removeProperty('top');
+            fab.style.removeProperty('right');
             const landingCard = document.querySelector('.lg\\:hidden.bg-white.rounded-t-\\[1\\.5rem\\]');
             const applyCardOffset = (cardHeight) => {
-                const offsetPx = (cardHeight || 160) + 12; // 12px gap above card
+                const offsetPx = (cardHeight || 160) + 12;
                 fab.style.setProperty('bottom', `${offsetPx}px`, 'important');
-                fab.style.removeProperty('right'); // keep default right-4 from class
                 fab.classList.remove('bottom-4', 'sm:bottom-6');
-                if (windowEl) {
-                    // Chat window opens upward from FAB — position it above FAB
-                    windowEl.style.setProperty('bottom', `${offsetPx + 64 + 8}px`, 'important');
-                    windowEl.classList.remove('bottom-20', 'sm:bottom-24');
-                }
             };
 
             if (landingCard) {
                 applyCardOffset(landingCard.getBoundingClientRect().height);
-                // Track future resizes (content changes, font scaling, etc.)
                 if (!this._landingCardObserver) {
                     this._landingCardObserver = new ResizeObserver((entries) => {
                         for (const entry of entries) {
@@ -470,22 +657,24 @@ export class DoleChatbotController {
                     this._landingCardObserver.observe(landingCard);
                 }
             } else {
-                // Fallback if card not in DOM yet: use 176px (approx card height)
                 applyCardOffset(160);
             }
         } else {
             // Authenticated or desktop: standard fixed bottom-right position
+            fab.style.removeProperty('left');
+            fab.style.removeProperty('top');
+            fab.style.removeProperty('right');
             fab.style.removeProperty('bottom');
             fab.classList.add('bottom-4', 'sm:bottom-6');
-            if (windowEl) {
-                windowEl.style.removeProperty('bottom');
-                windowEl.classList.add('bottom-20', 'sm:bottom-24');
-            }
-            // Disconnect landing card observer if no longer needed
+
             if (this._landingCardObserver) {
                 this._landingCardObserver.disconnect();
                 this._landingCardObserver = null;
             }
+        }
+
+        if (windowEl) {
+            windowEl.style.removeProperty('bottom');
         }
 
         if (window.DEBUG) {
@@ -559,8 +748,9 @@ export class DoleChatbotController {
             audience: this.audience
         });
 
-        // Clear input, destroy saved draft, and trigger 2-second cooldown
+        // Clear input, dismiss mobile keyboard, destroy saved draft, and trigger 2-second cooldown
         input.value = '';
+        input.blur();
         this.storage.setDraftMessage('');
         this.limiter.startCooldown();
 
@@ -795,7 +985,7 @@ export class ChatbotUI {
                 document.querySelector('[role="dialog"]:not(#dole-chatbot-window):not(#dole-chatbot-clear-modal):not(.hidden), #sidebar-logout-confirmation:not(.hidden)')
             );
 
-            const modalOpenClass = Boolean((document.body.classList.contains('overflow-hidden') || document.documentElement.classList.contains('overflow-hidden')) && !this.isClearModalOpen());
+            const modalOpenClass = Boolean((document.body.classList.contains('overflow-hidden') || document.documentElement.classList.contains('overflow-hidden')) && !this.isClearModalOpen() && !this.controller?.isOpen);
 
             const shouldHide = isLoginDrawerOpen || isMobileSidebarOpen || isRightDrawerOpen || hasBackdrop || hasActiveModal || modalOpenClass;
 

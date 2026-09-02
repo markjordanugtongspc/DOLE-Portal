@@ -10,59 +10,72 @@
   aria-expanded="false"
   aria-controls="dole-chatbot-window"
   aria-label="Open DOLE Support Chatbot"
-  class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[70] inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl cursor-pointer border border-gray-200/80 dark:border-gray-700/80 p-2.5 sm:p-3 transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 group select-none">
+  class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[70] inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl cursor-grab active:cursor-grabbing border border-gray-200/80 dark:border-gray-700/80 p-2 sm:p-3 transition-transform duration-150 transform hover:scale-105 active:scale-90 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 group select-none touch-none">
   
   <!-- DOLE Logo Image (With clean breathing space gap) -->
   <img
     id="dole-chatbot-fab-static-icon"
     src="/src/assets/logos/dole_logo.png"
     alt="DOLE Support Chatbot"
-    class="w-full h-full object-contain block transition-transform duration-200 group-hover:scale-110 drop-shadow-xs" />
+    class="w-full h-full object-contain block transition-transform duration-200 group-hover:scale-110 drop-shadow-xs pointer-events-none" />
 
   <!-- Online Pulse Dot (In front of and overlapping the top-right corner) -->
-  <span class="absolute top-0.5 right-0.5 z-30 flex h-3.5 w-3.5 pointer-events-none">
+  <span class="absolute top-0.5 right-0.5 z-30 flex h-3 w-3 sm:h-3.5 sm:w-3.5 pointer-events-none">
     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-gray-900 shadow-xs"></span>
+    <span class="relative inline-flex rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 bg-emerald-500 border-2 border-white dark:border-gray-900 shadow-xs"></span>
   </span>
 </button>
 
-<!-- Floating Chatbot Window -->
+<!-- Floating / Fullscreen Chatbot Window -->
 <div
   id="dole-chatbot-window"
   role="dialog"
   aria-modal="false"
   aria-label="DOLE Support Chatbot Window"
-  class="fixed bottom-20 right-3 left-3 sm:left-auto sm:bottom-24 sm:right-6 z-[70] sm:w-[480px] h-[560px] sm:h-[680px] max-h-[calc(100dvh-6rem)] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out transform origin-bottom-right hidden">
+  class="fixed inset-0 sm:inset-auto sm:bottom-24 sm:right-6 z-[70] w-full h-full sm:w-[480px] sm:h-[680px] sm:max-h-[calc(100dvh-6rem)] bg-white dark:bg-gray-900 sm:border sm:border-gray-200 dark:sm:border-gray-800 sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ease-out transform origin-bottom-right hidden">
 
   <!-- Chat Header -->
-  <div class="px-5 py-4 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white flex items-center justify-between border-b border-blue-600/30 dark:border-gray-800 shrink-0">
-    <div class="flex items-center space-x-3 min-w-0">
-      <div class="relative shrink-0 w-10 h-10 rounded-full bg-white dark:bg-gray-800 p-1.5 flex items-center justify-center border border-white/20">
+  <div class="px-3.5 py-3 sm:px-5 sm:py-4 bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900 text-white flex items-center justify-between border-b border-blue-600/30 dark:border-gray-800 shrink-0">
+    <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+      <!-- Back Button for Mobile View & Fast Page Return -->
+      <button
+        id="dole-chatbot-back-btn"
+        type="button"
+        title="Go back to page"
+        aria-label="Go back to page"
+        class="p-1.5 -ml-1 text-white/90 hover:text-white hover:bg-white/10 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30 flex items-center justify-center shrink-0">
+        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m15 19-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <div class="relative shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-gray-800 p-1 flex items-center justify-center border border-white/20">
         <img src="/src/assets/logos/dole_logo.png" alt="DOLE Logo" class="w-full h-full object-contain block drop-shadow-xs" />
-        <span class="absolute -bottom-0.5 -right-0.5 z-10 w-3 h-3 rounded-full bg-emerald-400 border-2 border-blue-900 shadow-xs"></span>
+        <span class="absolute -bottom-0.5 -right-0.5 z-10 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-blue-900 shadow-xs"></span>
       </div>
+
       <div class="truncate">
         <div class="flex items-center gap-1.5">
-          <h2 class="font-bold text-base tracking-tight leading-none">DOLE Support</h2>
-          <span class="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full">AI Live</span>
+          <h2 class="font-bold text-sm sm:text-base tracking-tight leading-none truncate">DOLE Virtual Assistant</h2>
+          <span class="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full shrink-0">AI Live</span>
         </div>
-        <p class="text-xs text-blue-100/80 dark:text-gray-400 leading-tight mt-1 truncate">
-          Powered by Creao API and Vercel
+        <p class="text-[11px] sm:text-xs text-blue-100/80 dark:text-gray-400 leading-tight mt-0.5 sm:mt-1 truncate">
+          Official DOLE Region X Assistant
         </p>
       </div>
     </div>
 
     <!-- Header Actions -->
     <div class="flex items-center space-x-1 shrink-0">
-      <!-- Force Delete / Clear History Button -->
+      <!-- Force Reset / Clear History Button -->
       <button
         id="dole-chatbot-clear-btn"
         type="button"
-        title="Clear conversation history & start fresh"
-        aria-label="Clear chat history"
-        class="p-2 text-white/80 hover:text-rose-300 hover:bg-white/10 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30">
-        <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+        title="Restart conversation & start fresh"
+        aria-label="Restart chat conversation"
+        class="p-2 text-white/85 hover:text-white hover:bg-white/10 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30">
+        <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9h13a5 5 0 0 1 0 10H7M3 9l4-4M3 9l4 4"/>
         </svg>
       </button>
 
@@ -70,10 +83,10 @@
       <button
         id="dole-chatbot-close-btn"
         type="button"
-        title="Close chat window"
-        aria-label="Close chat window"
-        class="p-2 text-white/80 hover:text-white hover:bg-white/10 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30">
-        <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        title="Close virtual assistant"
+        aria-label="Close virtual assistant"
+        class="p-2 text-white/85 hover:text-white hover:bg-white/10 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30">
+        <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
         </svg>
       </button>
@@ -153,8 +166,8 @@
     <span class="text-xs font-medium">DOLE Support is thinking &amp; typing...</span>
   </div>
 
-  <!-- Input Form & Controls -->
-  <div class="p-3.5 bg-gray-50 dark:bg-gray-800/90 border-t border-gray-200 dark:border-gray-800 shrink-0">
+  <!-- Input Form & Controls (With safe-area bottom padding) -->
+  <div class="p-3 sm:p-3.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-gray-50 dark:bg-gray-800/90 border-t border-gray-200 dark:border-gray-800 shrink-0">
     <form id="dole-chatbot-form" class="flex flex-col space-y-2">
       
       <!-- Input textfield & send button wrapper -->
@@ -163,7 +176,7 @@
           id="dole-chatbot-input"
           type="text"
           autocomplete="off"
-          placeholder="Ask a question about DOLE Portal..."
+          placeholder="Reply to DOLE Support Assistant..."
           class="flex-1 h-10 px-3.5 text-xs sm:text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all" />
 
         <!-- Cooldown countdown badge overlay inside input when active -->

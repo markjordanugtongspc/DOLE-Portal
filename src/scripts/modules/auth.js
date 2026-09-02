@@ -90,17 +90,11 @@ const applyRememberedLogin = () => {
     if (!rememberedLogin) return;
 
     ['desktop', 'mobile'].forEach((prefix) => {
-        if (rememberedLogin.mode === 'email') {
-            document.getElementById(`${prefix}-email-btn`)?.click();
-        } else if (rememberedLogin.mode === 'phone') {
-            document.getElementById(`${prefix}-phone-btn`)?.click();
-        }
-
         const identityInput = document.getElementById(`${prefix}-username`);
-        const credentialInput = getCredentialInput(prefix, rememberedLogin.mode);
+        const credentialInput = getCredentialInput(prefix, 'username');
         const rememberInput = document.getElementById(`${prefix}-remember`);
 
-        if (identityInput) identityInput.value = rememberedLogin.identifier;
+        if (identityInput && rememberedLogin.identifier) identityInput.value = rememberedLogin.identifier;
         // Passwords and PINs are never restored from browser storage.
         if (credentialInput?.id.endsWith('-password')) credentialInput.type = 'password';
         if (rememberInput) rememberInput.checked = true;
@@ -1072,14 +1066,32 @@ const setupAuthMethodSwitcher = () => {
             if (divider) divider.classList.remove('hidden');
 
             if (mode === 'username') {
-                methodsContainer.appendChild(createButton(`${prefix}-email-btn`, SVG_EMAIL, 'Email', roundedClass, () => switchMode(prefix, 'email')));
-                methodsContainer.appendChild(createButton(`${prefix}-phone-btn`, SVG_PHONE, 'Phone', roundedClass, () => switchMode(prefix, 'phone')));
+                methodsContainer.innerHTML = `
+                    <button id="${prefix}-email-btn" type="button" disabled data-tooltip-target="${prefix}-email-tooltip" data-tooltip-placement="${isMobile ? 'top' : 'bottom'}"
+                      class="cursor-not-allowed w-full text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 opacity-60 font-bold ${roundedClass} text-xs px-3 py-2.5 text-center inline-flex items-center justify-center select-none shadow-none transition-all">
+                      ${SVG_EMAIL}
+                      Email
+                    </button>
+                    <div id="${prefix}-email-tooltip" role="tooltip" class="absolute z-50 invisible inline-block px-3 py-2 text-xs font-semibold text-white transition-opacity duration-300 bg-gray-900/95 dark:bg-gray-800/95 rounded-lg shadow-xl opacity-0 tooltip border border-gray-700/80 pointer-events-none">
+                      Email login is currently unavailable
+                      <div class="tooltip-arrow" data-popper-arrow></div>
+                    </div>
+
+                    <button id="${prefix}-phone-btn" type="button" disabled data-tooltip-target="${prefix}-phone-tooltip" data-tooltip-placement="${isMobile ? 'top' : 'bottom'}"
+                      class="cursor-not-allowed w-full text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 opacity-60 font-bold ${roundedClass} text-xs px-3 py-2.5 text-center inline-flex items-center justify-center select-none shadow-none transition-all">
+                      ${SVG_PHONE}
+                      Phone
+                    </button>
+                    <div id="${prefix}-phone-tooltip" role="tooltip" class="absolute z-50 invisible inline-block px-3 py-2 text-xs font-semibold text-white transition-opacity duration-300 bg-gray-900/95 dark:bg-gray-800/95 rounded-lg shadow-xl opacity-0 tooltip border border-gray-700/80 pointer-events-none">
+                      Phone login is currently unavailable
+                      <div class="tooltip-arrow" data-popper-arrow></div>
+                    </div>
+                `;
+                try { initTooltips(); } catch {}
             } else if (mode === 'email') {
                 methodsContainer.appendChild(createButton(`${prefix}-username-btn`, SVG_USER, 'Username', roundedClass, () => switchMode(prefix, 'username')));
-                methodsContainer.appendChild(createButton(`${prefix}-phone-btn`, SVG_PHONE, 'Phone', roundedClass, () => switchMode(prefix, 'phone')));
             } else {
                 methodsContainer.appendChild(createButton(`${prefix}-username-btn`, SVG_USER, 'Username', roundedClass, () => switchMode(prefix, 'username')));
-                methodsContainer.appendChild(createButton(`${prefix}-email-btn`, SVG_EMAIL, 'Email', roundedClass, () => switchMode(prefix, 'email')));
             }
         }
     };
