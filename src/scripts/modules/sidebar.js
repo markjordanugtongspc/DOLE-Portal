@@ -10,24 +10,25 @@ let sidebarDrawerInstance = null;
 let sidebarRealtimeChannel = null;
 let lastSidebarTicketCount = null;
 
-/* START PLAY SIDEBAR PING - Plays audio notification chime for incoming tickets */
+/* START PLAY SIDEBAR PING (AUDIO TEMPORARILY DISABLED FOR QA) */
 const playSidebarPing = () => {
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.25);
-    } catch { /* Audio Context restricted */ }
+    // /* AUDIO TEMPORARILY DISABLED FOR QA */
+    // try {
+    //     const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    //     if (!AudioCtx) return;
+    //     const ctx = new AudioCtx();
+    //     const osc = ctx.createOscillator();
+    //     const gain = ctx.createGain();
+    //     osc.type = 'sine';
+    //     osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    //     osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+    //     gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    //     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    //     osc.connect(gain);
+    //     gain.connect(ctx.destination);
+    //     osc.start();
+    //     osc.stop(ctx.currentTime + 0.25);
+    // } catch { /* Audio Context restricted */ }
 };
 /* END PLAY SIDEBAR PING */
 

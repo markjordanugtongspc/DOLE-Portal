@@ -37,8 +37,9 @@ src/backend/migrations/*.sql
 
 # Root Vercel server-only development environment
 /.env.local
+# Audio Assets (Temporarily ignored for QA)
+src/assets/audio/
+src/assets/audio
 .vercel
 .env*
 .env*.local
-
-

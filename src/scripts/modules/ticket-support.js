@@ -21,8 +21,10 @@ import {
     markAdminMessagesRead,
     createTicketRoomChannel,
 } from '@/backend/api/ticket-messages.api.js';
-import typingSoundUrl from '@/assets/audio/typing_sound .mp3';
-import sendSoundUrl from '@/assets/audio/send_sound.mp3';
+// /* START AUDIO ASSETS (TEMPORARILY COMMENTED OUT FOR QA) */
+// import typingSoundUrl from '@/assets/audio/typing_sound .mp3';
+// import sendSoundUrl from '@/assets/audio/send_sound.mp3';
+// /* END AUDIO ASSETS */
 import { showImagePreviewModal, downloadImageFile } from '@/scripts/modules/modals.js';
 import { ticketCacheStorage, authStorage } from '@/scripts/modules/storage.js';
 import { Modal } from 'flowbite';
@@ -638,105 +640,117 @@ class TicketSupportApp {
     }
     /* END _subscribeMessages */
 
-    /* START PRESENCE TYPING & AUDIO CONTROLLER */
+    /* START PRESENCE TYPING & AUDIO CONTROLLER (AUDIO TEMPORARILY DISABLED FOR QA) */
     _getLocalTypingAudio() {
-        if (!this._localTypingAudio) {
-            try {
-                this._localTypingAudio = new Audio(typingSoundUrl);
-                this._localTypingAudio.volume = 1.0;
-                this._localTypingAudio.loop = true;
-            } catch {
-                this._localTypingAudio = null;
-            }
-        }
-        return this._localTypingAudio;
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // if (!this._localTypingAudio) {
+        //     try {
+        //         this._localTypingAudio = new Audio(typingSoundUrl);
+        //         this._localTypingAudio.volume = 1.0;
+        //         this._localTypingAudio.loop = true;
+        //     } catch {
+        //         this._localTypingAudio = null;
+        //     }
+        // }
+        // return this._localTypingAudio;
+        return null;
     }
 
     _getRemoteTypingAudio() {
-        if (!this._remoteTypingAudio) {
-            try {
-                this._remoteTypingAudio = new Audio(typingSoundUrl);
-                this._remoteTypingAudio.volume = 1.0;
-                this._remoteTypingAudio.loop = true;
-            } catch {
-                this._remoteTypingAudio = null;
-            }
-        }
-        return this._remoteTypingAudio;
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // if (!this._remoteTypingAudio) {
+        //     try {
+        //         this._remoteTypingAudio = new Audio(typingSoundUrl);
+        //         this._remoteTypingAudio.volume = 1.0;
+        //         this._remoteTypingAudio.loop = true;
+        //     } catch {
+        //         this._remoteTypingAudio = null;
+        //     }
+        // }
+        // return this._remoteTypingAudio;
+        return null;
     }
 
     _getSendAudio() {
-        if (!this._sendAudio) {
-            try {
-                this._sendAudio = new Audio(sendSoundUrl);
-                this._sendAudio.volume = 1.0;
-                this._sendAudio.loop = false;
-            } catch {
-                this._sendAudio = null;
-            }
-        }
-        return this._sendAudio;
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // if (!this._sendAudio) {
+        //     try {
+        //         this._sendAudio = new Audio(sendSoundUrl);
+        //         this._sendAudio.volume = 1.0;
+        //         this._sendAudio.loop = false;
+        //     } catch {
+        //         this._sendAudio = null;
+        //     }
+        // }
+        // return this._sendAudio;
+        return null;
     }
 
     _startLocalTypingAudio() {
-        try {
-            const audio = this._getLocalTypingAudio();
-            if (audio) {
-                audio.loop = true;
-                if (audio.paused) {
-                    audio.currentTime = 0;
-                    audio.play().catch(() => {});
-                }
-            }
-        } catch {}
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // try {
+        //     const audio = this._getLocalTypingAudio();
+        //     if (audio) {
+        //         audio.loop = true;
+        //         if (audio.paused) {
+        //             audio.currentTime = 0;
+        //             audio.play().catch(() => {});
+        //         }
+        //     }
+        // } catch {}
     }
 
     _stopLocalTypingAudio() {
-        try {
-            const audio = this._getLocalTypingAudio();
-            if (audio && !audio.paused) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
-        } catch {}
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // try {
+        //     const audio = this._getLocalTypingAudio();
+        //     if (audio && !audio.paused) {
+        //         audio.pause();
+        //         audio.currentTime = 0;
+        //     }
+        // } catch {}
     }
 
     _startRemoteTypingAudio() {
-        try {
-            const audio = this._getRemoteTypingAudio();
-            if (audio) {
-                audio.loop = true;
-                if (audio.paused) {
-                    audio.currentTime = 0;
-                    audio.play().catch(() => {});
-                }
-            }
-        } catch {}
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // try {
+        //     const audio = this._getRemoteTypingAudio();
+        //     if (audio) {
+        //         audio.loop = true;
+        //         if (audio.paused) {
+        //             audio.currentTime = 0;
+        //             audio.play().catch(() => {});
+        //         }
+        //     }
+        // } catch {}
     }
 
     _stopRemoteTypingAudio() {
-        try {
-            const audio = this._getRemoteTypingAudio();
-            if (audio && !audio.paused) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
-        } catch {}
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // try {
+        //     const audio = this._getRemoteTypingAudio();
+        //     if (audio && !audio.paused) {
+        //         audio.pause();
+        //         audio.currentTime = 0;
+        //     }
+        // } catch {}
     }
 
     _playSendAudio() {
-        const now = Date.now();
-        if (now - this._lastSendAudioTime < 300) return;
-        this._lastSendAudioTime = now;
-        try {
-            const audio = this._getSendAudio();
-            if (audio) {
-                audio.currentTime = 0;
-                audio.volume = 1.0;
-                audio.play().catch(() => {});
-            }
-        } catch {}
+        // /* AUDIO TEMPORARILY DISABLED FOR QA */
+        // const now = Date.now();
+        // if (now - this._lastSendAudioTime < 300) return;
+        // this._lastSendAudioTime = now;
+        // try {
+        //     const audio = this._getSendAudio();
+        //     if (audio) {
+        //         audio.currentTime = 0;
+        //         audio.volume = 1.0;
+        //         audio.play().catch(() => {});
+        //     }
+        // } catch {}
     }
+    /* END PRESENCE TYPING & AUDIO CONTROLLER */
 
     _handlePresenceSync(state) {
         if (!state || !this.selectedTicketDbId) {
