@@ -97,7 +97,25 @@ if (document.readyState === 'loading') {
 
 import './style.css'
 import 'flowbite';
+import { inject } from '@vercel/analytics';
 import sidebarTemplate from '@/components/sidebar.html?raw';
+
+/* START INIT VERCEL WEB ANALYTICS - Collects page views and visitor analytics */
+const initWebAnalytics = () => {
+    try {
+        inject();
+        if (window.DEBUG) {
+            window.DEBUG.success('SYSTEM', 'Vercel Web Analytics initialized successfully');
+        }
+    } catch (err) {
+        if (window.DEBUG) {
+            window.DEBUG.error('SYSTEM', 'Failed to initialize Vercel Web Analytics', err);
+        }
+    }
+};
+
+initWebAnalytics();
+/* END INIT VERCEL WEB ANALYTICS */
 
 /* Render the shared sidebar shell before the async module queue starts. The
  * role-specific links are intentionally still skeletons until sidebar.js has
