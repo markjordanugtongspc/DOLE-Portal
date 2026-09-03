@@ -97,15 +97,15 @@
 
             <!-- Table Section -->
             <div
-                class="relative overflow-x-auto bg-white dark:bg-gray-900 shadow-md rounded-xl border border-gray-200 dark:border-gray-800">
+                class="relative overflow-x-auto bg-white dark:bg-gray-900 shadow-sm rounded-none border border-gray-200 dark:border-gray-800">
                 <div
-                    class="flex flex-col md:flex-row md:items-center md:justify-between flex-wrap gap-4 p-4 border-2 border-blue-600 dark:border-blue-500 bg-gray-50/50 dark:bg-gray-900/50 rounded-t-xl">
+                    class="flex flex-col md:flex-row md:items-center md:justify-between flex-wrap gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/75 dark:bg-gray-900/60 rounded-none">
                     <div class="order-2 md:order-1 w-full md:w-auto">
                         <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown"
-                            class="cursor-pointer inline-flex w-full md:w-auto items-center justify-center text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-bold rounded-lg text-sm px-4 py-2 transition-colors shadow-sm"
+                            class="cursor-pointer inline-flex w-full md:w-auto items-center justify-center text-white bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 focus:ring-2 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-bold rounded-none text-sm px-4 py-2 transition-colors shadow-xs"
                             type="button">
                             Action
-                            <svg class="w-4 h-4 ms-1.5 -me-0.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                            <svg class="w-4 h-4 ms-1.5 -me-0.5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                 width="24" height="24" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2" d="m19 9-7 7-7-7" />
@@ -113,25 +113,26 @@
                         </button>
                         <!-- Dropdown menu -->
                         <div id="dropdown"
-                            class="z-10 hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg w-32">
-                            <ul class="p-2 text-sm text-gray-700 dark:text-gray-300"
-                                aria-labelledby="dropdownDefaultButton">                                <li>
+                            class="z-10 hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-xl w-36">
+                            <ul class="p-1.5 text-sm text-gray-700 dark:text-gray-300"
+                                aria-labelledby="dropdownDefaultButton">
+                                <li>
                                     <a id="bulk-approved" href="#"
-                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Approved</a>
+                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-none font-medium">Approved</a>
                                 </li>
                                 <li>
                                     <a id="bulk-declined" href="#"
-                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Declined</a>
+                                        class="cursor-pointer inline-flex items-center w-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-none font-medium">Declined</a>
                                 </li>
                                 <li role="separator" class="my-1 border-t border-gray-200 dark:border-gray-700"></li>
                                 <li>
                                     <a id="bulk-assign" href="#"
-                                        class="cursor-pointer inline-flex items-center w-full p-2 font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded">Assign</a>
+                                        class="cursor-pointer inline-flex items-center w-full p-2 font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-none">Assign</a>
                                 </li>
                                 <li role="separator" class="my-1 border-t border-gray-200 dark:border-gray-700"></li>
                                 <li>
                                     <a id="bulk-archived" href="#"
-                                        class="cursor-pointer inline-flex items-center w-full p-2 text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded">Archive</a>
+                                        class="cursor-pointer inline-flex items-center w-full p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-none font-medium">Archive</a>
                                 </li>
                             </ul>
                         </div>
@@ -146,13 +147,24 @@
                             </svg>
                         </div>
                         <input type="text" id="input-group-1"
-                            class="block w-full md:w-80 py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-blue-600 dark:border-blue-500 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200"
+                            class="block w-full md:w-80 py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-blue-600 dark:border-blue-500 text-gray-900 dark:text-white text-sm rounded-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200"
                             placeholder="Search staffs...">
                     </div>
                 </div>
 
-                <!-- Hidden Dummy Button to Programmatically Trigger the View Modal -->
+                <!-- Hidden Dummy Buttons to Programmatically Trigger Modals -->
                 <button id="trigger-view-modal-dummy" data-modal-target="viewUserModal" data-modal-show="viewUserModal" class="hidden cursor-pointer" type="button"></button>
+                <button id="trigger-view-gip-modal-dummy" data-modal-target="viewGipModal" data-modal-show="viewGipModal" class="hidden cursor-pointer" type="button"></button>
+
+                <!-- Flowbite Tooltip for Row Hover -->
+                <div id="table-row-tooltip" role="tooltip" class="fixed z-50 invisible inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white transition-opacity duration-200 bg-gray-950 dark:bg-gray-850 shadow-2xl opacity-0 tooltip border border-gray-700 pointer-events-none rounded-none select-none">
+                    <svg class="w-3.5 h-3.5 text-blue-400 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" />
+                    </svg>
+                    <span id="table-row-tooltip-text">Click row to view details</span>
+                    <div class="tooltip-arrow" data-popper-arrow></div>
+                </div>
 
                 <table id="sorting-table"
                     class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -162,47 +174,47 @@
                             <th scope="col" class="p-4 w-4 text-center" data-sortable="false">
                                 <div class="flex items-center justify-center">
                                     <input id="table-checkbox-45" type="checkbox" value=""
-                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                                        class="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-none focus:ring-blue-500 focus:ring-2 cursor-pointer">
                                     <label for="table-checkbox-45" class="sr-only">Table checkbox</label>
                                 </div>
                             </th>
-                            <th scope="col" class="px-6 py-3 font-semibold text-left">Full Name</th>
-                            <th scope="col" class="px-6 py-3 font-semibold text-left">Position</th>
-                            <th scope="col" class="px-6 py-3 font-semibold text-left">Office/Location</th>
-                            <th scope="col" class="px-6 py-3 font-semibold text-left">Status</th>
-                            <th scope="col" class="px-6 py-3 font-semibold text-left" data-sortable="false">Action</th>
+                            <th scope="col" class="px-6 py-3.5 font-semibold text-left">Full Name</th>
+                            <th scope="col" class="px-6 py-3.5 font-semibold text-left">Position</th>
+                            <th scope="col" class="px-6 py-3.5 font-semibold text-left">Office/Location</th>
+                            <th scope="col" class="px-6 py-3.5 font-semibold text-left">Status</th>
+                            <th scope="col" class="px-6 py-3.5 font-semibold text-left" data-sortable="false">Action</th>
                         </tr>
                     </thead>
                     <tbody id="staffs-table-body">
                         <!-- Skeleton rows shown until JS loads data -->
                         <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
-                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
-                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-40"></div></div></div></td>
-                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
-                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></td>
-                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
-                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-none"></div></td>
+                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-none bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-28"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-none w-40"></div></div></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-20"></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-24"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-none w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div></div></td>
                         </tr>
                         <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
-                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
-                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-36"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-48"></div></div></div></td>
-                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-16"></div></td>
-                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
-                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
-                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-none"></div></td>
+                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-none bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-36"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-none w-48"></div></div></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-16"></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-20"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-none w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div></div></td>
                         </tr>
                         <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
-                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
-                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-36"></div></div></div></td>
-                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></td>
-                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div></td>
-                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
-                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-none"></div></td>
+                            <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-none bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-24"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-none w-36"></div></div></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-24"></div></td>
+                            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-28"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-none w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div></div></td>
                         </tr>
                     </tbody>
                 </table>
                 <!-- Table Footer showing indicator number -->
-                <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 rounded-b-xl">
+                <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 rounded-none">
                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-400">
                         Showing <span class="font-bold text-gray-900 dark:text-white">1</span> to <span class="font-bold text-gray-900 dark:text-white">14</span> of <span class="font-bold text-gray-900 dark:text-white">14</span> entries
                     </span>
@@ -215,20 +227,20 @@
         </main>
     </div>
 
-    <!-- Edit Staff Modal (Flowbite) -->
+    <!-- Edit Staff / GIP Modal (Flowbite) -->
     <div id="editUserModal" tabindex="-1" aria-hidden="true"
         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative p-4 w-full max-w-2xl max-h-full">
             <!-- Modal content -->
             <div
-                class="relative bg-white border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl dark:bg-gray-800">
+                class="relative bg-white border border-gray-200 dark:border-gray-700 rounded-none shadow-2xl dark:bg-gray-800">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-none dark:border-gray-700">
                     <h3 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">
                         Edit Staff
                     </h3>
                     <button type="button"
-                        class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                        class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-none text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white"
                         data-modal-hide="editUserModal">
                         <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 14 14">
@@ -241,15 +253,15 @@
                 <!-- Modal body -->
                 <form class="p-4 md:p-5">
                     <div class="grid gap-4 mb-4 grid-cols-2">
-                        <!-- Full Name (Text Input) -->
+                        <!-- Full Name (Staff Mode) -->
                         <div class="col-span-2 sm:col-span-1" id="modal-staff-selector-sec">
                             <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name <span class="text-red-500">*</span></label>
-                            <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter staff full name" required>
+                            <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter staff full name" required>
                         </div>
                         <!-- Name input (GIP Mode) -->
                         <div class="col-span-2 sm:col-span-1 hidden" id="modal-gip-name-sec">
                             <label for="gip-name-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name <span class="text-red-500">*</span></label>
-                            <input type="text" id="gip-name-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter full name">
+                            <input type="text" id="gip-name-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter full name">
                         </div>
 
                         <!-- Birthday (Date Picker) -->
@@ -259,10 +271,9 @@
                               <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
                                 <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
                               </div>
-                              <input datepicker datepicker-format="yyyy-mm-dd" id="birthday" type="text" autocomplete="off" class="block w-full ps-9 pe-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 shadow-xs placeholder:text-gray-400" placeholder="Select birthday">
+                              <input datepicker datepicker-format="yyyy-mm-dd" id="birthday" type="text" autocomplete="off" class="block w-full ps-9 pe-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 shadow-xs placeholder:text-gray-400" placeholder="Select birthday">
                             </div>
                         </div>
-
 
                         <!-- Position Selector -->
                         <div class="col-span-2 sm:col-span-1 relative" id="modal-position-sec">
@@ -270,14 +281,14 @@
                             <!-- Hidden input to store value -->
                             <input type="hidden" id="position" name="position">
                             <!-- Custom Select Trigger Button -->
-                            <button type="button" id="position-dropdown-btn" class="cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center">
+                            <button type="button" id="position-dropdown-btn" class="cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-2 focus:ring-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center">
                                 <span id="position-selected-text">Select a position...</span>
-                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                             </button>
                             <!-- Searchable Dropdown List -->
-                            <div id="position-dropdown-list" class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg hidden">
+                            <div id="position-dropdown-list" class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-xl hidden">
                                 <div class="p-2 border-b border-gray-200 dark:border-gray-700">
-                                    <input type="text" id="position-search" autocomplete="off" class="block w-full p-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white" placeholder="Search positions...">
+                                    <input type="text" id="position-search" autocomplete="off" class="block w-full p-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white" placeholder="Search positions...">
                                 </div>
                                 <div class="options-container max-h-48 overflow-y-auto p-1">
                                     <!-- Dynamic Options loaded by JS -->
@@ -292,17 +303,17 @@
                             <input type="hidden" id="office" name="office">
                             <!-- Flowbite Loading Skeleton -->
                             <div id="office-loading-skeleton" class="animate-pulse">
-                                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg w-full"></div>
+                                <div class="h-10 bg-gray-200 dark:bg-gray-700 rounded-none w-full"></div>
                             </div>
                             <!-- Custom Select Trigger Button -->
-                            <button type="button" id="office-dropdown-btn" class="hidden cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center">
+                            <button type="button" id="office-dropdown-btn" class="hidden cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-2 focus:ring-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-left flex justify-between items-center">
                                 <span id="office-selected-text">Select an office...</span>
-                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7"/></svg>
                             </button>
                             <!-- Searchable Dropdown List -->
-                            <div id="office-dropdown-list" class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg hidden">
+                            <div id="office-dropdown-list" class="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-xl hidden">
                                 <div class="p-2 border-b border-gray-200 dark:border-gray-700">
-                                    <input type="text" id="office-search" autocomplete="off" class="block w-full p-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white" placeholder="Search offices...">
+                                    <input type="text" id="office-search" autocomplete="off" class="block w-full p-2 text-xs bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white" placeholder="Search offices...">
                                 </div>
                                 <div class="options-container max-h-48 overflow-y-auto p-1">
                                     <!-- Dynamic Options loaded by JS -->
@@ -310,47 +321,64 @@
                             </div>
                         </div>
 
+                        <!-- Supervising Mentor Selector (GIP Mode) -->
+                        <div class="col-span-2 sm:col-span-1 hidden" id="modal-gip-mentor-sec">
+                            <label for="gip-mentor-select" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Assigned Staff Mentor <span class="text-red-500">*</span></label>
+                            <select id="gip-mentor-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                <!-- Loaded dynamically with staff list -->
+                            </select>
+                        </div>
+
+                        <!-- Status Selector (GIP Mode) -->
+                        <div class="col-span-2 sm:col-span-1 hidden" id="modal-gip-status-sec">
+                            <label for="gip-status-select" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Account Status <span class="text-red-500">*</span></label>
+                            <select id="gip-status-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                <option value="online">Online / Active</option>
+                                <option value="offline">Offline / Inactive</option>
+                            </select>
+                        </div>
+
                         <!-- Username (Required) -->
                         <div class="col-span-2 sm:col-span-1">
                             <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username <span class="text-red-500">*</span></label>
-                            <input type="text" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. jdoe_admin" required>
+                            <input type="text" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. jdoe_admin" required>
                         </div>
 
                         <!-- Email (Required) -->
                         <div class="col-span-2 sm:col-span-1">
                             <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Address <span class="text-red-500">*</span></label>
-                            <input type="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="staff@dole.gov.ph" required>
+                            <input type="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="staff@dole.gov.ph" required>
                         </div>
 
                         <!-- Phone Number (Optional) -->
                         <div class="col-span-2 sm:col-span-1">
                             <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone Number <span class="text-gray-400 font-normal text-xs">(Optional)</span></label>
-                            <input type="tel" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. +63 912 345 6789">
+                            <input type="tel" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. +63 912 345 6789">
                         </div>
 
                         <!-- PIN -->
                         <div class="col-span-2 sm:col-span-1" id="modal-pin-sec">
                             <label for="pin" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIN <span class="text-red-500" id="pin-required-star">*</span></label>
-                            <input type="text" id="pin" maxlength="4" pattern="[0-9]{4}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. 1234">
+                            <input type="text" id="pin" maxlength="4" pattern="[0-9]{4}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. 1234">
                         </div>
 
                         <!-- Password -->
                         <div class="col-span-2 sm:col-span-1" id="modal-password-sec">
                             <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password <span class="text-red-500" id="pwd-required-star">*</span></label>
-                            <input type="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
+                            <input type="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
                         </div>
 
                         <!-- Confirm Password -->
                         <div class="col-span-2 sm:col-span-1" id="modal-confirm-password-sec">
                             <label for="confirm-password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm Password <span class="text-red-500" id="conf-pwd-required-star">*</span></label>
-                            <input type="password" id="confirm-password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
+                            <input type="password" id="confirm-password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="••••••••">
                         </div>
 
                         <!-- Dynamic GIP Section -->
                         <div class="col-span-2" id="modal-gip-list-sec">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="text-sm font-medium text-gray-900 dark:text-white">GIP Assistants</label>
-                                <button type="button" id="btn-add-gip" class="cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-3 py-1.5 rounded-lg shadow-sm transition-all duration-200">
+                                <button type="button" id="btn-add-gip" class="cursor-pointer inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-3 py-1.5 rounded-none shadow-xs transition-all duration-200">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
                                     </svg>
@@ -364,11 +392,11 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-5">
                         <button type="submit"
-                            class="cursor-pointer text-white inline-flex justify-center items-center bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-300 font-bold rounded-lg text-sm w-full py-2.5 text-center dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:focus:ring-emerald-800 transition-colors">
+                            class="cursor-pointer text-white inline-flex justify-center items-center bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:outline-none focus:ring-emerald-300 font-bold rounded-none text-sm w-full py-2.5 text-center dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:focus:ring-emerald-800 transition-colors shadow-xs">
                             Save Changes
                         </button>
                         <button data-modal-hide="editUserModal" type="button"
-                            class="cursor-pointer text-white inline-flex justify-center items-center bg-red-600 hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 font-bold rounded-lg text-sm w-full py-2.5 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-800 transition-colors">
+                            class="cursor-pointer text-white inline-flex justify-center items-center bg-red-600 hover:bg-red-700 focus:ring-2 focus:outline-none focus:ring-red-300 font-bold rounded-none text-sm w-full py-2.5 text-center dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-800 transition-colors shadow-xs">
                             Cancel
                         </button>
                     </div>
@@ -382,16 +410,21 @@
         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
         <div class="relative p-4 w-full max-w-2xl max-h-full">
             <!-- Modal content -->
-            <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden">
+            <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-2xl overflow-hidden">
                 <!-- Modal header -->
-                <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-                    <h3 class="text-lg font-bold text-emerald-800 dark:text-emerald-400">
-                        User Details Screen
-                    </h3>
+                <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 rounded-none bg-gray-50/50 dark:bg-gray-900/30">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-lg font-bold text-gray-950 dark:text-white">
+                            Staff Details
+                        </h3>
+                        <span class="inline-flex items-center bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 text-[11px] font-bold px-2 py-0.5 rounded-none border border-blue-200 dark:border-blue-800/60">
+                            DOLE Personnel
+                        </span>
+                    </div>
                     <button type="button"
-                        class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                        class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-none text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition-colors"
                         data-modal-hide="viewUserModal">
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        <svg class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
                             viewBox="0 0 14 14">
                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
@@ -405,20 +438,20 @@
                     
                     <!-- Section: Profile Summary -->
                     <div>
-                        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2.5">Profile Summary:</h4>
-                        <div class="bg-white dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/60 rounded-xl p-5 shadow-xs">
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Profile Overview</h4>
+                        <div class="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-none p-5 shadow-xs">
                             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5">
                                 <!-- Avatar -->
                                 <div class="relative shrink-0">
-                                    <img id="view-avatar" class="w-20 h-20 rounded-full object-cover ring-4 ring-gray-100 dark:ring-gray-800 shadow-md" src="https://ui-avatars.com/api/?name=User&background=random" alt="Avatar">
-                                    <div id="view-online-dot" class="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-[3.5px] border-white dark:border-gray-800 rounded-full"></div>
+                                    <img id="view-avatar" class="w-20 h-20 rounded-none object-cover border-2 border-gray-200 dark:border-gray-700 shadow-sm" src="https://ui-avatars.com/api/?name=User&background=random" alt="Avatar">
+                                    <div id="view-online-dot" class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-gray-800 rounded-none"></div>
                                 </div>
                                 
                                 <!-- Profile Grid -->
                                 <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6 text-center sm:text-left">
                                     <div class="space-y-0.5">
                                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Name:</p>
-                                        <span id="view-name" class="text-sm font-semibold text-gray-900 dark:text-white leading-tight">Silas Blackwood</span>
+                                        <span id="view-name" class="text-sm font-bold text-gray-950 dark:text-white leading-tight">Silas Blackwood</span>
                                     </div>
                                     <div class="space-y-0.5">
                                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Role:</p>
@@ -426,7 +459,7 @@
                                     </div>
                                     <div class="space-y-0.5">
                                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Email:</p>
-                                        <span id="view-email" class="text-sm font-semibold text-gray-900 dark:text-white break-all leading-tight">J.henry333@gmail.com</span>
+                                        <span id="view-email" class="text-sm font-medium text-gray-900 dark:text-white break-all leading-tight">J.henry333@gmail.com</span>
                                     </div>
                                     <div class="space-y-0.5">
                                         <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Status:</p>
@@ -442,8 +475,8 @@
 
                     <!-- Section: Account Info -->
                     <div>
-                        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2.5">Account Info:</h4>
-                        <div class="bg-white dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/60 rounded-xl p-5 shadow-xs">
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Account & Location</h4>
+                        <div class="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-none p-5 shadow-xs">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6">
                                 <div class="space-y-0.5">
                                     <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Username:</p>
@@ -467,7 +500,10 @@
 
                     <!-- Section: Linked GIP Implementors -->
                     <div id="view-gips-section">
-                        <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-2.5">Linked GIP Implementors:</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Linked GIP Implementors</h4>
+                            <span class="text-[11px] text-gray-500 dark:text-gray-400">Click any assistant to inspect details</span>
+                        </div>
                         <div id="view-gips-container" class="space-y-2">
                             <!-- Loaded Dynamically by staffs-manage.js -->
                         </div>
@@ -475,8 +511,146 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="flex justify-end p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20">
-                    <button data-modal-hide="viewUserModal" type="button" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 font-bold rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-sm">
+                <div class="flex justify-between items-center p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 rounded-none">
+                    <button id="view-edit-staff-btn" type="button" class="cursor-pointer inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-bold text-xs uppercase tracking-wider py-1.5 transition-colors">
+                        <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                        Edit This Staff
+                    </button>
+                    <button data-modal-hide="viewUserModal" type="button" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 font-bold rounded-none text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-xs">
+                        Close Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View GIP Modal (Flowbite) -->
+    <div id="viewGipModal" tabindex="-1" aria-hidden="true"
+        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <!-- Modal content -->
+            <div class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-2xl overflow-hidden">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 rounded-none bg-gray-50/50 dark:bg-gray-900/30">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-lg font-bold text-gray-950 dark:text-white">
+                            GIP Assistant Details
+                        </h3>
+                        <span class="inline-flex items-center bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 text-[11px] font-black px-2 py-0.5 rounded-none border border-blue-200 dark:border-blue-800/60">
+                            GIP ASSISTANT
+                        </span>
+                    </div>
+                    <button type="button"
+                        class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-none text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition-colors"
+                        data-modal-hide="viewGipModal">
+                        <svg class="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="p-5 space-y-5 max-h-[calc(100vh-12rem)] overflow-y-auto custom-scrollbar text-left">
+                    
+                    <!-- Section: Profile Summary -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Profile Overview</h4>
+                        <div class="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-none p-5 shadow-xs">
+                            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                                <!-- Avatar -->
+                                <div class="relative shrink-0">
+                                    <img id="view-gip-avatar" class="w-20 h-20 rounded-none object-cover border-2 border-gray-200 dark:border-gray-700 shadow-sm" src="https://ui-avatars.com/api/?name=GIP&background=random" alt="GIP Avatar">
+                                    <div id="view-gip-online-dot" class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-gray-800 rounded-none"></div>
+                                </div>
+                                
+                                <!-- Profile Grid -->
+                                <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6 text-center sm:text-left">
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Name:</p>
+                                        <span id="view-gip-name" class="text-sm font-bold text-gray-950 dark:text-white leading-tight">N/A</span>
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Role:</p>
+                                        <span class="text-sm font-semibold text-blue-700 dark:text-blue-400 leading-tight">Government Internship Program Assistant</span>
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Email:</p>
+                                        <span id="view-gip-email" class="text-sm font-medium text-gray-900 dark:text-white break-all leading-tight">N/A</span>
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Status:</p>
+                                        <div id="view-gip-status" class="inline-flex mt-0.5"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Supervising Mentor & Office -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Supervising Mentor & Department</h4>
+                        <div class="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-none p-5 shadow-xs">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6">
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Assigned Staff Mentor:</p>
+                                    <span id="view-gip-mentor-name" class="text-sm font-semibold text-gray-900 dark:text-white">N/A</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Mentor Role:</p>
+                                    <span id="view-gip-mentor-role" class="text-sm font-semibold text-gray-900 dark:text-white">N/A</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Mentor Email:</p>
+                                    <span id="view-gip-mentor-email" class="text-sm font-medium text-gray-900 dark:text-white break-all">N/A</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Office / Station:</p>
+                                    <span id="view-gip-mentor-office" class="text-sm font-semibold text-gray-900 dark:text-white">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Account Info -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Account Metadata</h4>
+                        <div class="bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-none p-5 shadow-xs">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3.5 gap-x-6">
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Username:</p>
+                                    <span id="view-gip-username" class="text-sm font-semibold text-gray-900 dark:text-white">N/A</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Phone Number:</p>
+                                    <span id="view-gip-phone" class="text-sm font-semibold text-gray-900 dark:text-white">N/A</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">Date Registered:</p>
+                                    <span id="view-gip-created" class="text-sm font-semibold text-gray-900 dark:text-white">N/A</span>
+                                </div>
+                                <div class="space-y-0.5">
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 font-medium">System Record ID:</p>
+                                    <span id="view-gip-id" class="text-sm font-mono text-gray-600 dark:text-gray-400">#0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex justify-between items-center p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 rounded-none">
+                    <button id="view-edit-gip-btn" type="button" class="cursor-pointer inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-bold text-xs uppercase tracking-wider py-1.5 transition-colors">
+                        <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                        Edit This Assistant
+                    </button>
+                    <button data-modal-hide="viewGipModal" type="button" class="cursor-pointer text-white bg-blue-700 hover:bg-blue-800 font-bold rounded-none text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-xs">
                         Close Details
                     </button>
                 </div>

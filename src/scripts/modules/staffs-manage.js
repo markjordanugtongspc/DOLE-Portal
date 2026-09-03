@@ -16,13 +16,17 @@ export const initStaffsManage = () => {
 
     const editEl = document.getElementById('editUserModal');
     const viewEl = document.getElementById('viewUserModal');
+    const viewGipEl = document.getElementById('viewGipModal');
     const editModal = editEl ? new Modal(editEl) : null;
     const viewModal = viewEl ? new Modal(viewEl) : null;
+    const viewGipModal = viewGipEl ? new Modal(viewGipEl) : null;
     const form = editEl?.querySelector('form');
     const q = (id) => document.getElementById(id);
     const els = {
         title: q('modal-title'), submit: editEl?.querySelector('button[type="submit"]'),
         staffSec: q('modal-staff-selector-sec'), staffName: q('name'), gipSec: q('modal-gip-name-sec'), gipName: q('gip-name-input'),
+        gipMentorSec: q('modal-gip-mentor-sec'), gipMentorSelect: q('gip-mentor-select'),
+        gipStatusSec: q('modal-gip-status-sec'), gipStatusSelect: q('gip-status-select'),
         roleSec: q('modal-position-sec'), role: q('position'), officeSec: q('modal-office-sec'), office: q('office'),
         username: q('username'), email: q('email'), phone: q('phone'), password: q('password'), confirmSec: q('modal-confirm-password-sec'), confirm: q('confirm-password'),
         gipList: q('modal-gip-list-sec'), gipBox: q('gips-form-container'), addGip: q('btn-add-gip'), search: q('input-group-1'), selectAll: q('table-checkbox-45'),
@@ -32,6 +36,30 @@ export const initStaffsManage = () => {
 
     let users = [], gips = [], roles = [], offices = [], dt = null, mode = 'add-staff', recordId = null, staffId = null, positionDropdown = null, officeDropdown = null;
     const MAX_GIP = 2;
+
+    // Flowbite Row Hover Tooltip helpers
+    let hoverTimeout = null;
+    const rowTooltipEl = document.getElementById('table-row-tooltip');
+    const rowTooltipText = document.getElementById('table-row-tooltip-text');
+
+    const positionRowTooltip = (clientX, clientY, targetRow) => {
+        if (!rowTooltipEl) return;
+        const rect = targetRow.getBoundingClientRect();
+        const top = clientY ? clientY - 38 : rect.top - 32;
+        const left = clientX ? clientX : rect.left + rect.width / 2;
+        rowTooltipEl.style.top = `${Math.max(10, top)}px`;
+        rowTooltipEl.style.left = `${Math.max(10, Math.min(window.innerWidth - 220, left - 60))}px`;
+    };
+
+    const hideRowTooltip = () => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = null;
+        }
+        if (rowTooltipEl) {
+            rowTooltipEl.classList.add('invisible', 'opacity-0');
+        }
+    };
 
     const showToast = (type, message) => {
         let container = document.getElementById('systems-toast-container');
@@ -47,12 +75,12 @@ export const initStaffsManage = () => {
         const id = `toast-${Date.now()}`;
         const toast = document.createElement('div');
         toast.id = id;
-        toast.className = `flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow-md dark:text-gray-400 dark:bg-gray-800 transition-all duration-300 transform translate-y-2 opacity-0`;
+        toast.className = `flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-none shadow-md dark:text-gray-400 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-all duration-300 transform translate-y-2 opacity-0`;
         
         let iconHtml = '';
         if (type === 'success') {
             iconHtml = `
-                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-emerald-500 bg-emerald-100 rounded-lg dark:bg-emerald-800 dark:text-emerald-200">
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-emerald-500 bg-emerald-100 rounded-none dark:bg-emerald-800 dark:text-emerald-200">
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
                     </svg>
@@ -61,7 +89,7 @@ export const initStaffsManage = () => {
             `;
         } else if (type === 'danger') {
             iconHtml = `
-                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200">
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-none dark:bg-red-800 dark:text-red-200">
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
                     </svg>
@@ -70,7 +98,7 @@ export const initStaffsManage = () => {
             `;
         } else if (type === 'warning') {
             iconHtml = `
-                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-orange-500 bg-orange-100 rounded-lg dark:bg-orange-850 dark:text-orange-200">
+                <div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-orange-500 bg-orange-100 rounded-none dark:bg-orange-850 dark:text-orange-200">
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>
                     </svg>
@@ -82,7 +110,7 @@ export const initStaffsManage = () => {
         toast.innerHTML = `
             ${iconHtml}
             <div class="ms-3 text-sm font-semibold">${message}</div>
-            <button type="button" class="cursor-pointer ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" data-dismiss-target="#${id}" aria-label="Close">
+            <button type="button" class="cursor-pointer ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-none focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" data-dismiss-target="#${id}" aria-label="Close">
                 <span class="sr-only">Close</span>
                 <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
@@ -116,7 +144,7 @@ export const initStaffsManage = () => {
         const accentClass = isDanger ? 'text-red-600 bg-red-100 dark:bg-red-950/40 dark:text-red-300' : 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300';
         const confirmClass = isDanger ? 'bg-red-600 hover:bg-red-700 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900' : 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-300 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:focus:ring-emerald-900';
         const cancelClass = cancelTone === 'red' ? 'bg-red-600 hover:bg-red-700 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900' : 'bg-gray-600 hover:bg-gray-700 focus:ring-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-800';
-        modalEl.innerHTML = `<div class="relative w-full max-w-md"><div class="relative bg-white rounded-lg shadow-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-800"><button type="button" class="cursor-pointer absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-800 dark:hover:text-white" data-staff-confirm-cancel aria-label="Close"><svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg></button><div class="p-5 text-center"><div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg ${accentClass}"><svg class="w-8 h-8" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div><h3 class="mb-2 text-lg font-extrabold text-gray-900 dark:text-white">${title}</h3><p class="mb-5 text-sm leading-relaxed text-gray-500 dark:text-gray-400">${message}</p><div class="grid grid-cols-2 gap-3"><button type="button" data-staff-confirm-ok class="cursor-pointer rounded-lg px-6 py-2.5 text-base font-extrabold text-white focus:outline-none focus:ring-4 ${confirmClass}">${confirmText}</button><button type="button" data-staff-confirm-cancel class="cursor-pointer rounded-lg px-6 py-2.5 text-base font-extrabold text-white focus:outline-none focus:ring-4 ${cancelClass}">Cancel</button></div></div></div></div>`;
+        modalEl.innerHTML = `<div class="relative w-full max-w-md"><div class="relative bg-white rounded-none shadow-xl dark:bg-gray-900 border border-gray-200 dark:border-gray-800"><button type="button" class="cursor-pointer absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-none text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-800 dark:hover:text-white" data-staff-confirm-cancel aria-label="Close"><svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg></button><div class="p-5 text-center"><div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-none ${accentClass}"><svg class="w-8 h-8" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div><h3 class="mb-2 text-lg font-extrabold text-gray-900 dark:text-white">${title}</h3><p class="mb-5 text-sm leading-relaxed text-gray-500 dark:text-gray-400">${message}</p><div class="grid grid-cols-2 gap-3"><button type="button" data-staff-confirm-ok class="cursor-pointer rounded-none px-6 py-2.5 text-base font-extrabold text-white focus:outline-none focus:ring-4 ${confirmClass}">${confirmText}</button><button type="button" data-staff-confirm-cancel class="cursor-pointer rounded-none px-6 py-2.5 text-base font-extrabold text-white focus:outline-none focus:ring-4 ${cancelClass}">Cancel</button></div></div></div></div>`;
         document.body.appendChild(modalEl);
 
         let settled = false;
@@ -142,23 +170,23 @@ export const initStaffsManage = () => {
     const approvalState = (user) => String(user?.approval_status || 'APPROVED').toUpperCase();
     const approvalBadge = (state) => {
         if (state === 'PENDING') {
-            return '<span class="inline-flex items-center bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>Pending</span>';
+            return '<span class="inline-flex items-center bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 font-semibold px-2.5 py-1 rounded-none text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 bg-amber-500 rounded-none animate-pulse"></span>Pending</span>';
         }
         if (state === 'DECLINED') {
-            return '<span class="inline-flex items-center bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>Declined</span>';
+            return '<span class="inline-flex items-center bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 font-semibold px-2.5 py-1 rounded-none text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 bg-rose-500 rounded-none"></span>Declined</span>';
         }
         return '';
     };
     const badge = (status = 'offline') => {
         const online = String(status).toLowerCase() === 'online';
-        return `<span class="inline-flex items-center ${online ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50'} font-semibold px-2.5 py-1 rounded-md text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 ${online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} rounded-full"></span>${online ? 'Online' : 'Offline'}</span>`;
+        return `<span class="inline-flex items-center ${online ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50'} font-semibold px-2.5 py-1 rounded-none text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 ${online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} rounded-none"></span>${online ? 'Online' : 'Offline'}</span>`;
     };
     const statusBadge = (user) => badge(user?.status);
     const staffActions = (user) => {
         if (approvalState(user) === 'PENDING') {
-            return `<div class="flex items-center justify-start gap-1.5"><button type="button" data-action="approve-staff" data-id="${user.id}" class="group cursor-pointer p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" title="Approve staff"><svg class="w-6 h-6 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><svg class="hidden w-6 h-6 pointer-events-none group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm13.707-1.293a1 1 0 0 0-1.414-1.414L11 12.586l-1.793-1.793a1 1 0 0 0-1.414 1.414l2.5 2.5a1 1 0 0 0 1.414 0l4-4Z" clip-rule="evenodd"/></svg></button><button type="button" data-action="decline-staff" data-id="${user.id}" class="group cursor-pointer p-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" title="Decline staff"><svg class="w-6 h-6 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><svg class="hidden w-6 h-6 pointer-events-none group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/></svg></button></div>`;
+            return `<div class="flex items-center justify-start gap-1.5"><button type="button" data-action="approve-staff" data-id="${user.id}" class="group cursor-pointer p-2 rounded-none text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" title="Approve staff"><svg class="w-6 h-6 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><svg class="hidden w-6 h-6 pointer-events-none group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm13.707-1.293a1 1 0 0 0-1.414-1.414L11 12.586l-1.793-1.793a1 1 0 0 0-1.414 1.414l2.5 2.5a1 1 0 0 0 1.414 0l4-4Z" clip-rule="evenodd"/></svg></button><button type="button" data-action="decline-staff" data-id="${user.id}" class="group cursor-pointer p-2 rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" title="Decline staff"><svg class="w-6 h-6 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><svg class="hidden w-6 h-6 pointer-events-none group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/></svg></button></div>`;
         }
-        return `<div class="flex items-center justify-start gap-1.5"><button type="button" data-action="edit-staff" data-id="${user.id}" class="cursor-pointer p-2 rounded-lg text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Edit staff"><svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg></button><button type="button" data-action="archive-staff" data-id="${user.id}" class="cursor-pointer p-2 rounded-lg text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Archive staff"><svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/></svg></button></div>`;
+        return `<div class="flex items-center justify-start gap-1.5"><button type="button" data-action="edit-staff" data-id="${user.id}" class="cursor-pointer p-2 rounded-none text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Edit staff"><svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg></button><button type="button" data-action="archive-staff" data-id="${user.id}" class="cursor-pointer p-2 rounded-none text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Archive staff"><svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/></svg></button></div>`;
     };
     const destroyTable = () => { if (dt) { dt.destroy(); dt = null; } };
     const initTable = () => {
@@ -180,20 +208,20 @@ export const initStaffsManage = () => {
 
     const skeletonRow = () => `
         <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
-            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-none"></div></td>
             <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0"></div>
+                    <div class="w-10 h-10 rounded-none bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div>
                     <div class="space-y-1.5">
-                        <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div>
-                        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full w-40"></div>
+                        <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-28"></div>
+                        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-none w-40"></div>
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
-            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-24"></div></td>
-            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-md w-16"></div></td>
-            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div></div></td>
+            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-20"></div></td>
+            <td class="px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-none w-24"></div></td>
+            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-none w-16"></div></td>
+            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-none"></div></div></td>
         </tr>`;
 
     const showSkeleton = (rows = 5) => {
@@ -218,20 +246,62 @@ export const initStaffsManage = () => {
             const pendingCellClass = isPending ? ' opacity-55 hover:opacity-75' : '';
             const pendingTitle = isPending ? ' title="This user is pending for approval"' : '';
             activeTbody.insertAdjacentHTML('beforeend', `
-                <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors" data-id="${user.id}"${pendingTitle}>
-                    <td class="w-4 p-4 text-center align-middle${pendingCellClass}"><input type="checkbox" value="${user.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer"></td>
-                    <td class="px-6 py-4 font-medium text-gray-950 dark:text-white whitespace-nowrap text-left${pendingCellClass}"><div class="flex items-center gap-3"><img class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-800" src="${avatar(user)}" alt="${esc(user.full_name)}"><div class="flex flex-col justify-start text-left"><div class="flex items-center gap-2"><span class="text-base font-semibold text-gray-950 dark:text-white leading-tight">${na(user.full_name)}</span>${kids.length ? `<button data-collapse-toggle="${childClass}" class="cursor-pointer text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none transition-colors" type="button" title="View GIP assistants"><svg class="w-5 h-5 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path></svg></button>` : ''}</div><div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">${na(user.email)}</div></div></div></td>
+                <tr class="parent-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-blue-50/40 dark:hover:bg-gray-800/60 transition-colors" data-id="${user.id}"${pendingTitle}>
+                    <td class="w-4 p-4 text-center align-middle${pendingCellClass}"><input type="checkbox" value="${user.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-none focus:ring-blue-500 focus:ring-2 cursor-pointer"></td>
+                    <td class="px-6 py-4 font-medium text-gray-950 dark:text-white whitespace-nowrap text-left${pendingCellClass}">
+                        <div class="flex items-center gap-3">
+                            <img class="w-10 h-10 rounded-none object-cover border border-gray-300 dark:border-gray-700 shadow-2xs" src="${avatar(user)}" alt="${esc(user.full_name)}">
+                            <div class="flex flex-col justify-start text-left">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-base font-semibold text-gray-950 dark:text-white leading-tight">${na(user.full_name)}</span>
+                                    ${kids.length ? `<button data-collapse-toggle="${childClass}" data-gip-toggle="${childClass}" class="gip-toggle-btn cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800/60 rounded-none transition-colors select-none" type="button" title="Toggle GIP assistants for ${esc(user.full_name || 'staff')}"><span>${kids.length} GIP</span><svg class="w-3.5 h-3.5 transition-transform duration-200 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path></svg></button>` : ''}
+                                </div>
+                                <div class="font-normal text-xs text-gray-500 dark:text-gray-400 leading-normal">${na(user.email)}</div>
+                            </div>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-left align-middle text-sm text-gray-950 dark:text-white font-medium${pendingCellClass}">${esc(roleName(user))}</td>
                     <td class="px-6 py-4 text-left align-middle text-gray-500 dark:text-gray-400${pendingCellClass}">${esc(officeName(user))}</td>
                     <td class="px-6 py-4 text-left align-middle${pendingCellClass}"><div class="flex items-center justify-start">${statusBadge(user)}</div></td>
                     <td class="px-6 py-4 text-left align-middle">${staffActions(user)}</td>
                 </tr>`);
             kids.forEach(gip => activeTbody.insertAdjacentHTML('beforeend', `
-                <tr class="${childClass} hidden bg-gray-50/80 dark:bg-gray-900/80 border-b border-gray-100 dark:border-gray-800" data-id="${gip.id}" data-parent-id="${user.id}">
-                    <td class="w-4 p-4 text-center align-middle"><input type="checkbox" value="gip:${gip.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-sm focus:ring-blue-500 focus:ring-2 cursor-pointer"></td>
-                    <td class="px-6 py-3 text-left"><div class="ms-8 flex items-center gap-3"><img class="w-8 h-8 rounded-lg object-cover ring-2 ring-white dark:ring-gray-700" src="${avatar(gip)}" alt="${esc(gip.full_name)}"><div class="flex flex-col"><span class="font-semibold text-sm text-gray-950 dark:text-white">${na(gip.full_name)}</span><span class="text-xs text-gray-500 dark:text-gray-400">${na(gip.email)}</span></div><span class="inline-flex items-center bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.5 rounded">GIP</span></div></td>
-                    <td class="px-6 py-3 text-left text-sm text-gray-950 dark:text-white font-medium">Assistant</td><td class="px-6 py-3 text-left text-gray-500 dark:text-gray-400">Assigned to ${esc(user.full_name || 'staff')}</td><td class="px-6 py-3 text-left">${badge(gip.status)}</td>
-                    <td class="px-6 py-3 text-left"><button type="button" data-action="edit-gip" data-id="${gip.id}" class="cursor-pointer p-2 rounded-lg text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Edit assistant"><svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg></button><button type="button" data-action="archive-gip" data-id="${gip.id}" class="cursor-pointer p-2 rounded-lg text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Archive assistant"><svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/></svg></button></td>
+                <tr class="${childClass} gip-row hidden cursor-pointer bg-blue-50/20 dark:bg-blue-950/20 border-b border-gray-200 dark:border-gray-800 hover:bg-blue-50/50 dark:hover:bg-blue-900/30 transition-colors" data-id="${gip.id}" data-parent-id="${user.id}">
+                    <td class="w-4 p-4 text-center align-middle"><input type="checkbox" value="gip:${gip.id}" class="row-checkbox w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-none focus:ring-blue-500 focus:ring-2 cursor-pointer"></td>
+                    <td class="px-6 py-3.5 text-left">
+                        <div class="ms-8 flex items-center gap-3">
+                            <img class="w-8 h-8 rounded-none object-cover border border-gray-300 dark:border-gray-700 shadow-2xs" src="${avatar(gip)}" alt="${esc(gip.full_name)}">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-sm text-gray-950 dark:text-white">${na(gip.full_name)}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">${na(gip.email)}</span>
+                            </div>
+                            <span class="inline-flex items-center bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.5 rounded-none border border-blue-200 dark:border-blue-800/60">GIP</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-3.5 text-left text-sm text-gray-950 dark:text-white font-medium">Assistant</td>
+                    <td class="px-6 py-3.5 text-left text-gray-500 dark:text-gray-400">Assigned to ${esc(user.full_name || 'staff')}</td>
+                    <td class="px-6 py-3.5 text-left">${badge(gip.status)}</td>
+                    <td class="px-6 py-3.5 text-left">
+                        <div class="flex items-center justify-start gap-1.5">
+                            <button type="button" data-action="view-gip" data-id="${gip.id}" class="cursor-pointer p-2 rounded-none text-emerald-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="View assistant details">
+                                <svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                </svg>
+                            </button>
+                            <button type="button" data-action="edit-gip" data-id="${gip.id}" class="cursor-pointer p-2 rounded-none text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Edit assistant">
+                                <svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                </svg>
+                            </button>
+                            <button type="button" data-action="archive-gip" data-id="${gip.id}" class="cursor-pointer p-2 rounded-none text-red-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="Archive assistant">
+                                <svg class="w-5 h-5 pointer-events-none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                    <path fill-rule="evenodd" d="M20 10H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM9 13v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                                    <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 1 1 0 4H4a2 2 0 0 1-2-2Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`));
         });
         initTable();
@@ -280,13 +350,23 @@ export const initStaffsManage = () => {
         if (els.pin) els.pin.value = '';
         if (positionDropdown) positionDropdown.setValue('');
         if (officeDropdown) officeDropdown.setValue('');
+        if (els.gipMentorSelect) els.gipMentorSelect.value = '';
+        if (els.gipStatusSelect) els.gipStatusSelect.value = 'offline';
         gipBtnState();
     };
     const showSections = ({ gipMode = false, staffMode = true, gipList = true }) => {
-        els.staffSec?.classList.toggle('hidden', gipMode); els.gipSec?.classList.toggle('hidden', !gipMode);
-        els.roleSec?.classList.toggle('hidden', !staffMode); els.officeSec?.classList.toggle('hidden', !staffMode); els.gipList?.classList.toggle('hidden', !gipList);
-        els.birthdaySec?.classList.toggle('hidden', gipMode); els.pinSec?.classList.toggle('hidden', gipMode);
-        if (els.staffName) els.staffName.required = !gipMode; if (els.gipName) els.gipName.required = gipMode; if (els.role) els.role.required = staffMode;
+        els.staffSec?.classList.toggle('hidden', gipMode);
+        els.gipSec?.classList.toggle('hidden', !gipMode);
+        els.gipMentorSec?.classList.toggle('hidden', !gipMode);
+        els.gipStatusSec?.classList.toggle('hidden', !gipMode);
+        els.roleSec?.classList.toggle('hidden', !staffMode);
+        els.officeSec?.classList.toggle('hidden', !staffMode);
+        els.gipList?.classList.toggle('hidden', !gipList);
+        els.birthdaySec?.classList.toggle('hidden', gipMode);
+        els.pinSec?.classList.toggle('hidden', gipMode);
+        if (els.staffName) els.staffName.required = !gipMode;
+        if (els.gipName) els.gipName.required = gipMode;
+        if (els.role) els.role.required = staffMode;
     };
     const addMode = () => {
         resetForm(); mode = 'add-staff'; showSections({ gipMode: false, staffMode: true, gipList: true });
@@ -320,16 +400,51 @@ export const initStaffsManage = () => {
         gipBtnState();
     };
     const editGipMode = (g) => {
-        resetForm(); mode = 'edit-gip'; recordId = g.id; staffId = g.created_by; showSections({ gipMode: true, staffMode: false, gipList: false });
-        if (els.title) els.title.textContent = 'Edit GIP Assistant'; if (els.submit) els.submit.textContent = 'Save Changes';
-        if (els.gipName) els.gipName.value = g.full_name || ''; if (els.username) els.username.value = g.username || ''; if (els.email) els.email.value = g.email || ''; if (els.phone) els.phone.value = g.phone || '';
-        if (els.password) { els.password.required = false; els.password.placeholder = 'Leave blank to keep current'; } if (els.confirm) els.confirm.required = false; els.confirmSec?.classList.add('hidden');
+        resetForm();
+        mode = 'edit-gip';
+        recordId = g.id;
+        staffId = g.created_by;
+        showSections({ gipMode: true, staffMode: false, gipList: false });
+        if (els.title) els.title.textContent = 'Edit GIP Assistant';
+        if (els.submit) els.submit.textContent = 'Save Changes';
+        if (els.gipName) els.gipName.value = g.full_name || '';
+        if (els.username) els.username.value = g.username || '';
+        if (els.email) els.email.value = g.email || '';
+        if (els.phone) els.phone.value = g.phone || '';
+
+        // Populate mentor selector with staff members
+        if (els.gipMentorSelect) {
+            els.gipMentorSelect.innerHTML = users.map(u => {
+                const isCurrent = Number(u.id) === Number(g.created_by);
+                const kidCount = staffGips(u.id).length;
+                const badgeText = isCurrent ? ' (Current Mentor)' : (kidCount >= MAX_GIP ? ` (Max ${MAX_GIP} assigned)` : '');
+                return `<option value="${u.id}" ${isCurrent ? 'selected' : ''}>${esc(u.full_name || u.username)} - ${esc(officeName(u))}${badgeText}</option>`;
+            }).join('');
+        }
+        if (els.gipStatusSelect) {
+            els.gipStatusSelect.value = String(g.status || 'offline').toLowerCase();
+        }
+
+        if (els.password) {
+            els.password.required = false;
+            els.password.value = '';
+            els.password.placeholder = 'Leave blank to keep current password';
+        }
+        if (els.confirm) {
+            els.confirm.required = false;
+            els.confirm.value = '';
+            els.confirm.placeholder = 'Confirm new password if changing';
+        }
+        els.confirmSec?.classList.remove('hidden');
+        if (els.pwdRequiredStar) els.pwdRequiredStar.classList.add('hidden');
+        if (els.confPwdRequiredStar) els.confPwdRequiredStar.classList.add('hidden');
+        if (els.pinRequiredStar) els.pinRequiredStar.classList.add('hidden');
     };
     const addGipBlock = () => {
         if (!els.gipBox) return;
         const n = els.gipBox.children.length + 1, block = document.createElement('div');
-        block.className = 'p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 space-y-3 relative';
-        block.innerHTML = `<div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2 mb-2"><span class="text-xs font-extrabold text-blue-600 dark:text-blue-500 uppercase tracking-wider">GIP Assistant #${n}</span><button type="button" class="cursor-pointer text-red-600 font-bold text-xs btn-remove-gip">Remove</button></div><div class="grid gap-3 grid-cols-2"><input type="text" name="gip_name[]" placeholder="Full name" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required><input type="text" name="gip_username[]" placeholder="Username" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required><input type="email" name="gip_email[]" placeholder="Email address" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required><input type="tel" name="gip_phone[]" placeholder="Phone number" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><input type="password" name="gip_password[]" placeholder="Password" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required><input type="password" name="gip_confirm_password[]" placeholder="Confirm password" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>`;
+        block.className = 'p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 space-y-3 relative rounded-none';
+        block.innerHTML = `<div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2 mb-2"><span class="text-xs font-extrabold text-blue-600 dark:text-blue-500 uppercase tracking-wider">GIP Assistant #${n}</span><button type="button" class="cursor-pointer text-red-600 font-bold text-xs btn-remove-gip">Remove</button></div><div class="grid gap-3 grid-cols-2"><input type="text" name="gip_name[]" placeholder="Full name" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-none" required><input type="text" name="gip_username[]" placeholder="Username" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-none" required><input type="email" name="gip_email[]" placeholder="Email address" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-none" required><input type="tel" name="gip_phone[]" placeholder="Phone number" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-none"><input type="password" name="gip_password[]" placeholder="Password" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-none" required><input type="password" name="gip_confirm_password[]" placeholder="Confirm password" class="col-span-2 sm:col-span-1 bg-white border border-gray-300 text-gray-900 text-xs block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white rounded-none" required></div>`;
         block.querySelector('.btn-remove-gip')?.addEventListener('click', () => { block.remove(); gipBtnState(); });
         els.gipBox.appendChild(block); gipBtnState();
     };
@@ -443,9 +558,33 @@ export const initStaffsManage = () => {
                 window.DEBUG?.success('STAFFS', 'Staff updated.', res.data);
                 showToast('success', `Staff member "${res.data.full_name}" was updated successfully.`);
             } else if (mode === 'edit-gip') {
-                const updates = { full_name: els.gipName?.value.trim() || '', username: els.username?.value.trim() || '', email: els.email?.value.trim() || null, phone: els.phone?.value.trim() || null };
-                if (els.password.value) updates.password = els.password.value;
-                const res = await updateGip(recordId, updates); if (res.error) throw new Error(res.error);
+                if (els.password?.value) {
+                    if (els.password.value !== els.confirm?.value) {
+                        throw new Error('New password and confirm password do not match.');
+                    }
+                    if (els.password.value.length < 6) {
+                        throw new Error('Password must be at least 6 characters long.');
+                    }
+                }
+                const newMentorId = Number(els.gipMentorSelect?.value || staffId);
+                if (newMentorId !== Number(staffId)) {
+                    const count = staffGips(newMentorId).length;
+                    if (count >= MAX_GIP) {
+                        throw new Error(`The selected mentor already has the maximum of ${MAX_GIP} GIP assistants assigned.`);
+                    }
+                }
+
+                const updates = {
+                    full_name: els.gipName?.value.trim() || '',
+                    username: els.username?.value.trim() || '',
+                    email: els.email?.value.trim() || null,
+                    phone: els.phone?.value.trim() || null,
+                    status: els.gipStatusSelect?.value || 'offline',
+                    created_by: newMentorId
+                };
+                if (els.password?.value) updates.password = els.password.value;
+                const res = await updateGip(recordId, updates);
+                if (res.error) throw new Error(res.error);
                 window.DEBUG?.success('STAFFS', 'GIP assistant updated.', res.data);
                 showToast('success', `GIP Assistant "${res.data.full_name}" was updated successfully.`);
             }
@@ -469,13 +608,88 @@ export const initStaffsManage = () => {
         setText('view-birthday', u.birthday);
         const s = q('view-status'); if (s) s.innerHTML = statusBadge(u);
         const appS = q('view-approval-status'); if (appS) appS.innerHTML = approvalBadge(approvalState(u));
-        const dot = q('view-online-dot'); if (dot) dot.className = `absolute bottom-0 right-0 w-5 h-5 ${u.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'} border-[3.5px] border-white dark:border-gray-800 rounded-full`;
+        const dot = q('view-online-dot'); if (dot) dot.className = `absolute bottom-0 right-0 w-4 h-4 ${u.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-gray-800 rounded-none`;
         const gipSection = q('view-gips-section');
         const box = q('view-gips-container'), kids = staffGips(u.id);
         if (gipSection) {
             gipSection.classList.toggle('hidden', Number(u.role_id) === 5);
         }
-        if (box) box.innerHTML = kids.length ? kids.map(g => `<div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-800"><img class="w-9 h-9 rounded-lg object-cover ring-2 ring-white dark:ring-gray-700 shadow-sm" src="${avatar(g)}" alt="${esc(g.full_name)}"><div class="flex-1 min-w-0"><h5 class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">${na(g.full_name)}</h5><p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">${na(g.email)}</p></div><span class="inline-flex items-center bg-gradient-to-r from-blue-800 to-blue-950 text-white dark:from-blue-500 dark:to-blue-400 font-semibold px-1.5 py-0.5 rounded text-[9px] select-none shrink-0">GIP</span></div>`).join('') : '<p class="text-sm text-gray-500 dark:text-gray-400 italic">No linked GIP assistants</p>';
+        if (box) {
+            box.innerHTML = kids.length ? kids.map(g => `
+                <div data-view-gip-item="${g.id}" class="cursor-pointer flex items-center justify-between p-3 bg-gray-50/80 hover:bg-blue-50/50 dark:bg-gray-900/60 dark:hover:bg-blue-950/40 rounded-none border border-gray-200 dark:border-gray-700 transition-colors group">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img class="w-9 h-9 rounded-none object-cover border border-gray-300 dark:border-gray-600 shadow-2xs shrink-0" src="${avatar(g)}" alt="${esc(g.full_name)}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h5 class="text-sm font-bold text-gray-950 dark:text-white leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${na(g.full_name)}</h5>
+                                <span class="inline-flex items-center bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.5 rounded-none border border-blue-200 dark:border-blue-800/60 shrink-0">GIP</span>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">${na(g.email)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        ${statusBadge(g)}
+                        <span class="text-xs font-semibold text-blue-600 dark:text-blue-400 group-hover:underline">View Details &rarr;</span>
+                    </div>
+                </div>`).join('') : '<p class="text-sm text-gray-500 dark:text-gray-400 italic">No linked GIP assistants</p>';
+
+            // Attach click listeners to linked GIP cards
+            box.querySelectorAll('[data-view-gip-item]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const gipId = Number(el.getAttribute('data-view-gip-item'));
+                    const g = gips.find(item => Number(item.id) === gipId);
+                    if (g) {
+                        viewModal?.hide();
+                        viewGip(g);
+                        viewGipModal?.show();
+                    }
+                });
+            });
+        }
+
+        const editBtn = q('view-edit-staff-btn');
+        if (editBtn) {
+            editBtn.onclick = () => {
+                viewModal?.hide();
+                editStaffMode(u);
+                editModal?.show();
+            };
+        }
+    };
+
+    const viewGip = (g) => {
+        const setText = (id, value) => { const el = q(id); if (el) el.textContent = value || 'N/A'; };
+        const mentor = users.find(u => Number(u.id) === Number(g.created_by));
+
+        q('view-gip-avatar')?.setAttribute('src', avatar(g));
+        setText('view-gip-name', g.full_name);
+        setText('view-gip-username', g.username);
+        setText('view-gip-email', g.email);
+        setText('view-gip-phone', g.phone);
+        setText('view-gip-id', `#${g.id}`);
+
+        const createdAt = g.created_at ? new Date(g.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+        setText('view-gip-created', createdAt);
+
+        const statusContainer = q('view-gip-status');
+        if (statusContainer) statusContainer.innerHTML = statusBadge(g);
+
+        const dot = q('view-gip-online-dot');
+        if (dot) dot.className = `absolute bottom-0 right-0 w-4 h-4 ${String(g.status).toLowerCase() === 'online' ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-gray-800 rounded-none`;
+
+        setText('view-gip-mentor-name', mentor ? mentor.full_name : 'None Assigned');
+        setText('view-gip-mentor-role', mentor ? roleName(mentor) : 'Staff');
+        setText('view-gip-mentor-email', mentor ? mentor.email : 'N/A');
+        setText('view-gip-mentor-office', mentor ? officeName(mentor) : 'Unassigned Office');
+
+        const editBtn = q('view-edit-gip-btn');
+        if (editBtn) {
+            editBtn.onclick = () => {
+                viewGipModal?.hide();
+                editGipMode(g);
+                editModal?.show();
+            };
+        }
     };
 
     addBtn.addEventListener('click', () => { addMode(); editModal?.show(); });
@@ -487,7 +701,27 @@ export const initStaffsManage = () => {
         const table = document.getElementById('sorting-table');
         if (!table || !table.contains(e.target)) return;
 
-        // Handle checkbox cell click separately to toggle checkbox
+        // 1. Handle toggle collapse button for GIP assistants explicitly
+        const collapse = e.target.closest('[data-collapse-toggle], [data-gip-toggle]');
+        if (collapse) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            hideRowTooltip();
+            const cls = collapse.getAttribute('data-collapse-toggle') || collapse.getAttribute('data-gip-toggle');
+            const rows = document.querySelectorAll(`.${cls}`);
+            let isNowOpen = false;
+            rows.forEach(r => {
+                r.classList.toggle('hidden');
+                if (!r.classList.contains('hidden')) isNowOpen = true;
+            });
+            const svg = collapse.querySelector('svg');
+            if (svg) svg.classList.toggle('rotate-180', isNowOpen);
+            window.DEBUG?.event('STAFFS', 'Toggled GIP rows.', { cls, isNowOpen });
+            return;
+        }
+
+        // 2. Handle checkbox cell click separately to toggle checkbox
         const checkboxCell = e.target.closest('td:first-child');
         if (checkboxCell) {
             const cb = checkboxCell.querySelector('input[type="checkbox"]');
@@ -498,14 +732,18 @@ export const initStaffsManage = () => {
             return;
         }
 
-        const collapse = e.target.closest('[data-collapse-toggle]');
-        if (collapse) { e.stopPropagation(); const cls = collapse.getAttribute('data-collapse-toggle'); document.querySelectorAll(`.${cls}`).forEach(r => r.classList.toggle('hidden')); collapse.querySelector('svg')?.classList.toggle('rotate-180'); window.DEBUG?.event('STAFFS', 'Toggled GIP rows.', cls); return; }
         if (e.target.closest('input[type="checkbox"]')) return;
+
+        // 3. Handle explicit action buttons
         const btn = e.target.closest('[data-action]');
         if (btn) {
-            e.stopPropagation(); const action = btn.dataset.action, id = Number(btn.dataset.id); window.DEBUG?.event('STAFFS', `Action: ${action}`, { id });
+            e.stopPropagation();
+            hideRowTooltip();
+            const action = btn.dataset.action, id = Number(btn.dataset.id);
+            window.DEBUG?.event('STAFFS', `Action: ${action}`, { id });
             if (action === 'edit-staff') { const u = users.find(x => Number(x.id) === id); if (u) { editStaffMode(u); editModal?.show(); } }
             if (action === 'edit-gip') { const g = gips.find(x => Number(x.id) === id); if (g) { editGipMode(g); editModal?.show(); } }
+            if (action === 'view-gip') { const g = gips.find(x => Number(x.id) === id); if (g) { viewGip(g); viewGipModal?.show(); } }
             if (action === 'approve-staff' && await showFlowbiteConfirm({ title: 'Approve this staff account?', message: 'This staff member will be allowed to log in after approval.', confirmText: 'Approve Staff', cancelTone: 'red' })) {
                 const r = await updateUser(id, { approval_status: 'APPROVED' });
                 if (r.error) {
@@ -548,9 +786,64 @@ export const initStaffsManage = () => {
             }
             return;
         }
-        const row = e.target.closest('.parent-row'); if (!row) return;
-        const u = users.find(x => Number(x.id) === Number(row.dataset.id)); if (u) { viewStaff(u); viewModal?.show(); }
+
+        // 4. Do not trigger row opening when clicking buttons, inputs, links, or action column
+        if (e.target.closest('button, a, input, select, textarea, label, [data-collapse-toggle], [data-gip-toggle], td:last-child')) {
+            return;
+        }
+
+        // 5. Parent row click -> Open Staff View Modal
+        const parentRow = e.target.closest('.parent-row');
+        if (parentRow) {
+            hideRowTooltip();
+            const u = users.find(x => Number(x.id) === Number(parentRow.dataset.id));
+            if (u) {
+                viewStaff(u);
+                viewModal?.show();
+            }
+            return;
+        }
+
+        // 6. GIP child row click -> Open GIP View Modal
+        const gipRow = e.target.closest('.gip-row');
+        if (gipRow) {
+            hideRowTooltip();
+            const g = gips.find(x => Number(x.id) === Number(gipRow.dataset.id));
+            if (g) {
+                viewGip(g);
+                viewGipModal?.show();
+            }
+            return;
+        }
     });
+
+    // Row Hover Tooltip Logic (delayed hover as requested)
+    const sortingTableEl = document.getElementById('sorting-table');
+    sortingTableEl?.addEventListener('mouseover', (e) => {
+        const row = e.target.closest('.parent-row, .gip-row');
+        if (!row || e.target.closest('button, input, a, select, [data-action], [data-collapse-toggle], [data-gip-toggle], td:first-child, td:last-child')) {
+            hideRowTooltip();
+            return;
+        }
+        if (hoverTimeout) clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(() => {
+            const isParent = row.classList.contains('parent-row');
+            const tooltipText = isParent ? 'Click row to view staff details' : 'Click row to view assistant details';
+            if (rowTooltipText) rowTooltipText.textContent = tooltipText;
+            positionRowTooltip(e.clientX, e.clientY, row);
+            if (rowTooltipEl) rowTooltipEl.classList.remove('invisible', 'opacity-0');
+        }, 450);
+    });
+
+    sortingTableEl?.addEventListener('mousemove', (e) => {
+        if (rowTooltipEl && !rowTooltipEl.classList.contains('invisible')) {
+            const row = e.target.closest('.parent-row, .gip-row');
+            if (row) positionRowTooltip(e.clientX, e.clientY, row);
+        }
+    });
+
+    sortingTableEl?.addEventListener('mouseleave', hideRowTooltip);
+    window.addEventListener('scroll', hideRowTooltip, { passive: true });
 
     document.addEventListener('change', (e) => {
         const table = document.getElementById('sorting-table');
@@ -646,6 +939,7 @@ export const initStaffsManage = () => {
     }));
     /* END STAFF ADD DRAFT CANCEL CLEAR */
     viewEl?.querySelectorAll('[data-modal-hide="viewUserModal"]').forEach(b => b.addEventListener('click', () => viewModal?.hide()));
+    viewGipEl?.querySelectorAll('[data-modal-hide="viewGipModal"]').forEach(b => b.addEventListener('click', () => viewGipModal?.hide()));
 
     const initDropdowns = () => {
         positionDropdown = initSearchableDropdown({
