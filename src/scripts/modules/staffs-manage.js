@@ -5,6 +5,7 @@ import { archiveUser, createUser, fetchOffices, fetchRoles, fetchUsers, updateUs
 import { supabase } from '@/backend/api/supabase.js';
 import { createNotification } from '@/backend/api/notifications.api.js';
 import { staffAddDraftStorage } from '@/scripts/modules/storage.js';
+import { subscribeToPresenceSync } from '@/backend/api/presence.api.js';
 
 export const initStaffsManage = () => {
     const table = document.getElementById('sorting-table');
@@ -179,11 +180,23 @@ export const initStaffsManage = () => {
         }
         return '';
     };
-    const badge = (status = 'offline') => {
-        const online = String(status).toLowerCase() === 'online';
+    let liveOnlineUsers = new Set();
+    let liveOnlineGips = new Set();
+
+    const isPersonOnline = (person, isGip = false) => {
+        if (!person || !person.id) return false;
+        const id = Number(person.id);
+        if (isGip) {
+            return liveOnlineGips.has(id) || String(person.status).toLowerCase() === 'online';
+        }
+        return liveOnlineUsers.has(id) || String(person.status).toLowerCase() === 'online';
+    };
+
+    const badge = (status = 'offline', isOnline = null) => {
+        const online = isOnline !== null ? isOnline : String(status).toLowerCase() === 'online';
         return `<span class="inline-flex items-center ${online ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50'} font-semibold px-2.5 py-1 rounded-none text-xs select-none gap-1.5"><span class="w-1.5 h-1.5 ${online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'} rounded-none"></span>${online ? 'Online' : 'Offline'}</span>`;
     };
-    const statusBadge = (user) => badge(user?.status);
+    const statusBadge = (user, isGip = false) => badge(user?.status, isPersonOnline(user, isGip));
     const staffActions = (user) => {
         if (approvalState(user) === 'PENDING') {
             return `<div class="flex items-center justify-start gap-1.5"><button type="button" data-action="approve-staff" data-id="${user.id}" class="group cursor-pointer p-2 rounded-none text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300" title="Approve staff"><svg class="w-6 h-6 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 11.5 11 14l4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><svg class="hidden w-6 h-6 pointer-events-none group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm13.707-1.293a1 1 0 0 0-1.414-1.414L11 12.586l-1.793-1.793a1 1 0 0 0-1.414 1.414l2.5 2.5a1 1 0 0 0 1.414 0l4-4Z" clip-rule="evenodd"/></svg></button><button type="button" data-action="decline-staff" data-id="${user.id}" class="group cursor-pointer p-2 rounded-none text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" title="Decline staff"><svg class="w-6 h-6 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><svg class="hidden w-6 h-6 pointer-events-none group-hover:block" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm7.707-3.707a1 1 0 0 0-1.414 1.414L10.586 12l-2.293 2.293a1 1 0 1 0 1.414 1.414L12 13.414l2.293 2.293a1 1 0 0 0 1.414-1.414L13.414 12l2.293-2.293a1 1 0 0 0-1.414-1.414L12 10.586 9.707 8.293Z" clip-rule="evenodd"/></svg></button></div>`;
@@ -282,7 +295,7 @@ export const initStaffsManage = () => {
                     </td>
                     <td class="px-6 py-3.5 text-left text-sm text-gray-950 dark:text-white font-medium">Assistant</td>
                     <td class="px-6 py-3.5 text-left text-gray-500 dark:text-gray-400">Assigned to ${esc(user.full_name || 'staff')}</td>
-                    <td class="px-6 py-3.5 text-left">${badge(gip.status)}</td>
+                    <td class="px-6 py-3.5 text-left">${statusBadge(gip, true)}</td>
                     <td class="px-6 py-3.5 text-left">
                         <div class="flex items-center justify-start gap-1.5">
                             <button type="button" data-action="view-gip" data-id="${gip.id}" class="cursor-pointer p-2 rounded-none text-emerald-600 hover:bg-gray-100 dark:hover:bg-gray-800" title="View assistant details">
@@ -730,7 +743,8 @@ export const initStaffsManage = () => {
         setText('view-birthday', u.birthday);
         const s = q('view-status'); if (s) s.innerHTML = statusBadge(u);
         const appS = q('view-approval-status'); if (appS) appS.innerHTML = approvalBadge(approvalState(u));
-        const dot = q('view-online-dot'); if (dot) dot.className = `absolute bottom-0 right-0 w-4 h-4 ${u.status === 'online' ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-gray-800 rounded-none`;
+        const isOnline = isPersonOnline(u);
+        const dot = q('view-online-dot'); if (dot) dot.className = `absolute bottom-0 right-0 w-4 h-4 ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-gray-800 rounded-none`;
         const gipSection = q('view-gips-section');
         const box = q('view-gips-container'), kids = staffGips(u.id);
         if (gipSection) {
@@ -793,11 +807,12 @@ export const initStaffsManage = () => {
         const createdAt = g.created_at ? new Date(g.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
         setText('view-gip-created', createdAt);
 
+        const isOnline = isPersonOnline(g, true);
         const statusContainer = q('view-gip-status');
-        if (statusContainer) statusContainer.innerHTML = statusBadge(g);
+        if (statusContainer) statusContainer.innerHTML = statusBadge(g, true);
 
         const dot = q('view-gip-online-dot');
-        if (dot) dot.className = `absolute bottom-0 right-0 w-4 h-4 ${String(g.status).toLowerCase() === 'online' ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-gray-800 rounded-none`;
+        if (dot) dot.className = `absolute bottom-0 right-0 w-4 h-4 ${isOnline ? 'bg-emerald-500' : 'bg-rose-500'} border-2 border-white dark:border-gray-800 rounded-none`;
 
         setText('view-gip-mentor-name', mentor ? mentor.full_name : 'None Assigned');
         setText('view-gip-mentor-role', mentor ? roleName(mentor) : 'Staff');
@@ -1086,19 +1101,33 @@ export const initStaffsManage = () => {
     load();
 
     // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Supabase Realtime ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
-    // Subscribe to users table changes and refresh the table live.
+    // Subscribe to users and gips table changes and refresh the table live.
+    const unsubscribePresence = subscribeToPresenceSync(({ onlineUsers, onlineGips }) => {
+        liveOnlineUsers = onlineUsers;
+        liveOnlineGips = onlineGips;
+        users.forEach(u => {
+            if (onlineUsers.has(Number(u.id))) u.status = 'online';
+        });
+        gips.forEach(g => {
+            if (onlineGips.has(Number(g.id))) g.status = 'online';
+        });
+        render(users);
+    });
+
     const channel = supabase
         .channel('staffs-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, async (payload) => {
-            window.DEBUG?.flow('STAFFS', `Realtime event: ${payload.eventType}`, payload);
-            // Re-fetch gips too in case role relationships changed
+            window.DEBUG?.flow('STAFFS', `Realtime event on users: ${payload.eventType}`, payload);
             const [ur, gr] = await Promise.all([fetchUsers(), fetchAllGips()]);
-            if (!ur.error) {
-                users = ur.data || [];
-            }
-            if (!gr.error) {
-                gips = gr.data || [];
-            }
+            if (!ur.error) users = ur.data || [];
+            if (!gr.error) gips = gr.data || [];
+            render(users);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'gips' }, async (payload) => {
+            window.DEBUG?.flow('STAFFS', `Realtime event on gips: ${payload.eventType}`, payload);
+            const [ur, gr] = await Promise.all([fetchUsers(), fetchAllGips()]);
+            if (!ur.error) users = ur.data || [];
+            if (!gr.error) gips = gr.data || [];
             render(users);
         })
         .subscribe((status) => {
@@ -1108,6 +1137,7 @@ export const initStaffsManage = () => {
     // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
         supabase.removeChannel(channel);
+        unsubscribePresence();
     });
 };
 

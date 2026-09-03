@@ -274,3 +274,23 @@ async function updateParentTicketAfterMessage(payload) {
 
     if (error) throw new Error(error.message);
 }
+
+/* START TICKET ROOM PRESENCE HELPERS */
+/**
+ * Create a configured ticket room channel with Presence tracking for typing indicators.
+ * @param {number} ticketId
+ * @param {number|string} userId
+ * @returns {import('@supabase/supabase-js').RealtimeChannel}
+ */
+export function createTicketRoomChannel(ticketId, userId, tabId = null) {
+    const clientTabId = tabId || (typeof window !== 'undefined' ? (window.__PORTAL_TAB_ID || (window.__PORTAL_TAB_ID = 't_' + Math.random().toString(36).slice(2, 9))) : 'srv');
+    const presenceKey = `client_${userId || 'anon'}_${clientTabId}`;
+    return supabase.channel(`ticket-room-${ticketId}`, {
+        config: {
+            presence: {
+                key: presenceKey
+            }
+        }
+    });
+}
+/* END TICKET ROOM PRESENCE HELPERS */

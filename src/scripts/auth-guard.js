@@ -48,10 +48,11 @@ if (isAboutRoute) {
 }
 
 import { detectActiveUserSession, logout, refreshPortalSession } from '../backend/api/auth.api.js';
+import { initPresence } from '../backend/api/presence.api.js';
 
-/* START INACTIVITY SESSION TIMEOUT */
-const INACTIVITY_LIMIT_MS = 2 * 60 * 60 * 1000;
-const SESSION_HEARTBEAT_MS = 5 * 60 * 1000;
+/* START INACTIVITY SESSION TIMEOUT - 16 Minutes Inactivity Auto-Offline & Logout */
+const INACTIVITY_LIMIT_MS = 16 * 60 * 1000; // 16 minutes
+const SESSION_HEARTBEAT_MS = 4 * 60 * 1000; // 4 minutes
 let inactivityTimer = null;
 let heartbeatTimer = null;
 let lastInteractionAt = Date.now();
@@ -99,6 +100,7 @@ const validateProtectedRoute = async () => {
             const user = await detectActiveUserSession();
             if (user) {
                 window.__PORTAL_SESSION = user;
+                void initPresence(user);
                 startInactivityMonitor();
             }
         } catch {}
@@ -133,6 +135,7 @@ const validateProtectedRoute = async () => {
         if (!allowed) return window.location.replace(dashboardFor(roleId));
         window.__PORTAL_SESSION = user;
         document.documentElement.classList.remove('portal-auth-checking');
+        void initPresence(user);
         startInactivityMonitor();
     } catch {
         authStorage.clearUserSession();

@@ -9,6 +9,8 @@ import { getCachedCurrentUser, detectActiveUserSession } from '@/backend/api/aut
 import { fetchExternalAccountLinks } from '@/backend/api/external-links.api.js';
 import { countGipsByStaff, fetchGipsByStaff } from '@/backend/api/gips.api.js';
 import { initAnnouncementBanner } from './announcement-banner.js';
+import { subscribeToPresenceSync } from '@/backend/api/presence.api.js';
+import { supabase } from '@/backend/api/supabase.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -114,6 +116,9 @@ class AdminDashboardController {
             resolvedRate: document.getElementById('admin-dashboard-resolved-rate'),
         };
 
+        this.liveOnlineUsers = new Set();
+        this.cachedUsers = [];
+
         if (!Object.values(this.metricEls).some(Boolean)) return;
 
         // Flowbite Marketing Announcement CTA Banner on top of Image Banner Header
@@ -122,6 +127,50 @@ class AdminDashboardController {
         this.renderUserMetrics();
         this.renderTicketMetrics();
         this.renderStaffList();
+        this.setupRealtimeStaffUpdates();
+    }
+
+    setupRealtimeStaffUpdates() {
+        // 1. Supabase Realtime Presence Synchronization
+        this.unsubscribePresence = subscribeToPresenceSync(({ onlineUsers }) => {
+            this.liveOnlineUsers = onlineUsers;
+            if (this.cachedUsers && this.cachedUsers.length) {
+                this.cachedUsers.forEach(u => {
+                    if (this.liveOnlineUsers.has(Number(u.id))) {
+                        u.status = 'online';
+                    }
+                });
+                const staff = this.getSortedStaff(this.cachedUsers);
+                if (this.staffListEl && staff.length) {
+                    this.staffListEl.innerHTML = staff.map((user, index) => this.renderStaffRow(user, index, staff.length)).join('');
+                }
+            }
+        });
+
+        // 2. Supabase Postgres Changes Subscription for users table
+        this.staffChannel = supabase
+            .channel('dashboard-staffs-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, async () => {
+                await this.renderStaffList();
+                await this.renderUserMetrics();
+            })
+            .subscribe();
+
+        // 3. Periodic refresh of relative time ("X minutes/hours ago") every 30 seconds
+        this.relativeTimeInterval = setInterval(() => {
+            if (this.cachedUsers && this.cachedUsers.length && this.staffListEl) {
+                const staff = this.getSortedStaff(this.cachedUsers);
+                if (staff.length) {
+                    this.staffListEl.innerHTML = staff.map((user, index) => this.renderStaffRow(user, index, staff.length)).join('');
+                }
+            }
+        }, 30000);
+
+        window.addEventListener('beforeunload', () => {
+            if (this.unsubscribePresence) this.unsubscribePresence();
+            if (this.staffChannel) supabase.removeChannel(this.staffChannel);
+            if (this.relativeTimeInterval) clearInterval(this.relativeTimeInterval);
+        });
     }
 
     setMetric(metricName, value) {
@@ -178,13 +227,11 @@ class AdminDashboardController {
     isActiveStaff(user) {
         if (this.isPendingStaff(user)) return false;
 
+        const id = Number(user?.id);
+        if (this.liveOnlineUsers?.has(id)) return true;
+
         const status = String(user?.status || '').toLowerCase();
-        if (['active', 'online'].includes(status)) return true;
-
-        const lastSeenTime = new Date(user?.last_seen || '').getTime();
-        if (!Number.isFinite(lastSeenTime)) return false;
-
-        return Date.now() - lastSeenTime <= 5 * 60 * 1000;
+        return status === 'active' || status === 'online';
     }
 
     getRelativeTime(value) {
@@ -192,10 +239,10 @@ class AdminDashboardController {
         if (!Number.isFinite(timestamp)) return '';
 
         const diffMinutes = Math.max(1, Math.floor((Date.now() - timestamp) / 60000));
-        if (diffMinutes < 60) return `${diffMinutes} min${diffMinutes === 1 ? '' : 's'} ago`;
+        if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
 
         const diffHours = Math.floor(diffMinutes / 60);
-        if (diffHours < 24) return `${diffHours} hr${diffHours === 1 ? '' : 's'} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
 
         const diffDays = Math.floor(diffHours / 24);
         return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
@@ -207,11 +254,11 @@ class AdminDashboardController {
         }
 
         if (this.isActiveStaff(user)) {
-            return { dotClass: 'bg-green-500', label: 'Active' };
+            return { dotClass: 'bg-emerald-500 animate-pulse', label: 'Active' };
         }
 
         const offlineSince = this.getRelativeTime(user?.last_seen);
-        return { dotClass: 'bg-red-500', label: offlineSince ? `Offline ${offlineSince}` : 'Offline' };
+        return { dotClass: 'bg-rose-500', label: offlineSince ? `Offline ${offlineSince}` : 'Offline' };
     }
 
     getSortedStaff(users) {
@@ -220,6 +267,9 @@ class AdminDashboardController {
             .sort((a, b) => {
                 const pendingDiff = Number(this.isPendingStaff(a)) - Number(this.isPendingStaff(b));
                 if (pendingDiff !== 0) return pendingDiff;
+
+                const activeDiff = Number(this.isActiveStaff(b)) - Number(this.isActiveStaff(a));
+                if (activeDiff !== 0) return activeDiff;
 
                 return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
             })
@@ -235,13 +285,13 @@ class AdminDashboardController {
                 ${Array.from({ length: 3 }).map((_, index) => `
                     <div class="flex items-center justify-between py-2 ${index < 2 ? 'border-b border-gray-100 dark:border-gray-800' : ''}">
                         <div class="flex min-w-0 items-center gap-3">
-                            <div class="h-10 w-10 shrink-0 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                            <div class="h-10 w-10 shrink-0 rounded-none bg-gray-200 dark:bg-gray-700"></div>
                             <div class="min-w-0 space-y-2">
-                                <div class="h-3 ${index === 1 ? 'w-24' : 'w-28'} rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                                <div class="h-2.5 ${index === 2 ? 'w-40' : 'w-36'} rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                                <div class="h-3 ${index === 1 ? 'w-24' : 'w-28'} rounded-none bg-gray-200 dark:bg-gray-700"></div>
+                                <div class="h-2.5 ${index === 2 ? 'w-40' : 'w-36'} rounded-none bg-gray-200 dark:bg-gray-700"></div>
                             </div>
                         </div>
-                        <div class="h-3 w-16 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                        <div class="h-3 w-16 rounded-none bg-gray-200 dark:bg-gray-700"></div>
                     </div>
                 `).join('')}
             </div>
@@ -262,15 +312,15 @@ class AdminDashboardController {
         return `
             <div class="flex items-center justify-between gap-3 py-2 transition-opacity ${borderClass}${pendingClass}"${pendingTitle}>
                 <div class="flex min-w-0 items-center gap-3">
-                    <img class="h-10 w-10 shrink-0 rounded-full object-cover" src="${this.escapeHtml(avatarUrl)}" alt="${this.escapeHtml(name)}" onerror="this.onerror=null;this.src='${this.escapeHtml(fallbackAvatarUrl)}';">
+                    <img class="h-10 w-10 shrink-0 rounded-none object-cover border border-gray-200 dark:border-gray-700 shadow-2xs" src="${this.escapeHtml(avatarUrl)}" alt="${this.escapeHtml(name)}" onerror="this.onerror=null;this.src='${this.escapeHtml(fallbackAvatarUrl)}';">
                     <div class="min-w-0">
                         <h4 class="truncate text-sm font-bold leading-tight text-gray-900 dark:text-white">${this.escapeHtml(name)}</h4>
                         <p class="truncate text-xs text-gray-500 dark:text-gray-400">${this.escapeHtml(email)}</p>
                     </div>
                 </div>
                 <div class="flex shrink-0 items-center gap-1.5 text-right">
-                    <div class="h-2.5 w-2.5 shrink-0 rounded-full ${statusMeta.dotClass}"></div>
-                    <span class="max-w-20 text-wrap text-left text-xs font-semibold leading-tight text-gray-600 dark:text-gray-400 sm:max-w-none sm:text-nowrap">${this.escapeHtml(statusMeta.label)}</span>
+                    <div class="h-2.5 w-2.5 shrink-0 rounded-none ${statusMeta.dotClass}"></div>
+                    <span class="max-w-28 text-wrap text-left text-xs font-semibold leading-tight text-gray-600 dark:text-gray-400 sm:max-w-none sm:text-nowrap">${this.escapeHtml(statusMeta.label)}</span>
                 </div>
             </div>
         `;
@@ -300,7 +350,16 @@ class AdminDashboardController {
             return;
         }
 
-        const staff = this.getSortedStaff(users || []);
+        this.cachedUsers = users || [];
+        if (this.liveOnlineUsers && this.liveOnlineUsers.size) {
+            this.cachedUsers.forEach(u => {
+                if (this.liveOnlineUsers.has(Number(u.id))) {
+                    u.status = 'online';
+                }
+            });
+        }
+
+        const staff = this.getSortedStaff(this.cachedUsers);
         if (!staff.length) {
             this.renderStaffListEmpty();
             return;

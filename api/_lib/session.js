@@ -13,22 +13,8 @@ const numberEnvironment = (name, fallback) => {
 
 /* START CALCULATE INACTIVITY TIMEOUT - Computes idle timeout based on remember state and weekday/weekend schedule */
 const getInactivityTimeoutMs = (isRemembered) => {
-    const now = new Date();
-    const day = now.getDay(); // 0 = Sunday, 6 = Saturday
-    const isWeekend = day === 0 || day === 6;
-
-    if (!isRemembered) {
-        // Strict unremembered session: 15 minutes
-        return 15 * 60 * 1000;
-    }
-
-    if (isWeekend) {
-        // Remembered session on Weekends (Saturday & Sunday): 30 minutes
-        return 30 * 60 * 1000;
-    }
-
-    // Remembered session on Weekdays (Mon - Fri): 12 hours relaxed workday timeout
-    return 12 * 60 * 60 * 1000;
+    // 16 minutes of inactivity as required for real-time presence lifecycle
+    return 16 * 60 * 1000;
 };
 /* END CALCULATE INACTIVITY TIMEOUT */
 

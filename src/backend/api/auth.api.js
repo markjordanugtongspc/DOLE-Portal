@@ -200,15 +200,18 @@ export async function getCurrentUser(options = {}) {
 
 import { authStorage } from '../../scripts/modules/storage.js';
 import { resetAnnouncementDismissal } from '../../scripts/modules/announcement-banner.js';
+import { initPresence, untrackPresence } from './presence.api.js';
 
 export function saveSession(user) {
     currentUserCache = (user && user.id) ? user : null;
     if (currentUserCache) {
         window.__PORTAL_SESSION = currentUserCache;
         authStorage.setUserSession(currentUserCache);
+        void initPresence(currentUserCache);
     } else {
         delete window.__PORTAL_SESSION;
         authStorage.clearUserSession();
+        void untrackPresence();
     }
     try {
         window.dispatchEvent(new CustomEvent('portal:auth-changed', { detail: currentUserCache }));
@@ -216,6 +219,7 @@ export function saveSession(user) {
 }
 
 export async function logout() {
+    await untrackPresence();
     const result = await portalApiRequest('/api/auth/logout', { method: 'POST' });
     saveSession(null);
     resetAnnouncementDismissal();

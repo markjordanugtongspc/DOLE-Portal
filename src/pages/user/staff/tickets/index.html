@@ -321,6 +321,16 @@
                         </div>
                     </div>
 
+                    <!-- Three Dots Waving Bounce Typing Indicator -->
+                    <div id="chat-typing-indicator" class="hidden items-center gap-2 px-6 py-2 bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-100 dark:border-gray-800 select-none transition-all duration-200">
+                        <span class="inline-flex items-center gap-0.5 text-base leading-none font-black text-blue-600 dark:text-blue-400">
+                            <span class="inline-block animate-bounce" style="animation-delay: 0ms; animation-duration: 0.8s;">•</span>
+                            <span class="inline-block animate-bounce" style="animation-delay: 160ms; animation-duration: 0.8s;">•</span>
+                            <span class="inline-block animate-bounce" style="animation-delay: 320ms; animation-duration: 0.8s;">•</span>
+                        </span>
+                        <span id="chat-typing-text" class="font-semibold text-xs truncate text-gray-700 dark:text-gray-300">Staff is typing...</span>
+                    </div>
+
                     <div id="chat-composer-shell" class="hidden border-t border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 p-4 sm:p-5 transition-all duration-200">
                         <form id="chat-input-form">
                             <input type="file" id="chat-image-upload" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" class="hidden" />

@@ -68,7 +68,7 @@ function copyStaticAssets() {
     name: 'copy-static-assets',
     apply: 'build',
     closeBundle() {
-      const subfolders = ['images', 'logos', 'icons']
+      const subfolders = ['images', 'logos', 'icons', 'audio']
       for (const folder of subfolders) {
         const src  = path.join(srcAssetsDir,  folder)
         const dest = path.join(distAssetsDir, folder)

@@ -1755,50 +1755,29 @@ const setupLoginForms = () => {
 };
 /* END SETUP LOGIN FORMS */
 
-/* START SETUP INACTIVITY AUTO LOGOUT - Automatically logs out based on remember state and weekend schedule */
+/* START SETUP INACTIVITY AUTO LOGOUT - Automatically marks offline and logs out after 16 minutes of inactivity */
 let inactivityTimer = null;
-
-const getClientInactivityTimeoutMs = () => {
-    const isRemembered = Boolean(getRememberedLogin());
-    const now = new Date();
-    const day = now.getDay(); // 0 = Sunday, 6 = Saturday
-    const isWeekend = day === 0 || day === 6;
-
-    if (!isRemembered) {
-        // Strict unremembered session: 15 minutes
-        return { timeoutMs: 15 * 60 * 1000, label: '15 minutes of inactivity' };
-    }
-
-    if (isWeekend) {
-        // Remembered session on Weekends (Saturday & Sunday): 30 minutes
-        return { timeoutMs: 30 * 60 * 1000, label: '30 minutes of weekend inactivity' };
-    }
-
-    // Remembered session on Weekdays (Mon - Fri): 12 hours relaxed workday session
-    return { timeoutMs: 12 * 60 * 60 * 1000, label: '12 hours of inactivity' };
-};
+const INACTIVITY_TIMEOUT_MS = 16 * 60 * 1000; // 16 minutes
 
 const resetInactivityTimer = () => {
     if (!isProtectedPage()) return;
     if (inactivityTimer) clearTimeout(inactivityTimer);
 
-    const { timeoutMs, label } = getClientInactivityTimeoutMs();
-
     inactivityTimer = setTimeout(async () => {
         const user = window.__PORTAL_SESSION || (await getCurrentUser());
         if (user) {
-            if (window.DEBUG) window.DEBUG.warn('AUTH', `Idle inactivity timeout (${label}) reached. Logging out user...`);
+            if (window.DEBUG) window.DEBUG.warn('AUTH', '16 minutes of inactivity reached. Automatically setting status OFFLINE and logging out user...');
             await logout();
             showAuthNotice({
                 title: 'Session Expired',
-                message: `You have been automatically logged out due to ${label} for your account security.`,
+                message: 'You have been automatically logged out due to 16 minutes of inactivity for your account security.',
                 autoCloseMs: 3000,
                 onAction: () => {
                     window.location.replace('/?auth=session_expired');
                 }
             });
         }
-    }, timeoutMs);
+    }, INACTIVITY_TIMEOUT_MS);
 };
 
 const setupInactivityAutoLogout = () => {

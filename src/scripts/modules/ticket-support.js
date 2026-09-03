@@ -19,11 +19,14 @@ import {
     uploadChatAttachment,
     markMessagesRead,
     markAdminMessagesRead,
+    createTicketRoomChannel,
 } from '@/backend/api/ticket-messages.api.js';
+import typingSoundUrl from '@/assets/audio/typing_sound .mp3';
+import sendSoundUrl from '@/assets/audio/send_sound.mp3';
 import { showImagePreviewModal, downloadImageFile } from '@/scripts/modules/modals.js';
-import { ticketCacheStorage } from '@/scripts/modules/storage.js';
+import { ticketCacheStorage, authStorage } from '@/scripts/modules/storage.js';
 import { Modal } from 'flowbite';
-import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
+import { getCachedCurrentUser, detectActiveUserSession } from '@/backend/api/auth.api.js';
 
 import { fetchArticles } from '@/backend/api/articles.api.js';
 
@@ -231,7 +234,7 @@ class TicketSupportApp {
         if (window.DEBUG) window.DEBUG.log('TICKET-SUPPORT', 'Initializing TicketSupportApp (Supabase mode)...');
 
         // This display state is populated by the verified HttpOnly-cookie session guard.
-        this.session = getCachedCurrentUser();
+        this.session = getCachedCurrentUser() || window.__PORTAL_SESSION || (authStorage ? authStorage.getUserSession() : null);
 
         const roleId = Number(this.session?.role_id || 0);
         // Only the actual Admin role is on the support side of a ticket.
@@ -239,8 +242,8 @@ class TicketSupportApp {
         // ticket owner; treating it as Admin prevents the real Admin badge from
         // counting its messages.
         this.isAdmin = roleId === 1;
-        this.sessionUserId = this.session?.id || null;
-        this.sessionUserName = this.session?.full_name || this.session?.username || 'Admin';
+        this.sessionUserId = this.session?.id ? Number(this.session.id) : null;
+        this.sessionUserName = this.session?.full_name || this.session?.username || (this.isAdmin ? 'Admin' : 'Staff');
 
         // App state
         this.tickets = [];
@@ -270,6 +273,17 @@ class TicketSupportApp {
         this._globalMessagesChannel = null;
         this._unreadRefreshTimer = null;
 
+        // Typing indicator & Presence audio state
+        this._localTypingAudio = null;
+        this._remoteTypingAudio = null;
+        this._sendAudio = null;
+        this._localTypingIdleTimer = null;
+        this._isLocalTyping = false;
+        this._lastSendAudioTime = 0;
+        this._lastKeystrokeSoundTime = 0;
+        this._lastRemoteTypingSoundTime = 0;
+        this._remoteTypingPulseInterval = null;
+
         // Child components
         this.drawer = new CategoryDrawer(this);
         this.table = new TicketTable(this);
@@ -278,6 +292,15 @@ class TicketSupportApp {
 
     /* START init */
     async init() {
+        try {
+            const activeUser = await detectActiveUserSession();
+            if (activeUser?.id) {
+                this.session = activeUser;
+                this.sessionUserId = Number(activeUser.id);
+                this.sessionUserName = activeUser.full_name || activeUser.username || (this.isAdmin ? 'Admin' : 'Staff');
+            }
+        } catch {}
+
         this.drawer.init();
         this.table.init();
 
@@ -557,14 +580,21 @@ class TicketSupportApp {
         }
 
         if (this._messagesChannel) {
+            this._stopLocalTyping();
+            this._stopRemoteTypingAudio();
+            this._hideTypingIndicator();
             supabase.removeChannel(this._messagesChannel);
             this._messagesChannel = null;
         }
 
         this._currentMessagesTicketId = ticketDbId;
 
-        this._messagesChannel = supabase
-            .channel(`ticket-messages-${ticketDbId}`)
+        const currentUserId = Number(this.sessionUserId || this.session?.id || 0);
+        const tabId = window.__PORTAL_TAB_ID || (window.__PORTAL_TAB_ID = 't_' + Math.random().toString(36).slice(2, 9));
+        this._myPresenceKey = `client_${currentUserId || 'anon'}_${tabId}`;
+
+        // Configure Realtime Channel with Presence tracking for ticket room
+        this._messagesChannel = createTicketRoomChannel(ticketDbId, currentUserId, tabId)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -575,11 +605,308 @@ class TicketSupportApp {
                     this._appendRealtimeMessage(ticketDbId, payload.new);
                 }
             })
-            .subscribe((status) => {
-                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Messages channel [${ticketDbId}]: ${status}`);
+            .on('presence', { event: 'sync' }, () => {
+                /* START PRESENCE SYNC RECONCILIATION */
+                // During a sync event, Presence reconciles its local state with the server state.
+                // presenceState() returns { "client_key_1": [{ "userId": 1, "typing": false }], ... }
+                const state = this._messagesChannel.presenceState();
+                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', 'Presence sync event state:', state);
+                this._handlePresenceSync(state);
+                /* END PRESENCE SYNC RECONCILIATION */
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Presence join: ${key}`, newPresences);
+                const state = this._messagesChannel.presenceState();
+                this._handlePresenceSync(state);
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Presence leave: ${key}`, leftPresences);
+                const state = this._messagesChannel.presenceState();
+                this._handlePresenceSync(state);
+            })
+            .subscribe(async (status) => {
+                if (window.DEBUG) window.DEBUG.flow('TICKET-SUPPORT', `Ticket room channel [${ticketDbId}]: ${status}`);
+                if (status === 'SUBSCRIBED') {
+                    const currentUserName = this.sessionUserName || (this.isAdmin ? 'Administrator' : 'Staff');
+                    await this._messagesChannel.track({
+                        userId: currentUserId,
+                        userName: currentUserName,
+                        typing: false
+                    });
+                }
             });
     }
     /* END _subscribeMessages */
+
+    /* START PRESENCE TYPING & AUDIO CONTROLLER */
+    _getLocalTypingAudio() {
+        if (!this._localTypingAudio) {
+            try {
+                this._localTypingAudio = new Audio(typingSoundUrl);
+                this._localTypingAudio.volume = 1.0;
+                this._localTypingAudio.loop = true;
+            } catch {
+                this._localTypingAudio = null;
+            }
+        }
+        return this._localTypingAudio;
+    }
+
+    _getRemoteTypingAudio() {
+        if (!this._remoteTypingAudio) {
+            try {
+                this._remoteTypingAudio = new Audio(typingSoundUrl);
+                this._remoteTypingAudio.volume = 1.0;
+                this._remoteTypingAudio.loop = true;
+            } catch {
+                this._remoteTypingAudio = null;
+            }
+        }
+        return this._remoteTypingAudio;
+    }
+
+    _getSendAudio() {
+        if (!this._sendAudio) {
+            try {
+                this._sendAudio = new Audio(sendSoundUrl);
+                this._sendAudio.volume = 1.0;
+                this._sendAudio.loop = false;
+            } catch {
+                this._sendAudio = null;
+            }
+        }
+        return this._sendAudio;
+    }
+
+    _startLocalTypingAudio() {
+        try {
+            const audio = this._getLocalTypingAudio();
+            if (audio) {
+                audio.loop = true;
+                if (audio.paused) {
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {});
+                }
+            }
+        } catch {}
+    }
+
+    _stopLocalTypingAudio() {
+        try {
+            const audio = this._getLocalTypingAudio();
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        } catch {}
+    }
+
+    _startRemoteTypingAudio() {
+        try {
+            const audio = this._getRemoteTypingAudio();
+            if (audio) {
+                audio.loop = true;
+                if (audio.paused) {
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {});
+                }
+            }
+        } catch {}
+    }
+
+    _stopRemoteTypingAudio() {
+        try {
+            const audio = this._getRemoteTypingAudio();
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        } catch {}
+    }
+
+    _playSendAudio() {
+        const now = Date.now();
+        if (now - this._lastSendAudioTime < 300) return;
+        this._lastSendAudioTime = now;
+        try {
+            const audio = this._getSendAudio();
+            if (audio) {
+                audio.currentTime = 0;
+                audio.volume = 1.0;
+                audio.play().catch(() => {});
+            }
+        } catch {}
+    }
+
+    _handlePresenceSync(state) {
+        if (!state || !this.selectedTicketDbId) {
+            this._hideTypingIndicator();
+            this._stopRemoteTypingAudio();
+            return;
+        }
+
+        const myUserId = Number(this.sessionUserId || this.session?.id || 0);
+        const myUserName = String(this.sessionUserName || this.session?.full_name || this.session?.username || '').trim().toLowerCase();
+
+        let isRemoteTyping = false;
+        let typingUserName = '';
+
+        for (const [clientKey, presences] of Object.entries(state)) {
+            // Ignore this local tab's own presence
+            if (this._myPresenceKey && clientKey === this._myPresenceKey) continue;
+
+            if (!Array.isArray(presences) || presences.length === 0) continue;
+
+            // In Supabase Presence, the most up-to-date presence object is the LAST element in the array
+            const latest = presences[presences.length - 1];
+            if (!latest) continue;
+
+            // Check only the latest presence state for this remote participant
+            if (latest.typing === true) {
+                isRemoteTyping = true;
+                typingUserName = latest.userName || (this.isAdmin ? 'Staff' : 'Administrator');
+                break;
+            }
+        }
+
+        if (isRemoteTyping) {
+            this._showTypingIndicator(typingUserName);
+            this._startRemoteTypingAudio();
+        } else {
+            this._hideTypingIndicator();
+            this._stopRemoteTypingAudio();
+        }
+    }
+
+    _showTypingIndicator(userName) {
+        let indicator = document.getElementById('chat-typing-indicator');
+        if (!indicator) {
+            const viewport = document.getElementById('chat-messages-viewport');
+            if (viewport && viewport.parentNode) {
+                indicator = document.createElement('div');
+                indicator.id = 'chat-typing-indicator';
+                indicator.className = 'flex items-center gap-2 px-6 py-2 bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-100 dark:border-gray-800 select-none transition-all duration-200';
+                indicator.innerHTML = `
+                    <span class="inline-flex items-center gap-0.5 text-base leading-none font-black text-blue-600 dark:text-blue-400">
+                        <span class="inline-block animate-bounce" style="animation-delay: 0ms; animation-duration: 0.8s;">•</span>
+                        <span class="inline-block animate-bounce" style="animation-delay: 160ms; animation-duration: 0.8s;">•</span>
+                        <span class="inline-block animate-bounce" style="animation-delay: 320ms; animation-duration: 0.8s;">•</span>
+                    </span>
+                    <span id="chat-typing-text" class="font-semibold text-xs truncate text-gray-700 dark:text-gray-300"></span>
+                `;
+                viewport.parentNode.insertBefore(indicator, viewport.nextSibling);
+            }
+        }
+
+        if (indicator) {
+            const typingText = indicator.querySelector('#chat-typing-text') || document.getElementById('chat-typing-text');
+            if (typingText) {
+                typingText.textContent = `${userName || 'Staff'} is typing...`;
+            }
+            indicator.classList.remove('hidden');
+            indicator.classList.add('flex');
+
+            const viewport = document.getElementById('chat-messages-viewport');
+            if (viewport) {
+                viewport.scrollTop = viewport.scrollHeight;
+            }
+        }
+    }
+
+    _hideTypingIndicator() {
+        const indicator = document.getElementById('chat-typing-indicator');
+        if (indicator) {
+            indicator.classList.add('hidden');
+            indicator.classList.remove('flex');
+        }
+    }
+
+    _setupChatEditorTypingListeners() {
+        const editor = document.getElementById('chat-editor');
+        if (!editor || editor.dataset.typingBound) return;
+        editor.dataset.typingBound = 'true';
+
+        const onKeystroke = () => {
+            if (!this.selectedTicketDbId || !this._messagesChannel) return;
+
+            const val = editor.value.trim();
+            const hasPendingContent = Boolean(val.length > 0 || this.pendingAttachment);
+
+            if (!hasPendingContent) {
+                this._stopLocalTyping();
+                return;
+            }
+
+            // 1. Play continuous typing loop audio while actively typing
+            this._startLocalTypingAudio();
+
+            // 2. Broadcast presence typing: true
+            const currentUserId = Number(this.sessionUserId || this.session?.id || 0);
+            const currentUserName = this.sessionUserName || (this.isAdmin ? 'Administrator' : 'Staff');
+            if (!this._isLocalTyping) {
+                this._isLocalTyping = true;
+                this._messagesChannel.track({
+                    userId: currentUserId,
+                    userName: currentUserName,
+                    typing: true
+                });
+            }
+
+            // 3. Inactivity idle timer: when user pauses typing for 1200ms, pause audio loop and broadcast typing: false
+            if (this._localTypingIdleTimer) {
+                clearTimeout(this._localTypingIdleTimer);
+            }
+            this._localTypingIdleTimer = setTimeout(() => {
+                this._stopLocalTyping();
+            }, 1200);
+        };
+
+        editor.addEventListener('input', onKeystroke);
+        editor.addEventListener('focus', () => {
+            if (editor.value.trim().length > 0 || this.pendingAttachment) {
+                onKeystroke();
+            }
+        });
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                this._stopLocalTyping();
+                return;
+            }
+            onKeystroke();
+        });
+
+        editor.addEventListener('blur', () => {
+            this._stopLocalTyping();
+        });
+
+        // Click or tap anywhere outside the chat editor immediately stops local typing
+        document.addEventListener('pointerdown', (e) => {
+            if (!editor.contains(e.target) && this._isLocalTyping) {
+                this._stopLocalTyping();
+            }
+        }, { passive: true });
+    }
+
+    _stopLocalTyping() {
+        if (this._localTypingIdleTimer) {
+            clearTimeout(this._localTypingIdleTimer);
+            this._localTypingIdleTimer = null;
+        }
+
+        this._stopLocalTypingAudio();
+
+        if (this._isLocalTyping && this._messagesChannel) {
+            this._isLocalTyping = false;
+            const currentUserId = Number(this.sessionUserId || this.session?.id || 0);
+            const currentUserName = this.sessionUserName || (this.isAdmin ? 'Administrator' : 'Staff');
+            this._messagesChannel.track({
+                userId: currentUserId,
+                userName: currentUserName,
+                typing: false
+            });
+        }
+    }
+    /* END PRESENCE TYPING & AUDIO CONTROLLER */
 
     /**
      * A bubble belongs on the right only when it was sent by this exact user.
@@ -624,6 +951,10 @@ class TicketSupportApp {
         if (!rawMsg || Number(this.selectedTicketDbId) !== Number(ticketDbId)) return;
         const norm = normalizeMessage(rawMsg);
 
+        // When a message arrives in the active conversation, clear typing indicator and sound immediately
+        this._hideTypingIndicator();
+        this._stopRemoteTypingAudio();
+
         if (!Array.isArray(this.currentMessages)) {
             this.currentMessages = [];
         }
@@ -654,6 +985,9 @@ class TicketSupportApp {
         // The open, focused conversation is already being read in real time.
         // Persist that state immediately so its ticket/sidebar badge disappears.
         if (!this.isCurrentUserMessage(norm)) {
+            // Play message received sound for recipient in active ticket
+            this._playSendAudio();
+
             if (document.hasFocus()) {
                 void this.markConversationRead(ticketDbId);
             } else {
@@ -675,6 +1009,9 @@ class TicketSupportApp {
 
     /* START _cleanup */
     _cleanup() {
+        this._stopLocalTyping();
+        this._stopRemoteTypingAudio();
+        this._hideTypingIndicator();
         if (this._ticketsChannel) supabase.removeChannel(this._ticketsChannel);
         if (this._messagesChannel) supabase.removeChannel(this._messagesChannel);
     }
@@ -831,47 +1168,50 @@ class TicketSupportApp {
         }
 
         const fileInput = document.getElementById('chat-image-upload');
-        const previewContainer = document.getElementById('attachment-preview-container');
 
         fileInput?.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                this.pendingAttachment = {
-                    file,
-                    dataUrl: event.target.result
-                };
-
-                if (previewContainer) {
-                    previewContainer.innerHTML = `
-                        <div class="relative inline-block w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden group shadow-xs">
-                            <img src="${event.target.result}" class="w-full h-full object-cover">
-                            <button id="btn-remove-attachment" type="button" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow-md cursor-pointer transition-colors z-10">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                    `;
-                    previewContainer.classList.remove('hidden');
-                    previewContainer.classList.add('flex');
-
-                    document.getElementById('btn-remove-attachment')?.addEventListener('click', () => {
-                        this.pendingAttachment = null;
-                        fileInput.value = '';
-                        previewContainer.innerHTML = '';
-                        previewContainer.classList.add('hidden');
-                        previewContainer.classList.remove('flex');
-                    });
-                }
-            };
-            reader.readAsDataURL(file);
+            this.attachChatImageFile(file);
         });
+
+        // Click toolbar button to open file selector
+        document.querySelectorAll('#btn-upload-image').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                fileInput?.click();
+            });
+        });
+
+        /* START CLIPBOARD IMAGE PASTE (CTRL + V) */
+        const chatEditor = document.getElementById('chat-editor');
+        chatEditor?.addEventListener('paste', (e) => {
+            this.handleClipboardPaste(e);
+        });
+
+        document.getElementById('chat-input-form')?.addEventListener('paste', (e) => {
+            if (e.target !== chatEditor) {
+                this.handleClipboardPaste(e);
+            }
+        });
+        /* END CLIPBOARD IMAGE PASTE (CTRL + V) */
 
         document.getElementById('chat-input-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleSendMessage();
         });
+
+        // Click trigger on Send Reply button or submit button to ensure immediate send audio feedback
+        document.querySelectorAll('#chat-input-form button[type="submit"], #chat-send-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this._stopLocalTyping();
+                this._stopRemoteTypingAudio();
+                this._hideTypingIndicator();
+                this._playSendAudio();
+            });
+        });
+
+        this._setupChatEditorTypingListeners();
 
         document.getElementById('tab-btn-details')?.addEventListener('click', () => this.switchDetailsTab('details'));
         document.getElementById('tab-btn-kb')?.addEventListener('click', () => this.switchDetailsTab('kb'));
@@ -946,6 +1286,89 @@ class TicketSupportApp {
         });
     }
     /* END bindChatViewEvents */
+
+    /* START attachChatImageFile */
+    attachChatImageFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+
+        const previewContainer = document.getElementById('attachment-preview-container');
+        const fileInput = document.getElementById('chat-image-upload');
+        const editor = document.getElementById('chat-editor');
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            this.pendingAttachment = {
+                file,
+                dataUrl: event.target.result
+            };
+
+            if (previewContainer) {
+                previewContainer.innerHTML = `
+                    <div class="relative inline-block w-16 h-16 border border-gray-200 dark:border-gray-700 rounded-none overflow-hidden group shadow-xs">
+                        <img src="${event.target.result}" class="w-full h-full object-cover">
+                        <button id="btn-remove-attachment" type="button" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-none p-1 shadow-md cursor-pointer transition-colors z-10" title="Remove image">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                `;
+                previewContainer.classList.remove('hidden');
+                previewContainer.classList.add('flex');
+
+                document.getElementById('btn-remove-attachment')?.addEventListener('click', () => {
+                    this.pendingAttachment = null;
+                    if (fileInput) fileInput.value = '';
+                    previewContainer.innerHTML = '';
+                    previewContainer.classList.add('hidden');
+                    previewContainer.classList.remove('flex');
+                    if (editor) {
+                        editor.required = true;
+                    }
+                    this.syncStaffComposerState();
+                });
+            }
+
+            if (editor) {
+                editor.required = false;
+            }
+            this.syncStaffComposerState();
+        };
+        reader.readAsDataURL(file);
+    }
+    /* END attachChatImageFile */
+
+    /* START handleClipboardPaste */
+    handleClipboardPaste(e) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (!clipboardData) return;
+
+        // 1. Check clipboardData.items for image blobs
+        const items = clipboardData.items;
+        if (items) {
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type && items[i].type.startsWith('image/')) {
+                    const blob = items[i].getAsFile();
+                    if (blob) {
+                        e.preventDefault();
+                        this.attachChatImageFile(blob);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 2. Check clipboardData.files fallback
+        const files = clipboardData.files;
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].type && files[i].type.startsWith('image/')) {
+                    e.preventDefault();
+                    this.attachChatImageFile(files[i]);
+                    return;
+                }
+            }
+        }
+    }
+    /* END handleClipboardPaste */
 
     /* START openTicket */
     async openTicket(ticketId) {
@@ -1032,6 +1455,7 @@ class TicketSupportApp {
         document.getElementById('kb-article-popover')?.classList.add('hidden');
 
         this.syncStaffComposerState();
+        this._setupChatEditorTypingListeners();
         this.renderChatSidebar();
         await this._loadAndRenderConversation(this.selectedTicketDbId);
 
@@ -1553,6 +1977,10 @@ class TicketSupportApp {
 
     /* START closeTicket */
     closeTicket() {
+        this._stopLocalTyping();
+        this._stopRemoteTypingAudio();
+        this._hideTypingIndicator();
+
         this.selectedTicketId = null;
         this.selectedTicketDbId = null;
 
@@ -2438,6 +2866,12 @@ class TicketSupportApp {
         const attachment = this.pendingAttachment;
         if (!val && !attachment) return;
 
+        // Stop typing loop immediately and play send audio
+        this._stopLocalTyping();
+        this._stopRemoteTypingAudio();
+        this._hideTypingIndicator();
+        this._playSendAudio();
+
         this.isSendingMessage = true;
         this.setSendButtonLoading(true);
 
@@ -2448,6 +2882,7 @@ class TicketSupportApp {
 
         // Clear editor and input controls INSTANTLY for 0ms user feedback
         editor.value = '';
+        editor.required = true;
         this.pendingAttachment = null;
         const fileInput = document.getElementById('chat-image-upload');
         const previewContainer = document.getElementById('attachment-preview-container');
