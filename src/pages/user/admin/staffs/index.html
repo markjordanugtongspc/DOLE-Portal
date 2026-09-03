@@ -236,9 +236,14 @@
                 class="relative bg-white border border-gray-200 dark:border-gray-700 rounded-none shadow-2xl dark:bg-gray-800">
                 <!-- Modal header -->
                 <div class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 rounded-none dark:border-gray-700">
-                    <h3 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">
-                        Edit Staff
-                    </h3>
+                    <div class="flex items-center gap-2.5">
+                        <h3 id="modal-title" class="text-xl font-semibold text-gray-900 dark:text-white">
+                            Edit Staff
+                        </h3>
+                        <span id="modal-superadmin-badge" class="hidden text-xs font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 px-2 py-0.5 border border-amber-200 dark:border-amber-800/60 rounded-none select-none">
+                            Super Admin (All fields optional)
+                        </span>
+                    </div>
                     <button type="button"
                         class="cursor-pointer text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-none text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white"
                         data-modal-hide="editUserModal">
@@ -255,7 +260,7 @@
                     <div class="grid gap-4 mb-4 grid-cols-2">
                         <!-- Full Name (Staff Mode) -->
                         <div class="col-span-2 sm:col-span-1" id="modal-staff-selector-sec">
-                            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name <span class="text-red-500">*</span></label>
+                            <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name <span class="text-red-500" id="name-required-star">*</span></label>
                             <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter staff full name" required>
                         </div>
                         <!-- Name input (GIP Mode) -->
@@ -277,7 +282,7 @@
 
                         <!-- Position Selector -->
                         <div class="col-span-2 sm:col-span-1 relative" id="modal-position-sec">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Position <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Position <span class="text-red-500" id="pos-required-star">*</span></label>
                             <!-- Hidden input to store value -->
                             <input type="hidden" id="position" name="position">
                             <!-- Custom Select Trigger Button -->
@@ -298,7 +303,7 @@
 
                         <!-- Office/Location Selector -->
                         <div class="col-span-2 sm:col-span-1 relative" id="modal-office-sec">
-                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Office / Location <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Office / Location <span class="text-red-500" id="office-required-star">*</span></label>
                             <!-- Hidden input to store value -->
                             <input type="hidden" id="office" name="office">
                             <!-- Flowbite Loading Skeleton -->
@@ -340,13 +345,13 @@
 
                         <!-- Username (Required) -->
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username <span class="text-red-500">*</span></label>
+                            <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Username <span class="text-red-500" id="user-required-star">*</span></label>
                             <input type="text" id="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="e.g. jdoe_admin" required>
                         </div>
 
                         <!-- Email (Required) -->
                         <div class="col-span-2 sm:col-span-1">
-                            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Address <span class="text-red-500">*</span></label>
+                            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Address <span class="text-red-500" id="email-required-star">*</span></label>
                             <input type="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-none focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="staff@dole.gov.ph" required>
                         </div>
 

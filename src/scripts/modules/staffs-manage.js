@@ -31,7 +31,9 @@ export const initStaffsManage = () => {
         username: q('username'), email: q('email'), phone: q('phone'), password: q('password'), confirmSec: q('modal-confirm-password-sec'), confirm: q('confirm-password'),
         gipList: q('modal-gip-list-sec'), gipBox: q('gips-form-container'), addGip: q('btn-add-gip'), search: q('input-group-1'), selectAll: q('table-checkbox-45'),
         birthdaySec: q('modal-birthday-sec'), birthday: q('birthday'), pinSec: q('modal-pin-sec'), pin: q('pin'),
-        pinRequiredStar: q('pin-required-star'), pwdRequiredStar: q('pwd-required-star'), confPwdRequiredStar: q('conf-pwd-required-star')
+        pinRequiredStar: q('pin-required-star'), pwdRequiredStar: q('pwd-required-star'), confPwdRequiredStar: q('conf-pwd-required-star'),
+        nameRequiredStar: q('name-required-star'), posRequiredStar: q('pos-required-star'), officeRequiredStar: q('office-required-star'),
+        userRequiredStar: q('user-required-star'), emailRequiredStar: q('email-required-star'), superAdminBadge: q('modal-superadmin-badge')
     };
 
     let users = [], gips = [], roles = [], offices = [], dt = null, mode = 'add-staff', recordId = null, staffId = null, positionDropdown = null, officeDropdown = null;
@@ -371,10 +373,23 @@ export const initStaffsManage = () => {
     const addMode = () => {
         resetForm(); mode = 'add-staff'; showSections({ gipMode: false, staffMode: true, gipList: true });
         if (els.title) els.title.textContent = 'Add Staff'; if (els.submit) els.submit.textContent = 'Add Staff';
+        els.superAdminBadge?.classList.add('hidden');
+        if (els.staffName) els.staffName.required = true;
+        if (els.username) els.username.required = true;
+        if (els.email) els.email.required = true;
+        if (els.role) els.role.required = true;
+        if (els.office) els.office.required = true;
+        if (els.phone) els.phone.required = false;
+        if (els.birthday) els.birthday.required = false;
         if (els.password) { els.password.required = true; els.password.placeholder = 'Password'; }
         if (els.confirm) { els.confirm.required = true; }
         if (els.pin) { els.pin.required = true; els.pin.placeholder = 'e.g. 1234'; }
         els.confirmSec?.classList.remove('hidden');
+        els.nameRequiredStar?.classList.remove('hidden');
+        els.posRequiredStar?.classList.remove('hidden');
+        els.officeRequiredStar?.classList.remove('hidden');
+        els.userRequiredStar?.classList.remove('hidden');
+        els.emailRequiredStar?.classList.remove('hidden');
         if (els.pwdRequiredStar) els.pwdRequiredStar.classList.remove('hidden');
         if (els.confPwdRequiredStar) els.confPwdRequiredStar.classList.remove('hidden');
         if (els.pinRequiredStar) els.pinRequiredStar.classList.remove('hidden');
@@ -384,19 +399,68 @@ export const initStaffsManage = () => {
     };
     const editStaffMode = (u) => {
         resetForm(); mode = 'edit-staff'; recordId = u.id; staffId = u.id; showSections({ gipMode: false, staffMode: true, gipList: true });
-        if (els.title) els.title.textContent = 'Edit Staff'; if (els.submit) els.submit.textContent = 'Save Changes';
+        const isSuperAdmin = Number(u.id) === 1;
+        els.superAdminBadge?.classList.toggle('hidden', !isSuperAdmin);
+
+        if (els.title) els.title.textContent = isSuperAdmin ? 'Edit Super Admin' : 'Edit Staff';
+        if (els.submit) els.submit.textContent = 'Save Changes';
         if (els.staffName) els.staffName.value = u.full_name || '';
         if (els.birthday) els.birthday.value = u.birthday || '';
         if (positionDropdown) positionDropdown.setValue(u.role_id || '');
         if (officeDropdown) officeDropdown.setValue(u.office_id || '');
-        if (els.username) els.username.value = u.username || ''; if (els.email) els.email.value = u.email || ''; if (els.phone) els.phone.value = u.phone || '';
-        if (els.password) { els.password.required = false; els.password.placeholder = 'Leave blank to keep current'; }
-        if (els.confirm) { els.confirm.required = false; }
-        if (els.pin) { els.pin.required = false; els.pin.placeholder = 'Leave blank to keep current'; }
+        if (els.username) els.username.value = u.username || '';
+        if (els.email) els.email.value = u.email || '';
+        if (els.phone) els.phone.value = u.phone || '';
+
+        // For Super Admin (data-id="1"), ignore required on entire modal
+        if (isSuperAdmin) {
+            if (els.staffName) els.staffName.required = false;
+            if (els.username) els.username.required = false;
+            if (els.email) els.email.required = false;
+            if (els.role) els.role.required = false;
+            if (els.office) els.office.required = false;
+            if (els.phone) els.phone.required = false;
+            if (els.birthday) els.birthday.required = false;
+            if (els.password) { els.password.required = false; els.password.placeholder = 'Leave blank to keep current'; }
+            if (els.confirm) { els.confirm.required = false; }
+            if (els.pin) { els.pin.required = false; els.pin.placeholder = 'Leave blank to keep current'; }
+
+            // Hide all required red asterisks for Super Admin
+            els.nameRequiredStar?.classList.add('hidden');
+            els.posRequiredStar?.classList.add('hidden');
+            els.officeRequiredStar?.classList.add('hidden');
+            els.userRequiredStar?.classList.add('hidden');
+            els.emailRequiredStar?.classList.add('hidden');
+            els.pwdRequiredStar?.classList.add('hidden');
+            els.confPwdRequiredStar?.classList.add('hidden');
+            els.pinRequiredStar?.classList.add('hidden');
+        } else {
+            // For other roles: Full Name, Position, Office, Username, Email are required
+            if (els.staffName) els.staffName.required = true;
+            if (els.username) els.username.required = true;
+            if (els.email) els.email.required = true;
+            if (els.role) els.role.required = true;
+            if (els.office) els.office.required = true;
+
+            // Phone, Pin, Password, Birthday are optional
+            if (els.phone) els.phone.required = false;
+            if (els.birthday) els.birthday.required = false;
+            if (els.password) { els.password.required = false; els.password.placeholder = 'Leave blank to keep current'; }
+            if (els.confirm) { els.confirm.required = false; }
+            if (els.pin) { els.pin.required = false; els.pin.placeholder = 'Leave blank to keep current'; }
+
+            // Show required stars on mandatory fields only
+            els.nameRequiredStar?.classList.remove('hidden');
+            els.posRequiredStar?.classList.remove('hidden');
+            els.officeRequiredStar?.classList.remove('hidden');
+            els.userRequiredStar?.classList.remove('hidden');
+            els.emailRequiredStar?.classList.remove('hidden');
+            els.pwdRequiredStar?.classList.add('hidden');
+            els.confPwdRequiredStar?.classList.add('hidden');
+            els.pinRequiredStar?.classList.add('hidden');
+        }
+
         els.confirmSec?.classList.add('hidden');
-        if (els.pwdRequiredStar) els.pwdRequiredStar.classList.add('hidden');
-        if (els.confPwdRequiredStar) els.confPwdRequiredStar.classList.add('hidden');
-        if (els.pinRequiredStar) els.pinRequiredStar.classList.add('hidden');
         gipBtnState();
     };
     const editGipMode = (g) => {
@@ -516,13 +580,54 @@ export const initStaffsManage = () => {
     });
     const submitForm = async (e) => {
         e.preventDefault();
-        if (mode === 'add-staff' || mode === 'edit-staff') {
+        const isSuperAdminEdit = mode === 'edit-staff' && Number(recordId) === 1;
+
+        if (mode === 'add-staff') {
             if (!els.role?.value) {
                 showToast('danger', 'Position is required.');
                 return;
             }
+            if (!els.office?.value) {
+                showToast('danger', 'Office / Location is required.');
+                return;
+            }
+            if (!els.staffName?.value.trim()) {
+                showToast('danger', 'Full name is required.');
+                return;
+            }
+            if (!els.username?.value.trim()) {
+                showToast('danger', 'Username is required.');
+                return;
+            }
+            if (!els.email?.value.trim()) {
+                showToast('danger', 'Email address is required.');
+                return;
+            }
+        } else if (mode === 'edit-staff' && !isSuperAdminEdit) {
+            // For other roles, Full Name, Position, Office, Username, Email are required
+            if (!els.staffName?.value.trim()) {
+                showToast('danger', 'Full name is required.');
+                return;
+            }
+            if (!els.role?.value) {
+                showToast('danger', 'Position is required.');
+                return;
+            }
+            if (!els.office?.value) {
+                showToast('danger', 'Office / Location is required.');
+                return;
+            }
+            if (!els.username?.value.trim()) {
+                showToast('danger', 'Username is required.');
+                return;
+            }
+            if (!els.email?.value.trim()) {
+                showToast('danger', 'Email address is required.');
+                return;
+            }
         }
-        if (!form?.checkValidity()) { form?.reportValidity(); return; }
+
+        if (!isSuperAdminEdit && !form?.checkValidity()) { form?.reportValidity(); return; }
         els.submit.disabled = true; els.submit.classList.add('opacity-70', 'pointer-events-none');
         window.DEBUG?.flow('STAFFS', `Submitting staff modal: ${mode}`);
         try {
@@ -546,17 +651,34 @@ export const initStaffsManage = () => {
                 });
                 showToast('success', `Staff member "${res.data.full_name}" was added successfully.`);
             } else if (mode === 'edit-staff') {
-                const updates = staffPayload();
-                if (els.password.value) updates.password = els.password.value;
-                if (els.pin?.value.trim()) {
+                let updates;
+                if (isSuperAdminEdit) {
+                    // Super Admin (id: 1): can save ANY changes whatsoever without required constraints
+                    updates = {
+                        full_name: els.staffName?.value.trim() || '',
+                        username: els.username?.value.trim() || '',
+                        email: els.email?.value.trim() || null,
+                        phone: els.phone?.value.trim() || null,
+                        birthday: els.birthday?.value || null
+                    };
+                    if (els.role?.value) updates.role_id = Number(els.role.value);
+                    if (els.office?.value) updates.office_id = Number(els.office.value);
+                } else {
+                    updates = staffPayload();
+                }
+
+                if (els.password?.value) updates.password = els.password.value;
+                if (els.pin?.value?.trim()) {
                     const pinVal = els.pin.value.trim();
-                    if (pinVal.length !== 4 || isNaN(Number(pinVal))) throw new Error('PIN must be a 4-digit number.');
+                    if (!isSuperAdminEdit && (pinVal.length !== 4 || isNaN(Number(pinVal)))) {
+                        throw new Error('PIN must be a 4-digit number.');
+                    }
                     updates.pin = pinVal;
                 }
                 const res = await updateUser(recordId, updates); if (res.error) throw new Error(res.error);
                 const gipError = await saveGipBlocks(recordId); if (gipError) throw new Error(gipError);
                 window.DEBUG?.success('STAFFS', 'Staff updated.', res.data);
-                showToast('success', `Staff member "${res.data.full_name}" was updated successfully.`);
+                showToast('success', `Staff member "${res.data.full_name || res.data.username || 'User'}" was updated successfully.`);
             } else if (mode === 'edit-gip') {
                 if (els.password?.value) {
                     if (els.password.value !== els.confirm?.value) {
