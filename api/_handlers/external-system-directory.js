@@ -1,6 +1,6 @@
 import { createPortalAdmin } from '../_lib/supabase-admin.js';
 import { allowMethods, getRequestBody, requireSameOrigin, sendJson } from '../_lib/http.js';
-import { requirePortalAdmin } from '../_lib/session.js';
+import { requirePortalSession } from '../_lib/session.js';
 import { searchGipDirectory } from '../_lib/external-systems.js';
 
 const safeString = (value) => String(value || '').trim();
@@ -12,8 +12,13 @@ export default async function handler(req, res) {
 
     try {
         const admin = createPortalAdmin();
-        const administrator = await requirePortalAdmin(req, res, admin);
-        if (!administrator) return;
+        const session = await requirePortalSession(req, res, admin);
+        if (!session) return;
+        const roleId = Number(session.user.role_id);
+        if (roleId !== 1 && roleId !== 3) {
+            return sendJson(res, 403, { error: 'Only an approved Portal administrator or staff member can search external directories.' });
+        }
+        const administrator = session;
 
         const body = getRequestBody(req);
         const systemKey = safeString(body.system_key).toUpperCase();

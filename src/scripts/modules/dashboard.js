@@ -5,7 +5,8 @@ import { DashboardCarousel } from './slider.js';
 import { fetchUserDashboardCounts, fetchUsers } from '@/backend/api/users.api.js';
 import { fetchSystems } from '@/backend/api/systems.api.js';
 import { fetchTickets } from '@/backend/api/tickets.api.js';
-import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
+import { getCachedCurrentUser, detectActiveUserSession } from '@/backend/api/auth.api.js';
+import { fetchExternalAccountLinks } from '@/backend/api/external-links.api.js';
 import { countGipsByStaff, fetchGipsByStaff } from '@/backend/api/gips.api.js';
 import { initAnnouncementBanner } from './announcement-banner.js';
 
@@ -368,6 +369,7 @@ class StaffDashboardController {
             window.DEBUG.log('STAFF_DASHBOARD', 'Initializing staff dashboard sub-systems and charts...');
         }
         this.systems = [];
+        this.assignedSystemKeys = new Set();
         // Pagination limit
         this.limit = 3;
         this.searchFilter = '';
@@ -392,6 +394,30 @@ class StaffDashboardController {
 
     async loadSystems() {
         this.renderLoading();
+
+        let currentUser = getCachedCurrentUser();
+        if (!currentUser) {
+            try {
+                currentUser = await detectActiveUserSession();
+            } catch {}
+        }
+
+        this.assignedSystemKeys = new Set();
+        if (currentUser?.id) {
+            try {
+                const linksRes = await fetchExternalAccountLinks(currentUser.id, Boolean(currentUser.is_gip));
+                if (Array.isArray(linksRes?.data)) {
+                    linksRes.data.forEach(link => {
+                        if (link?.system_key) {
+                            this.assignedSystemKeys.add(String(link.system_key).toUpperCase());
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('[DASHBOARD] Could not load assigned external systems:', err);
+            }
+        }
+
         const { data, error } = await fetchSystems({ activeOnly: false });
         if (error) {
             this.systems = [];
@@ -523,6 +549,32 @@ class StaffDashboardController {
             });
         }
 
+        // Auto-refresh when an assignment is confirmed or window is refocused
+        window.addEventListener('portal:assign-user-confirmed', (e) => {
+            const matches = e.detail?.matches || [];
+            matches.forEach(m => {
+                if (m.system_key) {
+                    this.assignedSystemKeys.add(String(m.system_key).toUpperCase());
+                }
+            });
+            this.render();
+        });
+
+        window.addEventListener('focus', async () => {
+            const user = getCachedCurrentUser();
+            if (!user?.id) return;
+            try {
+                const linksRes = await fetchExternalAccountLinks(user.id, Boolean(user.is_gip));
+                if (Array.isArray(linksRes?.data)) {
+                    const newKeys = new Set(linksRes.data.map(l => String(l.system_key).toUpperCase()));
+                    if (newKeys.size !== this.assignedSystemKeys.size || ![...newKeys].every(k => this.assignedSystemKeys.has(k))) {
+                        this.assignedSystemKeys = newKeys;
+                        this.render();
+                    }
+                }
+            } catch {}
+        });
+
         // TEMPORARILY DISABLED: Refresh Recent Active Staff Action (Real-time Supabase Refetch)
         // const bindRefresh = (btnId) => {
         //     const btn = document.getElementById(btnId);
@@ -566,13 +618,17 @@ class StaffDashboardController {
         const sysColor = sys.color || '#3b82f6';
         const currentUser = getCachedCurrentUser();
         const roleId = Number(currentUser?.role_id);
-        // Only system id = 1 (GIP) is restricted for role_id = 3 (Staff)
-        const isRestricted = Number(sys?.id) === 1 && roleId === 3;
+        const title = String(sys?.title || '').toLowerCase();
+        const systemKey = title.includes('spes') ? 'SPES' : (title.includes('gip') || Number(sys?.id) === 1) ? 'GIP' : null;
+
+        // System id = 1 (GIP) is restricted for role_id = 3 (Staff) unless an external account has been assigned
+        const isAssigned = Boolean(systemKey && this.assignedSystemKeys?.has(systemKey));
+        const isRestricted = Number(sys?.id) === 1 && roleId === 3 && !isAssigned;
 
         if (isRestricted) {
             card.className = 'system-card disabled-state cursor-not-allowed opacity-75 hover:opacity-85 grayscale-[20%] border border-rose-500/40 hover:border-rose-500/60 flex flex-col justify-between transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)] select-none';
             card.setAttribute('data-disabled', 'true');
-            card.setAttribute('title', 'Exclusive only for LDNPFO (Iligan) personnel');
+            card.setAttribute('title', 'Exclusive only for LDNPFO (Iligan) personnel or assigned staff');
         } else {
             card.className = 'system-card cursor-pointer border border-transparent flex flex-col justify-between hover:scale-[1.01] hover:shadow-[0_0_15px_var(--glow-color)] transition-all duration-300 relative group min-h-[320px] rounded-none overflow-hidden text-white sm:w-[calc(50%-12px)] lg:w-[calc(33.3333%-16px)]';
         }
@@ -628,10 +684,11 @@ class StaffDashboardController {
             const url = card.getAttribute('data-url');
             const system = this.systems.find((item) => String(item.id) === String(sysId));
             const title = String(system?.title || '').toLowerCase();
-            const systemKey = title.includes('spes') ? 'SPES' : title.includes('gip') ? 'GIP' : null;
+            const systemKey = title.includes('spes') ? 'SPES' : (title.includes('gip') || Number(sysId) === 1) ? 'GIP' : null;
             const currentUser = getCachedCurrentUser();
             const roleId = Number(currentUser?.role_id);
-            const isRestricted = Number(sysId) === 1 && roleId === 3;
+            const isAssigned = Boolean(systemKey && this.assignedSystemKeys?.has(systemKey));
+            const isRestricted = Number(sysId) === 1 && roleId === 3 && !isAssigned;
             
             if (isRestricted) {
                 return;

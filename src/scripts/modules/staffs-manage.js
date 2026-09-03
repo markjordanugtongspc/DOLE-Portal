@@ -595,15 +595,48 @@ export const initStaffsManage = () => {
         await load();
     });
     q('bulk-archived')?.addEventListener('click', async (e) => { e.preventDefault(); const ids = selectedUserIds(); if (!ids.length || !(await showFlowbiteConfirm({ title: `Archive ${ids.length} selected staff account(s)?`, message: 'Are you sure you want to archive the selected staff accounts?', confirmText: 'Archive Accounts', tone: 'danger' }))) return; for (const id of ids) await archiveUser(id); await load(); });
-    /* START STAFF ASSIGNMENT DRAWER TRIGGER */
+    /* START STAFF ASSIGNMENT DRAWER TRIGGER - Handles assignment requests for staff and GIP assistants */
     window.addEventListener('portal:request-assignment', () => {
-        const ids = selectedUserIds();
-        if (ids.length !== 1) {
-            showToast('warning', 'Select exactly one staff account to assign.');
+        const checkedValues = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+        if (checkedValues.length !== 1) {
+            showToast('warning', 'Select exactly one staff or assistant account to assign.');
             return;
         }
-        const user = users.find((item) => Number(item.id) === Number(ids[0]));
-        if (user) window.dispatchEvent(new CustomEvent('portal:assign-user', { detail: { user } }));
+        const val = checkedValues[0];
+        if (String(val).startsWith('gip:')) {
+            const gipId = Number(String(val).replace('gip:', ''));
+            const gip = gips.find(g => Number(g.id) === gipId);
+            if (gip) {
+                const parentStaff = users.find(u => Number(u.id) === Number(gip.created_by));
+                const targetUser = {
+                    id: gip.id,
+                    gip_id: gip.id,
+                    is_gip: true,
+                    full_name: gip.full_name,
+                    username: gip.username,
+                    email: gip.email,
+                    phone: gip.phone,
+                    avatar_url: gip.avatar_url,
+                    roles: { name: 'GIP Assistant' },
+                    position: 'GIP Assistant',
+                    office: parentStaff?.offices ? [parentStaff.offices.name, parentStaff.offices.location].filter(Boolean).join(' / ') : (parentStaff ? `Assigned to ${parentStaff.full_name}` : 'GIP Assistant'),
+                    offices: parentStaff?.offices || null,
+                    approval_status: 'APPROVED',
+                    status: gip.status || 'Active',
+                    created_by: gip.created_by
+                };
+                window.dispatchEvent(new CustomEvent('portal:assign-user', { detail: { user: targetUser } }));
+            } else {
+                showToast('danger', 'Selected assistant account was not found.');
+            }
+        } else {
+            const user = users.find((item) => Number(item.id) === Number(val));
+            if (user) {
+                window.dispatchEvent(new CustomEvent('portal:assign-user', { detail: { user } }));
+            } else {
+                showToast('danger', 'Selected staff account was not found.');
+            }
+        }
     });
     /* END STAFF ASSIGNMENT DRAWER TRIGGER */
     /* START STAFF ADD DRAFT CANCEL CLEAR */

@@ -210,6 +210,19 @@ export const requirePortalAdmin = async (req, res, admin) => {
     return session;
 };
 
+/* START REQUIRE PORTAL ADMIN OR STAFF - Authorizes administrators or approved staff members */
+export const requirePortalAdminOrStaff = async (req, res, admin) => {
+    const session = await requirePortalSession(req, res, admin);
+    if (!session) return null;
+    const roleId = Number(session.user.role_id);
+    if (roleId !== 1 && roleId !== 3) {
+        sendJson(res, 403, { error: 'Only an approved Portal administrator or staff member can manage account assignments.' });
+        return null;
+    }
+    return session;
+};
+/* END REQUIRE PORTAL ADMIN OR STAFF */
+
 export const revokePortalSession = async (admin, sessionId) => {
     if (!sessionId) return;
     await admin.from('portal_sessions').update({ revoked_at: new Date().toISOString() }).eq('id', sessionId);

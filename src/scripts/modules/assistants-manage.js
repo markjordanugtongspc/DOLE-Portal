@@ -672,10 +672,43 @@ export const initAssistantsManage = () => {
     const getCheckedIds = () => {
         const ids = [];
         document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
-            ids.push(cb.value);
+            ids.push(String(cb.value).replace('gip:', ''));
         });
         return ids;
     };
+
+    /* START ASSISTANT ASSIGNMENT DRAWER TRIGGER - Dispatches portal:assign-user for the selected assistant */
+    window.addEventListener('portal:request-assignment', () => {
+        const checked = getCheckedIds();
+        if (checked.length !== 1) {
+            showToast('warning', 'Select exactly one assistant account to assign.');
+            return;
+        }
+        const targetId = checked[0];
+        const asst = assistants.find(a => String(a.id) === String(targetId));
+        if (asst) {
+            const user = {
+                id: asst.id,
+                gip_id: asst.id,
+                is_gip: true,
+                full_name: asst.name || asst.full_name,
+                username: asst.username,
+                email: asst.email,
+                phone: asst.phone,
+                avatar_url: asst.avatar,
+                roles: { name: 'GIP Assistant' },
+                position: 'GIP Assistant',
+                office: asst.office || 'GIP Assistant',
+                approval_status: 'APPROVED',
+                status: asst.status || 'Active',
+                created_by: asst.created_by
+            };
+            window.dispatchEvent(new CustomEvent('portal:assign-user', { detail: { user } }));
+        } else {
+            showToast('danger', 'Selected assistant account was not found.');
+        }
+    });
+    /* END ASSISTANT ASSIGNMENT DRAWER TRIGGER */
 
     if (bulkActivate) {
         bulkActivate.addEventListener('click', async (e) => {

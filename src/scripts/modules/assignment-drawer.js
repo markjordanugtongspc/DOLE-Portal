@@ -1,10 +1,9 @@
 import { fetchExternalUsers, getExternalSystemConfigs } from '@/backend/api/external-systems.api.js';
 import { fetchExternalAccountLinks, deleteExternalAccountLink } from '@/backend/api/external-links.api.js';
 
-/* START STAFF ACCOUNT ASSIGNMENT DRAWER */
+/* START STAFF ACCOUNT ASSIGNMENT DRAWER - Mounts slide-over drawer for linking staff and assistant accounts */
 const initStaffAssignmentDrawer = () => {
-    const assignAction = document.getElementById('bulk-assign');
-    if (!assignAction || document.getElementById('assign-user-drawer')) return;
+    if (document.getElementById('assign-user-drawer')) return;
 
     const escapeHtml = (value) => String(value ?? 'N/A')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -126,7 +125,7 @@ const initStaffAssignmentDrawer = () => {
                 if (!activePortalUser) return;
                 unassignBtn.disabled = true;
                 unassignBtn.textContent = 'Unassigning...';
-                const response = await deleteExternalAccountLink(activePortalUser.id, systemKey);
+                const response = await deleteExternalAccountLink(activePortalUser.id, systemKey, activePortalUser.is_gip);
                 if (response.error) {
                     unassignBtn.disabled = false;
                     unassignBtn.textContent = 'Unassign';
@@ -208,15 +207,31 @@ const initStaffAssignmentDrawer = () => {
         drawer.focus();
         window.dispatchEvent(new CustomEvent('portal:drawer-open'));
 
-        const response = await fetchExternalAccountLinks(user.id);
+        const response = await fetchExternalAccountLinks(user.id, user.is_gip);
         render(user, response.data || []);
     };
 
-    assignAction.addEventListener('click', (event) => { event.preventDefault(); window.dispatchEvent(new CustomEvent('portal:request-assignment')); });
+    document.addEventListener('click', (event) => {
+        const btn = event.target.closest('#bulk-assign, [data-action="bulk-assign"]');
+        if (btn) {
+            event.preventDefault();
+            window.dispatchEvent(new CustomEvent('portal:request-assignment'));
+        }
+    });
     window.addEventListener('portal:assign-user', (event) => { if (event.detail?.user) open(event.detail.user); });
     drawer.querySelectorAll('[data-assign-drawer-close]').forEach((button) => button.addEventListener('click', close));
     backdrop.addEventListener('click', close);
-    drawer.querySelector('[data-assign-drawer-submit]')?.addEventListener('click', () => { if (drawer.querySelector('[data-assign-drawer-submit]').disabled || !activePortalUser) return; window.dispatchEvent(new CustomEvent('portal:assign-user-confirmed', { detail: { user: activePortalUser, matches: Array.from(matchedSystems.values()) } })); close(); });
+    drawer.querySelector('[data-assign-drawer-submit]')?.addEventListener('click', () => {
+        if (drawer.querySelector('[data-assign-drawer-submit]').disabled || !activePortalUser) return;
+        window.dispatchEvent(new CustomEvent('portal:assign-user-confirmed', {
+            detail: {
+                user: activePortalUser,
+                is_gip: Boolean(activePortalUser.is_gip),
+                matches: Array.from(matchedSystems.values())
+            }
+        }));
+        close();
+    });
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && drawer.getAttribute('aria-hidden') === 'false') close(); });
 };
 /* END STAFF ACCOUNT ASSIGNMENT DRAWER */

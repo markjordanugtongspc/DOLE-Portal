@@ -16,11 +16,12 @@ const requestJson = async (url, options = {}) => {
     }
 };
 
-/** Save only the selected Portal-to-external account mappings. */
+/* START CREATE EXTERNAL ACCOUNT LINKS - Persists account mappings for staff or GIP assistant */
 export const createExternalAccountLinks = (user, matches) => requestJson('/api/external-account-links', {
     method: 'POST',
     body: JSON.stringify({
         portal_user_id: user.id,
+        is_gip: Boolean(user.is_gip),
         links: matches.map((match) => ({
             system_key: match.system_key,
             external_user_id: String(match.id),
@@ -29,17 +30,20 @@ export const createExternalAccountLinks = (user, matches) => requestJson('/api/e
         }))
     })
 });
+/* END CREATE EXTERNAL ACCOUNT LINKS */
 
-/** Retrieve existing Portal-to-external account mappings. */
-export const fetchExternalAccountLinks = (portalUserId) => requestJson(`/api/external-account-links?portal_user_id=${portalUserId}`, {
+/* START FETCH EXTERNAL ACCOUNT LINKS - Loads external mappings for a user or GIP assistant */
+export const fetchExternalAccountLinks = (portalUserId, isGip = false) => requestJson(`/api/external-account-links?portal_user_id=${portalUserId}${isGip ? '&is_gip=true' : ''}`, {
     method: 'GET'
 });
+/* END FETCH EXTERNAL ACCOUNT LINKS */
 
-/** Remove one Portal-to-external account mapping. */
-export const deleteExternalAccountLink = (portalUserId, systemKey) => requestJson('/api/external-account-links', {
+/* START DELETE EXTERNAL ACCOUNT LINK - Removes an external mapping for a user or GIP assistant */
+export const deleteExternalAccountLink = (portalUserId, systemKey, isGip = false) => requestJson('/api/external-account-links', {
     method: 'DELETE',
-    body: JSON.stringify({ portal_user_id: portalUserId, system_key: systemKey })
+    body: JSON.stringify({ portal_user_id: portalUserId, system_key: systemKey, is_gip: Boolean(isGip) })
 });
+/* END DELETE EXTERNAL ACCOUNT LINK */
 /** Ask the trusted Portal backend to issue a short-lived SSO redirect. */
 export const requestSystemSsoLaunch = (systemKey) => requestJson('/api/sso/authorize', {
     method: 'POST',

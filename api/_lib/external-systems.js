@@ -45,15 +45,16 @@ const getGipDirectoryAccount = async (externalUserId) => {
     const config = systemConfig('GIP');
     if (!config?.url || !config?.anonKey) throw new Error('GIP external directory is not configured.');
     const client = createClient(config.url, config.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data, error } = await client
-        .from(config.table)
-        .select(config.select)
-        .eq('user_id', externalUserId)
-        .eq('is_active', true)
-        .eq('portal_sso_enabled', true)
-        .maybeSingle();
+    let query = client.from(config.table).select('*');
+    if (Number.isFinite(Number(externalUserId))) {
+        query = query.or(`user_id.eq.${externalUserId},id.eq.${externalUserId}`);
+    } else {
+        query = query.eq('user_id', externalUserId);
+    }
+    const { data, error } = await query.maybeSingle();
     if (error || !data) throw new Error('Selected GIP account could not be verified.');
-    return { id: String(data.user_id), full_name: safeString(data.full_name), username: safeString(data.username), email: safeString(data.email) };
+    const resolvedId = String(data.user_id || data.id || externalUserId);
+    return { id: resolvedId, full_name: safeString(data.full_name), username: safeString(data.username), email: safeString(data.email) };
 };
 /* END GIP SERVER DIRECTORY LOOKUP */
 
@@ -66,15 +67,13 @@ export const searchGipDirectory = async (fullName) => {
     const client = createClient(config.url, config.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data, error } = await client
         .from(config.table)
-        .select(config.select)
+        .select('*')
         .ilike('full_name', `%${term}%`)
-        .eq('is_active', true)
-        .eq('portal_sso_enabled', true)
         .limit(10);
 
     if (error) throw new Error(`GIP directory search failed: ${error.message}`);
     return (data || []).map((user) => ({
-        id: String(user.user_id || ''),
+        id: String(user.user_id || user.id || ''),
         full_name: safeString(user.full_name),
         username: safeString(user.username),
         email: safeString(user.email)

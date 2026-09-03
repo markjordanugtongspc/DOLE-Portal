@@ -69,13 +69,36 @@ const resolvePathname = (req) => {
 };
 /* END PATHNAME RESOLVER */
 
-/* START MAIN DISPATCHER */
+const handlerPaths = {
+    '/api/auth/login': './_handlers/auth-login.js',
+    '/api/auth/me': './_handlers/auth-me.js',
+    '/api/auth/logout': './_handlers/auth-logout.js',
+    '/api/auth/forgot-password': './_handlers/auth-forgot-password.js',
+    '/api/profile': './_handlers/profile.js',
+    '/api/audit-logs': './_handlers/audit-logs.js',
+    '/api/external-account-links': './_handlers/external-account-links.js',
+    '/api/external-system-directory': './_handlers/external-system-directory.js',
+    '/api/sso/authorize': './_handlers/sso-authorize.js',
+    '/api/sso/consume': './_handlers/sso-consume.js',
+    '/api/chatbot': './_handlers/chatbot.js',
+    '/api/chatbot/chatbot.api': './_handlers/chatbot.js',
+    '/api/sms': './_handlers/sms-send.js',
+    '/api/sms/send': './_handlers/sms-send.js'
+};
+
+/* START MAIN DISPATCHER - Resolves and executes the matched API route handler */
 export default async function handler(req, res) {
     const pathname = resolvePathname(req);
-    const routeHandler = routes[pathname];
+    const handlerRelativePath = handlerPaths[pathname];
 
-    if (routeHandler) {
+    if (handlerRelativePath) {
         try {
+            let routeHandler = routes[pathname];
+            if (process.env.NODE_ENV !== 'production') {
+                const moduleUrl = new URL(handlerRelativePath, import.meta.url).href;
+                const freshModule = await import(`${moduleUrl}?ts=${Date.now()}`);
+                routeHandler = freshModule.default || routeHandler;
+            }
             return await routeHandler(req, res);
         } catch (error) {
             console.error(`[PORTAL API ROUTER] Exception at ${pathname}:`, error);
