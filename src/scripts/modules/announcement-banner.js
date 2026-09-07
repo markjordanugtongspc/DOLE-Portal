@@ -9,6 +9,13 @@ import { Modal } from 'flowbite';
 /* START ANNOUNCEMENT DATA LIST - Top items are prioritized and sequenced first */
 export const PORTAL_ANNOUNCEMENTS = [
     {
+        id: 'announcement-spes-monitoring-2026',
+        text: 'SPES Monitoring Update: Fixed multiple bugs, improved lists of Implementors Date records, and fixed Payroll bugs.',
+        ctaText: '',
+        ctaUrl: '',
+        noCta: true
+    },
+    {
         id: 'announcement-draggable-chatbot-2026',
         text: 'The DOLE Chatbot is now draggable anywhere on mobile with automatic magnetic edge snapping. Tap and place it wherever convenient!',
         ctaText: 'Try Chatbot',
@@ -53,25 +60,35 @@ let currentAnnouncementIndex = 0;
 let isBannerPaused = false;
 let forgotTourModalInstance = null;
 
+/* START REMOVE DRAWER BACKDROP - Cleans up any full-screen dark drawer overlay to keep page and highlights fully visible */
+export const removeDrawerBackdrop = () => {
+    document.querySelectorAll('[drawer-backdrop], div[drawer-backdrop]').forEach((el) => {
+        el.remove();
+    });
+};
+/* END REMOVE DRAWER BACKDROP */
+
 /* START ENSURE MOBILE SIDEBAR OPEN - Opens Flowbite sidebar drawer on mobile/tablet so tour and highlight elements are visible */
 export const ensureMobileSidebarOpen = () => {
     const isMobileOrTablet = window.innerWidth < 1024 || window.matchMedia('(max-width: 1023px)').matches;
     const sidebarEl = document.getElementById('default-sidebar');
     if (!sidebarEl) return false;
 
-    // Check if sidebar is currently closed / hidden off-screen
+    // Check if sidebar is currently closed / hidden off-screen on mobile
     const isSidebarClosed = sidebarEl.classList.contains('-translate-x-full') || 
-                            sidebarEl.classList.contains('translate-x-full') ||
-                            sidebarEl.getAttribute('aria-hidden') === 'true';
+                            sidebarEl.classList.contains('translate-x-full');
 
-    if (isMobileOrTablet || isSidebarClosed) {
+    if (isMobileOrTablet && isSidebarClosed) {
         const toggleBtn = document.querySelector('[data-drawer-toggle="default-sidebar"]') ||
                           document.querySelector('[data-drawer-target="default-sidebar"]');
         if (toggleBtn) {
             toggleBtn.click();
+            setTimeout(removeDrawerBackdrop, 50);
+            setTimeout(removeDrawerBackdrop, 350);
             return true;
         }
     }
+    removeDrawerBackdrop();
     return false;
 };
 /* END ENSURE MOBILE SIDEBAR OPEN */
@@ -90,8 +107,10 @@ const updateTourUrlParam = (step) => {
 export const startProfilePhoneTour = () => {
     const wasClosed = ensureMobileSidebarOpen();
     const delay = wasClosed ? 350 : 0;
+    removeDrawerBackdrop();
 
     setTimeout(() => {
+        removeDrawerBackdrop();
         const userCard = document.getElementById('sidebar-user-card');
         const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
         const settingsBtn = document.getElementById('sidebar-profile-settings-btn');
@@ -160,8 +179,10 @@ export const startLogoutTour = () => {
     sessionStorage.setItem('dole_forgot_pwd_tour', 'active');
     const wasClosed = ensureMobileSidebarOpen();
     const delay = wasClosed ? 350 : 0;
+    removeDrawerBackdrop();
 
     setTimeout(() => {
+        removeDrawerBackdrop();
         const userCard = document.getElementById('sidebar-user-card');
         const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
         const logoutBtn = document.getElementById('sidebar-profile-logout-btn');
@@ -308,8 +329,10 @@ export const showForgotPasswordTourModal = () => {
 const triggerSettingsHighlight = () => {
     const wasClosed = ensureMobileSidebarOpen();
     const delay = wasClosed ? 350 : 0;
+    removeDrawerBackdrop();
 
     setTimeout(() => {
+        removeDrawerBackdrop();
         const userCard = document.getElementById('sidebar-user-card');
         const profileInfoBtn = document.getElementById('sidebar-user-profile-info');
         if (!userCard) return;
@@ -346,8 +369,10 @@ const triggerSettingsHighlight = () => {
 const triggerTicketsHighlight = () => {
     const wasClosed = ensureMobileSidebarOpen();
     const delay = wasClosed ? 350 : 0;
+    removeDrawerBackdrop();
 
     setTimeout(() => {
+        removeDrawerBackdrop();
         const isAdminOrHr = window.location.pathname.includes('/admin/') || 
                             window.__PORTAL_SESSION?.roles?.name?.toLowerCase() === 'admin' || 
                             window.__PORTAL_SESSION?.roles?.name?.toLowerCase() === 'hr';
@@ -405,8 +430,8 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
                     </span>
                 </div>
                 <div class="flex items-center justify-between sm:justify-end w-full md:w-auto shrink-0 gap-2 border-t md:border-t-0 border-gray-100 dark:border-gray-800 pt-2.5 md:pt-0">
-                    <a id="announcement-cta" href="${PORTAL_ANNOUNCEMENTS[0].ctaUrl}" class="cursor-pointer inline-flex items-center justify-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900/50 shadow-xs font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all select-none">
-                        ${PORTAL_ANNOUNCEMENTS[0].ctaText}
+                    <a id="announcement-cta" href="${PORTAL_ANNOUNCEMENTS[0].ctaUrl || '#'}" class="cursor-pointer ${(!PORTAL_ANNOUNCEMENTS[0].ctaText || PORTAL_ANNOUNCEMENTS[0].noCta) ? 'hidden' : 'inline-flex'} items-center justify-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900/50 shadow-xs font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all select-none">
+                        ${PORTAL_ANNOUNCEMENTS[0].ctaText || ''}
                     </a>
                     <button id="btn-dismiss-announcement" type="button" class="cursor-pointer shrink-0 inline-flex justify-center text-sm w-7 h-7 items-center text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors focus:outline-none" title="Dismiss announcement">
                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -455,16 +480,23 @@ export const initAnnouncementBanner = (targetContainerSelector = '#announcement-
 
         setTimeout(() => {
             textEl.textContent = item.text;
-            ctaBtn.textContent = item.ctaText || 'Learn More';
-            ctaBtn.href = item.ctaUrl || '#';
-
-            if (item.disabled) {
-                ctaBtn.removeAttribute('href');
-                ctaBtn.setAttribute('disabled', 'true');
-                ctaBtn.className = 'cursor-not-allowed inline-flex items-center justify-center text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold text-xs px-3.5 py-1.5 rounded-lg opacity-60 select-none pointer-events-none';
+            
+            if (item.noCta || !item.ctaText) {
+                ctaBtn.classList.add('hidden');
+                ctaBtn.classList.remove('inline-flex');
             } else {
-                ctaBtn.removeAttribute('disabled');
-                ctaBtn.className = 'cursor-pointer inline-flex items-center justify-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900/50 shadow-xs font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all select-none';
+                ctaBtn.classList.remove('hidden');
+                ctaBtn.textContent = item.ctaText || 'Learn More';
+                ctaBtn.href = item.ctaUrl || '#';
+
+                if (item.disabled) {
+                    ctaBtn.removeAttribute('href');
+                    ctaBtn.setAttribute('disabled', 'true');
+                    ctaBtn.className = 'cursor-not-allowed inline-flex items-center justify-center text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold text-xs px-3.5 py-1.5 rounded-lg opacity-60 select-none pointer-events-none';
+                } else {
+                    ctaBtn.removeAttribute('disabled');
+                    ctaBtn.className = 'cursor-pointer inline-flex items-center justify-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900/50 shadow-xs font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all select-none';
+                }
             }
 
             textEl.style.opacity = '1';

@@ -64,15 +64,10 @@ const notifySubscribers = () => {
     });
 };
 
-/**
- * Sends a status update to the server (online/offline).
- * Uses fetch when page is active, fallback to sendBeacon when unloading.
- * @param {'online'|'offline'} status
- * @param {boolean} isBeacon
- */
-export const sendStatusUpdate = async (status = 'online', isBeacon = false) => {
+/* START SEND STATUS UPDATE - Sends status and uptime delta to server via fetch or sendBeacon */
+export const sendStatusUpdate = async (status = 'online', isBeacon = false, uptimeDelta = 0) => {
     try {
-        const payload = JSON.stringify({ status });
+        const payload = JSON.stringify({ status, uptime_delta: uptimeDelta });
         if (isBeacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
             const blob = new Blob([payload], { type: 'application/json' });
             navigator.sendBeacon('/api/auth/me', blob);
@@ -87,19 +82,125 @@ export const sendStatusUpdate = async (status = 'online', isBeacon = false) => {
         if (window.DEBUG) window.DEBUG.warn('PRESENCE', 'Status update request failed:', err?.message || err);
     }
 };
+/* END SEND STATUS UPDATE */
 
-/**
- * Unload event handler to untrack presence and mark user offline.
- */
+/* START FORMAT TOTAL UPTIME - Formats total seconds into smart compact uptime strings */
+export const formatTotalUptime = (totalSeconds = 0) => {
+    const sec = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    if (sec < 60) {
+        return `${sec}s`;
+    }
+    if (sec < 3600) {
+        const mins = Math.floor(sec / 60);
+        const remSec = sec % 60;
+        return remSec > 0 ? `${mins}m ${remSec}s` : `${mins}m`;
+    }
+    const hours = (sec / 3600).toFixed(1);
+    const cleanHours = hours.endsWith('.0') ? hours.slice(0, -2) : hours;
+    return `${cleanHours} hrs`;
+};
+/* END FORMAT TOTAL UPTIME */
+
+let uptimeInterval = null;
+let unsyncedUptimeSeconds = 0;
+let currentUptimeTotalSeconds = 0;
+let lastRenderedUptimeFormatted = '';
+
+/* START USER UPTIME TRACKER CONTROLLER - Ultra-lightweight in-memory counter with 60s batched DB sync */
+export const startUserUptimeTracker = (user, onTick) => {
+    if (!user || !user.id) return () => {};
+
+    if (uptimeInterval) {
+        clearInterval(uptimeInterval);
+        uptimeInterval = null;
+    }
+
+    currentUptimeTotalSeconds = Number(user.total_uptime || 0);
+    unsyncedUptimeSeconds = 0;
+    lastRenderedUptimeFormatted = formatTotalUptime(currentUptimeTotalSeconds);
+
+    // Initial immediate render
+    if (typeof onTick === 'function') {
+        onTick({
+            totalSeconds: currentUptimeTotalSeconds,
+            formatted: lastRenderedUptimeFormatted
+        });
+    }
+
+    const flushUptimeSync = async (isBeacon = false) => {
+        if (unsyncedUptimeSeconds <= 0) return;
+        const delta = unsyncedUptimeSeconds;
+        unsyncedUptimeSeconds = 0;
+        await sendStatusUpdate('online', isBeacon, delta);
+    };
+
+    let syncCounter = 0;
+
+    // 1-second in-memory clock (consumes 0.0001% CPU, 0 database queries)
+    uptimeInterval = setInterval(() => {
+        // Automatically sleep and consume 0 resources if tab is backgrounded/hidden
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+            return;
+        }
+
+        currentUptimeTotalSeconds += 1;
+        unsyncedUptimeSeconds += 1;
+        syncCounter += 1;
+
+        const newFormatted = formatTotalUptime(currentUptimeTotalSeconds);
+
+        // Only invoke DOM update if text representation actually changed (saves UI repaints on low-end laptops)
+        if (newFormatted !== lastRenderedUptimeFormatted || currentUptimeTotalSeconds < 60) {
+            lastRenderedUptimeFormatted = newFormatted;
+            if (typeof onTick === 'function') {
+                onTick({
+                    totalSeconds: currentUptimeTotalSeconds,
+                    formatted: newFormatted
+                });
+            }
+        }
+
+        // Lightweight batched database sync every 60 seconds (only 1 request/min)
+        if (syncCounter >= 60) {
+            syncCounter = 0;
+            void flushUptimeSync(false);
+        }
+    }, 1000);
+
+    const handleUnloadSync = () => {
+        if (unsyncedUptimeSeconds > 0) {
+            void flushUptimeSync(true);
+        }
+    };
+
+    window.addEventListener('beforeunload', handleUnloadSync);
+    window.addEventListener('pagehide', handleUnloadSync);
+
+    return () => {
+        if (uptimeInterval) {
+            clearInterval(uptimeInterval);
+            uptimeInterval = null;
+        }
+        window.removeEventListener('beforeunload', handleUnloadSync);
+        window.removeEventListener('pagehide', handleUnloadSync);
+        void flushUptimeSync(false);
+    };
+};
+/* END USER UPTIME TRACKER CONTROLLER */
+
+/* START HANDLE WINDOW UNLOAD - Unloads presence and syncs final offline state and remaining uptime */
 const handleWindowUnload = () => {
     if (!currentPresenceUser) return;
     try {
         if (presenceChannel) {
             void presenceChannel.untrack();
         }
-        sendStatusUpdate('offline', true);
+        const delta = unsyncedUptimeSeconds;
+        unsyncedUptimeSeconds = 0;
+        sendStatusUpdate('offline', true, delta);
     } catch {}
 };
+/* END HANDLE WINDOW UNLOAD */
 
 /**
  * Initializes and tracks Supabase Presence for an authenticated user.

@@ -174,16 +174,19 @@
           </div>
         </div>
 
-        <!-- Card 4: Total Resigned -->
+        <!-- Card 4: Total Uptime (Hours Spent / Personal Playtime) -->
         <div
-          class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-red-600 dark:bg-red-700 p-4 rounded-none border border-red-700/40 dark:border-red-600/60 shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-default select-none">
+          id="admin-card-uptime"
+          data-tooltip-target="tooltip-admin-uptime"
+          data-tooltip-placement="top"
+          class="w-full md:w-auto md:min-w-0 shrink-0 snap-center group bg-emerald-600 dark:bg-emerald-700 p-4 rounded-none border border-emerald-700/40 dark:border-emerald-600/60 shadow-sm flex items-center justify-between text-white hover:scale-[1.02] transition-all duration-300 ease-out cursor-pointer select-none">
           <div>
-            <h3 class="text-xs font-bold text-red-100 uppercase tracking-wider">TOTAL RESIGNED</h3>
-            <p id="admin-total-resigned-value" data-admin-dashboard-metric="totalResigned"
+            <h3 class="text-xs font-bold text-emerald-100 uppercase tracking-wider">TOTAL UPTIME</h3>
+            <p id="admin-user-uptime-value" data-admin-dashboard-metric="totalUptime"
               class="text-2xl font-extrabold mt-1 tracking-tight text-white transition-all duration-300 ease-out group-hover:scale-110 group-hover:font-black origin-left inline-block"
               role="status" aria-live="polite">
               <span class="inline-block h-7 w-16 rounded-full bg-white/20 animate-pulse align-middle"><span
-                  class="sr-only">Loading total resigned...</span></span>
+                  class="sr-only">Loading total uptime...</span></span>
             </p>
           </div>
           <div
@@ -191,9 +194,16 @@
             <svg class="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="none" viewBox="0 0 24 24">
               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm0 0v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-9 9m4.5-1.206a8.959 8.959 0 0 1-4.5 1.206" />
+                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           </div>
+        </div>
+
+        <!-- Flowbite Tooltip: Personal Uptime Indicator -->
+        <div id="tooltip-admin-uptime" role="tooltip"
+          class="absolute z-50 invisible inline-block px-3 py-2 text-xs font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-md opacity-0 tooltip dark:bg-gray-700 max-w-xs leading-relaxed">
+          <span class="font-bold text-emerald-400">Your Active Work Time:</span> Cumulative hours and sessions you have been logged in and actively using the portal.
+          <div class="tooltip-arrow" data-popper-arrow></div>
         </div>
       </div>
 

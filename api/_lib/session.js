@@ -22,7 +22,8 @@ const safeUser = (user = {}) => ({
     id: Number(user.id), role_id: Number(user.role_id), office_id: user.office_id === null ? null : Number(user.office_id),
     full_name: user.full_name, username: user.username, email: user.email, phone: user.phone,
     birthday: user.birthday, avatar_url: user.avatar_url || null,
-    approval_status: user.approval_status, status: user.status
+    approval_status: user.approval_status, status: user.status,
+    total_uptime: Number(user.total_uptime || 0)
 });
 
 const isSecureRuntime = (req) => {
@@ -132,7 +133,7 @@ export const getPortalSession = async (req, admin) => {
     if (isGipToken && gipId) {
         const { data: gipRecord } = await admin
             .from('gips')
-            .select('id, full_name, username, email, phone, avatar_url, status, archived_at, created_by')
+            .select('id, full_name, username, email, phone, avatar_url, status, archived_at, created_by, total_uptime')
             .eq('id', gipId)
             .is('archived_at', null)
             .maybeSingle();
@@ -152,6 +153,7 @@ export const getPortalSession = async (req, admin) => {
                 approval_status: 'APPROVED',
                 status: gipRecord.status || 'online',
                 archived_at: gipRecord.archived_at,
+                total_uptime: gipRecord.total_uptime,
                 is_gip: true,
                 gip_id: gipRecord.id
             };
@@ -159,7 +161,7 @@ export const getPortalSession = async (req, admin) => {
     } else {
         const { data: userRecord } = await admin
             .from('users')
-            .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at')
+            .select('id, role_id, office_id, full_name, birthday, username, email, phone, avatar_url, approval_status, status, archived_at, total_uptime')
             .eq('id', data.user_id)
             .is('archived_at', null)
             .maybeSingle();

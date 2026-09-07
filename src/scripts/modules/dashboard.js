@@ -9,7 +9,7 @@ import { getCachedCurrentUser, detectActiveUserSession } from '@/backend/api/aut
 import { fetchExternalAccountLinks } from '@/backend/api/external-links.api.js';
 import { countGipsByStaff, fetchGipsByStaff } from '@/backend/api/gips.api.js';
 import { initAnnouncementBanner } from './announcement-banner.js';
-import { subscribeToPresenceSync } from '@/backend/api/presence.api.js';
+import { subscribeToPresenceSync, startUserUptimeTracker, formatTotalUptime } from '@/backend/api/presence.api.js';
 import { supabase } from '@/backend/api/supabase.js';
 
 /* START THEME TOGGLER */
@@ -111,13 +111,14 @@ class AdminDashboardController {
             totalStaff: document.getElementById('admin-total-staff-value'),
             totalTickets: document.getElementById('admin-total-tickets-value'),
             openTickets: document.getElementById('admin-open-tickets-value'),
-            totalResigned: document.getElementById('admin-total-resigned-value'),
+            totalUptime: document.getElementById('admin-user-uptime-value') || document.getElementById('admin-total-resigned-value'),
             ticketsReceived: document.getElementById('admin-dashboard-tickets-received'),
             resolvedRate: document.getElementById('admin-dashboard-resolved-rate'),
         };
 
         this.liveOnlineUsers = new Set();
         this.cachedUsers = [];
+        this.stopUptimeTracker = null;
 
         if (!Object.values(this.metricEls).some(Boolean)) return;
 
@@ -170,6 +171,7 @@ class AdminDashboardController {
             if (this.unsubscribePresence) this.unsubscribePresence();
             if (this.staffChannel) supabase.removeChannel(this.staffChannel);
             if (this.relativeTimeInterval) clearInterval(this.relativeTimeInterval);
+            if (this.stopUptimeTracker) this.stopUptimeTracker();
         });
     }
 
@@ -186,12 +188,22 @@ class AdminDashboardController {
         const { data, error } = await fetchUserDashboardCounts();
         if (error) {
             this.setMetric('totalStaff', null);
-            this.setMetric('totalResigned', null);
             return;
         }
 
         this.setMetric('totalStaff', data.totalStaff);
-        this.setMetric('totalResigned', data.totalResigned);
+
+        // Fetch active session user to initialize live total uptime tracking
+        const activeUser = (await detectActiveUserSession()) || getCachedCurrentUser();
+        if (activeUser && this.metricEls.totalUptime) {
+            if (this.stopUptimeTracker) this.stopUptimeTracker();
+            this.stopUptimeTracker = startUserUptimeTracker(activeUser, ({ formatted }) => {
+                if (this.metricEls.totalUptime) {
+                    this.metricEls.totalUptime.textContent = formatted;
+                    this.metricEls.totalUptime.classList.remove('text-red-100', 'text-indigo-100');
+                }
+            });
+        }
     }
     /* START ADMIN STAFF LIST RENDERER */
     escapeHtml(value) {
@@ -1948,12 +1960,14 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         initThemeToggler();
         initQuickActionsSwitcher();
+        initTooltips();
         new AdminDashboardController();
         new StaffDashboardController();
     });
 } else {
     initThemeToggler();
     initQuickActionsSwitcher();
+    initTooltips();
     new AdminDashboardController();
     new StaffDashboardController();
 }
