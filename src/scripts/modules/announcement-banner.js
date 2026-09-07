@@ -93,6 +93,114 @@ export const ensureMobileSidebarOpen = () => {
 };
 /* END ENSURE MOBILE SIDEBAR OPEN */
 
+/* START TOUR SPOTLIGHT & STEP TOOLTIP OVERLAY SYSTEM */
+export const showTourOverlay = (onDismiss) => {
+    let overlay = document.getElementById('portal-tour-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'portal-tour-overlay';
+        overlay.className = 'fixed inset-0 z-[90] bg-black/25 transition-opacity duration-300 pointer-events-auto cursor-pointer animate-fade-in';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', () => {
+            endPortalTour();
+            if (typeof onDismiss === 'function') onDismiss();
+        });
+    }
+    return overlay;
+};
+
+export const hideTourOverlay = () => {
+    const overlay = document.getElementById('portal-tour-overlay');
+    if (overlay) {
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.remove(), 200);
+    }
+};
+
+export const showTourStepTooltip = (targetEl, { step, totalSteps, title, description, badgeColor = 'blue' }) => {
+    hideTourStepTooltip();
+    if (!targetEl) return;
+
+    const rect = targetEl.getBoundingClientRect();
+    const tooltip = document.createElement('div');
+    tooltip.id = 'portal-tour-step-tooltip';
+    tooltip.className = 'fixed z-[110] transition-all duration-300 pointer-events-auto bg-gray-900/95 dark:bg-gray-800/95 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-blue-500/40 backdrop-blur-md max-w-[280px] sm:max-w-xs animate-fade-in';
+
+    const colorBadgeClasses = badgeColor === 'red'
+        ? 'bg-red-600/30 text-red-300 border-red-400/30'
+        : (badgeColor === 'emerald' ? 'bg-emerald-600/30 text-emerald-300 border-emerald-400/30' : 'bg-blue-600/30 text-blue-300 border-blue-400/30');
+
+    const dotColor = badgeColor === 'red' ? 'bg-red-400' : (badgeColor === 'emerald' ? 'bg-emerald-400' : 'bg-blue-400');
+
+    tooltip.innerHTML = `
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${colorBadgeClasses} border shadow-xs">
+                <span class="w-1.5 h-1.5 rounded-full ${dotColor} animate-pulse"></span>
+                STEP ${step} OF ${totalSteps}
+            </span>
+            <button type="button" data-dismiss-tour-tooltip class="text-gray-400 hover:text-white text-xs p-1 rounded-md cursor-pointer transition-colors" title="Close Tour">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <h4 class="text-xs sm:text-sm font-extrabold text-white mb-1 leading-snug">${title}</h4>
+        <p class="text-[11px] sm:text-xs text-gray-300 leading-relaxed">${description}</p>
+    `;
+
+    document.body.appendChild(tooltip);
+
+    tooltip.querySelector('[data-dismiss-tour-tooltip]')?.addEventListener('click', () => {
+        endPortalTour();
+    });
+
+    // Position tooltip smartly relative to targetEl
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top = rect.bottom + 12;
+    let left = rect.left;
+
+    // If placed on sidebar or left side
+    if (rect.left < viewportWidth / 2) {
+        left = Math.min(rect.right + 16, viewportWidth - tooltipRect.width - 16);
+        top = Math.max(16, Math.min(rect.top, viewportHeight - tooltipRect.height - 16));
+    } else {
+        left = Math.max(16, rect.left - tooltipRect.width - 16);
+        top = Math.max(16, Math.min(rect.top, viewportHeight - tooltipRect.height - 16));
+    }
+
+    // Fallback if overflowing bottom
+    if (top + tooltipRect.height > viewportHeight - 16) {
+        top = Math.max(16, rect.top - tooltipRect.height - 12);
+    }
+
+    tooltip.style.top = `${Math.round(top)}px`;
+    tooltip.style.left = `${Math.round(left)}px`;
+};
+
+export const hideTourStepTooltip = () => {
+    const tooltip = document.getElementById('portal-tour-step-tooltip');
+    if (tooltip) tooltip.remove();
+};
+
+export const endPortalTour = () => {
+    hideTourOverlay();
+    hideTourStepTooltip();
+    updateTourUrlParam(null);
+    document.querySelectorAll('.portal-tour-highlighted').forEach(el => {
+        el.classList.remove(
+            'portal-tour-highlighted',
+            'relative', 'z-[95]',
+            'ring-4', 'ring-blue-500', 'ring-emerald-500', 'ring-red-500', 'ring-red-400',
+            'ring-offset-2', 'dark:ring-offset-gray-950', 'dark:ring-offset-gray-900',
+            'animate-pulse', 'border-blue-500', 'border-emerald-500', 'border-red-500',
+            'bg-blue-50', 'dark:bg-blue-950/50', 'bg-emerald-50', 'dark:bg-emerald-950/40'
+        );
+    });
+};
+window.__dismissPortalTour = endPortalTour;
+/* END TOUR SPOTLIGHT & STEP TOOLTIP OVERLAY SYSTEM */
+
 /* START FORGOT PASSWORD INTERACTIVE TOUR SYSTEM */
 const updateTourUrlParam = (step) => {
     const url = new URL(window.location.href);
@@ -116,14 +224,25 @@ export const startProfilePhoneTour = () => {
         const settingsBtn = document.getElementById('sidebar-profile-settings-btn');
         if (!userCard) return;
 
-        // STEP 1: Highlight the user profile dropdown card alone
+        // --- STEP 1: Blur & Tooltip (Reading Phase) ---
+        showTourOverlay();
         updateTourUrlParam('profile-dropdown');
         userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        userCard.classList.add('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
+        userCard.classList.add('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
 
-        // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Settings button
+        showTourStepTooltip(userCard, {
+            step: 1,
+            totalSteps: 4,
+            title: 'Open Profile Menu',
+            description: 'Click on your user profile card in the sidebar to reveal account options.',
+            badgeColor: 'blue'
+        });
+
+        // After reading time: Return to default, then perform action
         setTimeout(() => {
-            userCard.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
+            hideTourStepTooltip();
+            hideTourOverlay();
+            userCard.classList.remove('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-blue-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-blue-500');
             
             const container = document.getElementById('sidebar-user-actions-container');
             const isClosed = container?.classList.contains('grid-rows-[0fr]');
@@ -131,47 +250,84 @@ export const startProfilePhoneTour = () => {
                 profileInfoBtn.click();
             }
 
-            updateTourUrlParam('profile-settings');
-            if (settingsBtn) {
-                settingsBtn.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
-            }
-
-            // STEP 3: After 2.0s, remove Settings button highlight and open the Settings Modal
+            // --- STEP 2: Blur & Tooltip (Reading Phase) ---
             setTimeout(() => {
+                showTourOverlay();
+                updateTourUrlParam('profile-settings');
                 if (settingsBtn) {
-                    settingsBtn.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
-                    settingsBtn.click();
+                    settingsBtn.classList.add('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
+                    showTourStepTooltip(settingsBtn, {
+                        step: 2,
+                        totalSteps: 4,
+                        title: 'Click Profile Settings',
+                        description: 'Select Profile Settings to edit your contact and security details.',
+                        badgeColor: 'blue'
+                    });
                 }
 
-                // STEP 4: Inside Modal, highlight ONLY the Phone Number input field first
+                // After reading time: Return to default, then open modal
                 setTimeout(() => {
-                    updateTourUrlParam('phone-number-field');
-                    const phoneInput = document.getElementById('phone') || document.getElementById('settings-phone');
-                    const saveBtn = document.getElementById('settings-save-button');
-
-                    if (phoneInput) {
-                        phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        phoneInput.focus();
-                        phoneInput.classList.add('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                    hideTourStepTooltip();
+                    hideTourOverlay();
+                    if (settingsBtn) {
+                        settingsBtn.classList.remove('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-blue-500', 'animate-pulse', 'bg-blue-50', 'dark:bg-blue-950/50', 'border-blue-400');
+                        settingsBtn.click();
                     }
 
-                    // STEP 5: After 2.5s on the Phone field, remove Phone highlight and highlight ONLY the Save Settings button
+                    // --- STEP 3: Inside Modal - Input Highlight & Tooltip (No overlay/blur to keep form crystal clear) ---
                     setTimeout(() => {
+                        updateTourUrlParam('phone-number-field');
+                        const phoneInput = document.getElementById('phone') || document.getElementById('settings-phone');
+                        const saveBtn = document.getElementById('settings-save-button');
+
                         if (phoneInput) {
-                            phoneInput.classList.remove('ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                            phoneInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            phoneInput.focus();
+                            phoneInput.classList.add('portal-tour-highlighted', 'relative', 'z-[105]', 'ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+
+                            showTourStepTooltip(phoneInput, {
+                                step: 3,
+                                totalSteps: 4,
+                                title: 'Register Philippine Mobile Number',
+                                description: 'Ensure your active 11-digit mobile number is entered to receive SMS OTP reset codes.',
+                                badgeColor: 'blue'
+                            });
                         }
 
-                        updateTourUrlParam('save-settings');
-                        sessionStorage.setItem('dole_forgot_pwd_tour_step', 'awaiting_profile_save');
+                        // After reading time: Return to default, transition to save button
+                        setTimeout(() => {
+                            hideTourStepTooltip();
+                            if (phoneInput) {
+                                phoneInput.classList.remove('portal-tour-highlighted', 'relative', 'z-[105]', 'ring-4', 'ring-blue-500', 'animate-pulse', 'border-blue-500', 'bg-blue-50/50', 'dark:bg-blue-950/30');
+                            }
 
-                        if (saveBtn) {
-                            saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            saveBtn.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
-                        }
-                    }, 2500);
-                }, 500);
-            }, 2000);
-        }, 1500);
+                            // --- STEP 4: Save Settings - Button Highlight & Tooltip ---
+                            setTimeout(() => {
+                                updateTourUrlParam('save-settings');
+                                sessionStorage.setItem('dole_forgot_pwd_tour_step', 'awaiting_profile_save');
+
+                                if (saveBtn) {
+                                    saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    saveBtn.classList.add('portal-tour-highlighted', 'relative', 'z-[105]', 'ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+
+                                    showTourStepTooltip(saveBtn, {
+                                        step: 4,
+                                        totalSteps: 4,
+                                        title: 'Save Profile Changes',
+                                        description: 'Click Save Settings to link your mobile number for SMS password recovery.',
+                                        badgeColor: 'emerald'
+                                    });
+                                }
+
+                                setTimeout(() => {
+                                    endPortalTour();
+                                }, 3200);
+                            }, 400);
+                        }, 3000);
+                    }, 600);
+                }, 2800);
+            }, 500);
+        }, 2800);
     }, delay);
 };
 
@@ -188,14 +344,25 @@ export const startLogoutTour = () => {
         const logoutBtn = document.getElementById('sidebar-profile-logout-btn');
         if (!userCard) return;
 
-        // STEP 1: Highlight the profile dropdown card alone
+        // --- STEP 1: Blur & Tooltip (Reading Phase) ---
+        showTourOverlay();
         updateTourUrlParam('logout-dropdown');
         userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        userCard.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
+        userCard.classList.add('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
 
-        // STEP 2: After 1.5s, remove card highlight, expand accordion, and highlight ONLY the Logout button
+        showTourStepTooltip(userCard, {
+            step: 1,
+            totalSteps: 3,
+            title: 'Profile Menu',
+            description: 'Open your profile menu to sign out and test password recovery.',
+            badgeColor: 'red'
+        });
+
+        // After reading: Return to default, expand accordion
         setTimeout(() => {
-            userCard.classList.remove('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
+            hideTourStepTooltip();
+            hideTourOverlay();
+            userCard.classList.remove('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-red-500');
 
             const container = document.getElementById('sidebar-user-actions-container');
             const isClosed = container?.classList.contains('grid-rows-[0fr]');
@@ -203,28 +370,52 @@ export const startLogoutTour = () => {
                 profileInfoBtn.click();
             }
 
-            updateTourUrlParam('logout-button');
-            if (logoutBtn) {
-                logoutBtn.classList.add('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
-            }
-
-            // STEP 3: After 2.0s, remove Logout button highlight and open the Logout Confirmation Modal
+            // --- STEP 2: Blur & Tooltip (Reading Phase) ---
             setTimeout(() => {
+                showTourOverlay();
+                updateTourUrlParam('logout-button');
                 if (logoutBtn) {
-                    logoutBtn.classList.remove('ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
-                    logoutBtn.click();
+                    logoutBtn.classList.add('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
+                    showTourStepTooltip(logoutBtn, {
+                        step: 2,
+                        totalSteps: 3,
+                        title: 'Click Logout',
+                        description: 'Click Log Out to open the confirmation dialog.',
+                        badgeColor: 'red'
+                    });
                 }
 
-                // STEP 4: Inside Modal, highlight ONLY the Confirm Logout button
+                // After reading: Return to default, click logout
                 setTimeout(() => {
-                    updateTourUrlParam('confirm-logout');
-                    const confirmLogoutBtn = document.getElementById('sidebar-logout-confirm-btn');
-                    if (confirmLogoutBtn) {
-                        confirmLogoutBtn.classList.add('ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                    hideTourStepTooltip();
+                    hideTourOverlay();
+                    if (logoutBtn) {
+                        logoutBtn.classList.remove('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-red-400', 'ring-offset-1', 'animate-pulse');
+                        logoutBtn.click();
                     }
-                }, 500);
-            }, 2000);
-        }, 1500);
+
+                    // --- STEP 3: Inside Confirmation Modal (Button Highlight & Tooltip) ---
+                    setTimeout(() => {
+                        updateTourUrlParam('confirm-logout');
+                        const confirmLogoutBtn = document.getElementById('sidebar-logout-confirm-btn');
+                        if (confirmLogoutBtn) {
+                            confirmLogoutBtn.classList.add('portal-tour-highlighted', 'relative', 'z-[105]', 'ring-4', 'ring-red-500', 'ring-offset-2', 'dark:ring-offset-gray-900', 'animate-pulse');
+                            showTourStepTooltip(confirmLogoutBtn, {
+                                step: 3,
+                                totalSteps: 3,
+                                title: 'Confirm Sign Out',
+                                description: 'Confirm logout to return to the sign-in screen and test SMS OTP reset.',
+                                badgeColor: 'red'
+                            });
+                        }
+
+                        setTimeout(() => {
+                            endPortalTour();
+                        }, 3200);
+                    }, 600);
+                }, 2800);
+            }, 500);
+        }, 2800);
     }, delay);
 };
 
@@ -325,11 +516,12 @@ export const showForgotPasswordTourModal = () => {
 };
 /* END FORGOT PASSWORD INTERACTIVE TOUR SYSTEM */
 
-/* START HIGHLIGHT PROFILE SETTINGS - Pulses emerald border and auto-toggles card preview twice */
+/* START HIGHLIGHT PROFILE SETTINGS - Pulses emerald border with tour overlay and preview tooltip */
 const triggerSettingsHighlight = () => {
     const wasClosed = ensureMobileSidebarOpen();
     const delay = wasClosed ? 350 : 0;
     removeDrawerBackdrop();
+    showTourOverlay();
 
     setTimeout(() => {
         removeDrawerBackdrop();
@@ -338,38 +530,49 @@ const triggerSettingsHighlight = () => {
         if (!userCard) return;
 
         userCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        userCard.classList.add('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
+        userCard.classList.add('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
+
+        showTourStepTooltip(userCard, {
+            step: 1,
+            totalSteps: 1,
+            title: 'Profile Settings & Preview',
+            description: 'Hover or click your profile card to view quick account details and settings.',
+            badgeColor: 'emerald'
+        });
 
         if (profileInfoBtn) {
             setTimeout(() => {
                 profileInfoBtn.click();
-            }, 400);
+            }, 600);
 
             setTimeout(() => {
                 profileInfoBtn.click();
-            }, 1800);
+            }, 2400);
 
             setTimeout(() => {
                 profileInfoBtn.click();
-            }, 2600);
+            }, 3800);
 
             setTimeout(() => {
                 profileInfoBtn.click();
-            }, 4000);
+            }, 5200);
         }
 
         setTimeout(() => {
-            userCard.classList.remove('ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
-        }, 4500);
+            userCard.classList.remove('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-emerald-500', 'ring-offset-2', 'dark:ring-offset-gray-950', 'animate-pulse', 'border-emerald-500');
+            hideTourStepTooltip();
+            hideTourOverlay();
+        }, 6000);
     }, delay);
 };
 /* END HIGHLIGHT PROFILE SETTINGS */
 
-/* START HIGHLIGHT TICKETS - Directs user to the appropriate tickets page and triggers target highlight */
+/* START HIGHLIGHT TICKETS - Directs user to the appropriate tickets page with preview tooltip */
 const triggerTicketsHighlight = () => {
     const wasClosed = ensureMobileSidebarOpen();
     const delay = wasClosed ? 350 : 0;
     removeDrawerBackdrop();
+    showTourOverlay();
 
     setTimeout(() => {
         removeDrawerBackdrop();
@@ -383,11 +586,24 @@ const triggerTicketsHighlight = () => {
 
         const ticketNavBtn = document.querySelector('a[data-nav-id="tickets"]') || document.querySelector('a[href*="/tickets/"]');
         if (ticketNavBtn) {
-            ticketNavBtn.classList.add('ring-4', 'ring-emerald-500', 'animate-pulse', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'border', 'border-emerald-400');
+            ticketNavBtn.classList.add('portal-tour-highlighted', 'relative', 'z-[95]', 'ring-4', 'ring-emerald-500', 'animate-pulse', 'bg-emerald-50', 'dark:bg-emerald-950/40', 'border', 'border-emerald-400');
+            
+            showTourStepTooltip(ticketNavBtn, {
+                step: 1,
+                totalSteps: 1,
+                title: 'Helpdesk & Ticket Support',
+                description: 'Opening Tickets Support to view realtime chats and messages...',
+                badgeColor: 'emerald'
+            });
+
             setTimeout(() => {
+                hideTourStepTooltip();
+                hideTourOverlay();
                 window.location.href = targetUrl;
-            }, 600);
+            }, 1200);
         } else {
+            hideTourStepTooltip();
+            hideTourOverlay();
             window.location.href = targetUrl;
         }
     }, delay);
