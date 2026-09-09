@@ -2,15 +2,16 @@ import { getPreference, setPreference } from './storage.js';
 import ApexCharts from 'apexcharts';
 import { Modal, initTooltips } from 'flowbite';
 import { DashboardCarousel } from './slider.js';
-import { fetchUserDashboardCounts, fetchUsers } from '@/backend/api/users.api.js';
+import { fetchUserDashboardCounts, fetchUsers, invalidateUsersCache } from '@/backend/api/users.api.js';
 import { fetchSystems } from '@/backend/api/systems.api.js';
-import { fetchTickets } from '@/backend/api/tickets.api.js';
+import { fetchTickets, invalidateTicketsCache } from '@/backend/api/tickets.api.js';
 import { getCachedCurrentUser, detectActiveUserSession } from '@/backend/api/auth.api.js';
 import { fetchExternalAccountLinks } from '@/backend/api/external-links.api.js';
 import { countGipsByStaff, fetchGipsByStaff } from '@/backend/api/gips.api.js';
 import { initAnnouncementBanner } from './announcement-banner.js';
 import { subscribeToPresenceSync, startUserUptimeTracker, formatTotalUptime } from '@/backend/api/presence.api.js';
 import { supabase } from '@/backend/api/supabase.js';
+import { getAvatarUrl } from './avatar.js';
 
 /* START THEME TOGGLER */
 const initThemeToggler = () => {
@@ -148,12 +149,17 @@ class AdminDashboardController {
             }
         });
 
-        // 2. Supabase Postgres Changes Subscription for users table
+        // 2. Supabase Postgres Changes Subscription for users and tickets table
         this.staffChannel = supabase
             .channel('dashboard-staffs-realtime')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, async () => {
+                invalidateUsersCache();
                 await this.renderStaffList();
                 await this.renderUserMetrics();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, async () => {
+                invalidateTicketsCache();
+                await this.renderTicketMetrics();
             })
             .subscribe();
 
@@ -216,11 +222,7 @@ class AdminDashboardController {
     }
 
     getStaffAvatarUrl(user) {
-        const directAvatar = user?.avatar_url || user?.profile_image_url || user?.photo_url || user?.image_url || user?.avatar;
-        if (directAvatar) return directAvatar;
-
-        const name = user?.full_name || user?.username || user?.email || 'Staff';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1A56DB&color=fff&bold=true`;
+        return getAvatarUrl(user);
     }
 
     /* START DEVELOPER CLONE EXCLUSION */

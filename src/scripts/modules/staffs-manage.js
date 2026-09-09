@@ -6,6 +6,7 @@ import { supabase } from '@/backend/api/supabase.js';
 import { createNotification } from '@/backend/api/notifications.api.js';
 import { staffAddDraftStorage, staffsCacheStorage } from '@/scripts/modules/storage.js';
 import { subscribeToPresenceSync } from '@/backend/api/presence.api.js';
+import { getAvatarUrl } from './avatar.js';
 
 export const initStaffsManage = () => {
     const table = document.getElementById('sorting-table');
@@ -162,10 +163,7 @@ export const initStaffsManage = () => {
         modal.show();
     });
     const esc = (v = '') => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    const avatar = (person) => {
-        const name = typeof person === 'string' ? person : person?.full_name || person?.username || 'User';
-        return (typeof person === 'object' && person?.avatar_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-    };
+    const avatar = (person) => getAvatarUrl(person, 'User');
     const na = (v) => v ? esc(v) : '<span class="italic text-gray-400 dark:text-gray-600">N/A</span>';
     const roleName = (u) => u?.roles?.name || roles.find(r => Number(r.id) === Number(u?.role_id))?.name || `Role ${u?.role_id || 'N/A'}`;
     const officeName = (u) => u?.offices?.name || offices.find(o => Number(o.id) === Number(u?.office_id))?.name || 'N/A';

@@ -3,6 +3,7 @@ import { fetchGipsByStaff, fetchGipById, createGip, updateGip, archiveGip } from
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
 import { assistantAddDraftStorage, assistantsCacheStorage } from '@/scripts/modules/storage.js';
 import { showAssistantDetailsModal } from '@/scripts/modules/modals.js';
+import { getAvatarUrl } from './avatar.js';
 
 /* START STAFF ASSISTANTS MANAGEMENT CONTROLLER */
 export const initAssistantsManage = () => {
@@ -495,7 +496,7 @@ export const initAssistantsManage = () => {
             phone: g.phone || '',
             created_at: g.created_at,
             status: g.is_archived || g.status === 'archived' ? 'Archived' : (g.status === 'online' ? 'Active' : 'Offline'),
-            avatar: g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.full_name)}&background=random`
+            avatar: getAvatarUrl(g, 'GIP')
         }));
 
         // Cache the latest assistants in localStorage
@@ -690,7 +691,7 @@ export const initAssistantsManage = () => {
                     email: data.email || '',
                     phone: data.phone || '',
                     status: data.status === 'online' ? 'Active' : 'Offline',
-                    avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name)}&background=random`
+                    avatar: getAvatarUrl(data, 'GIP')
                 };
             }
         } catch (err) {

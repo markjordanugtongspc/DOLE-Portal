@@ -4,9 +4,20 @@
  * IndexedDB Storage, Flowbite Masonry Grid Gallery, and Export Suite.
  */
 
-import scribe from 'scribe.js-ocr';
 import { authStorage, ocrImageStorage } from './storage.js';
 import { Modal } from 'flowbite';
+
+/* START LAZY SCRIBE OCR LOADER - On-demand initialization only when processing starts */
+let scribeInstance = null;
+const getScribeInstance = async () => {
+    if (!scribeInstance) {
+        logOcr('Initializing Scribe.js OCR engine on user demand...');
+        const mod = await import('scribe.js-ocr');
+        scribeInstance = mod.default || mod;
+    }
+    return scribeInstance;
+};
+/* END LAZY SCRIBE OCR LOADER */
 
 /* START CANVAS 2D WILLREADFREQUENTLY & LEPTONICA WARNING SUPPRESSION */
 // Optimize Canvas 2D contexts for OCR readback operations and eliminate browser readback warnings
@@ -401,7 +412,8 @@ const cookDocumentOcr = async (docId) => {
 
         logOcr(`Prepared File object for Scribe: "${file.name}" (MIME: ${file.type}, Size: ${file.size} bytes)`);
 
-        // Extract text using Scribe.js OCR
+        // Extract text using Scribe.js OCR (loaded on-demand)
+        const scribe = await getScribeInstance();
         const extracted = await scribe.extractText([file], ['eng'], 'txt');
         const durationMs = Math.round(performance.now() - startTime);
         const rawText = typeof extracted === 'string' ? extracted : String(extracted || '');
@@ -435,6 +447,7 @@ const cookDocumentOcr = async (docId) => {
         // Gracefully release Scribe memory workers
         try {
             await scribe.terminate();
+            scribeInstance = null;
             logOcr('Scribe OCR worker pool terminated cleanly.');
         } catch {
             // Worker pool will re-initialize on next demand

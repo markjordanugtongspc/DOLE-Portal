@@ -9,6 +9,7 @@ import { fetchUserById, updateUser } from '@/backend/api/users.api.js';
 import { fetchGipsByStaff } from '@/backend/api/gips.api.js';
 import { supabase } from '@/backend/api/supabase.js';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
+import { getAvatarUrl } from './avatar.js';
 
 const formatDate = (value) => {
     try {
@@ -25,10 +26,7 @@ const esc = (value = '') => String(value ?? '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-const avatar = (person) => {
-    const name = typeof person === 'string' ? person : person?.full_name || person?.username || 'DOLE Portal';
-    return (typeof person === 'object' && person?.avatar_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=DBEAFE&color=1D4ED8&bold=true`;
-};
+const avatar = (person) => getAvatarUrl(person, 'DOLE Portal');
 
 const approvalState = (user) => String(user?.approval_status || 'APPROVED').toUpperCase();
 

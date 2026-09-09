@@ -12,52 +12,96 @@
 import { supabase } from './supabase.js';
 import { recordAuditLog } from './audit-logs.api.js';
 
-/**
- * Fetch all active tickets with category join.
- * @param {object} filters  â€” { category_id, priority, status, search }
- * @returns {{ data: Array, error: string|null }}
- */
-export async function fetchTickets(filters = {}) {
-    let query = supabase
-        .from('tickets')
-        .select(`
-            id,
-            ticket_number,
-            subject,
-            priority,
-            status,
-            team,
-            tags,
-            unread_count,
-            last_activity,
-            created_at,
-            updated_at,
-            created_by,
-            category_id,
-            ticket_categories ( name, icon ),
-            users!tickets_created_by_fkey ( full_name, username, email, avatar_url )
-        `)
-        .is('archived_at', null)
-        .order('created_at', { ascending: false });
+let ticketsCache = null;
+let ticketsCacheTime = 0;
+let pendingTicketsPromise = null;
+const TICKETS_CACHE_TTL_MS = 10000; // 10 seconds cache
 
-    if (filters.category_id) {
-        query = query.eq('category_id', filters.category_id);
-    }
-    if (filters.priority && filters.priority !== 'All') {
-        query = query.eq('priority', filters.priority);
-    }
-    if (filters.status && filters.status !== 'All') {
-        query = query.eq('status', filters.status);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-        if (window.DEBUG) window.DEBUG.error('TICKETS-API', 'Failed to fetch tickets', error.message);
-        return { data: [], error: error.message };
-    }
-    return { data: data || [], error: null };
+/* START INVALIDATE TICKETS CACHE - Clears in-memory tickets cache on mutations or realtime events */
+export function invalidateTicketsCache() {
+    ticketsCache = null;
+    ticketsCacheTime = 0;
+    pendingTicketsPromise = null;
 }
+/* END INVALIDATE TICKETS CACHE */
+
+/* START FETCH TICKETS - Fetch all active tickets with category join, deduplicating simultaneous requests */
+export async function fetchTickets(filters = {}, force = false) {
+    const hasFilters = Object.keys(filters || {}).length > 0;
+    const now = Date.now();
+
+    // Serve from cache if general unfiltered query within TTL
+    if (!hasFilters && !force && ticketsCache && (now - ticketsCacheTime < TICKETS_CACHE_TTL_MS)) {
+        return { data: ticketsCache, error: null };
+    }
+
+    // Deduplicate in-flight promises so simultaneous calls share one network request
+    if (!hasFilters && !force && pendingTicketsPromise) {
+        return pendingTicketsPromise;
+    }
+
+    const fetchPromise = (async () => {
+        let query = supabase
+            .from('tickets')
+            .select(`
+                id,
+                ticket_number,
+                subject,
+                priority,
+                status,
+                team,
+                tags,
+                unread_count,
+                last_activity,
+                created_at,
+                updated_at,
+                created_by,
+                category_id,
+                ticket_categories ( name, icon ),
+                users!tickets_created_by_fkey ( full_name, username, email, avatar_url )
+            `)
+            .is('archived_at', null)
+            .order('created_at', { ascending: false });
+
+        if (filters.category_id) {
+            query = query.eq('category_id', filters.category_id);
+        }
+        if (filters.priority && filters.priority !== 'All') {
+            query = query.eq('priority', filters.priority);
+        }
+        if (filters.status && filters.status !== 'All') {
+            query = query.eq('status', filters.status);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            if (window.DEBUG) window.DEBUG.error('TICKETS-API', 'Failed to fetch tickets', error.message);
+            return { data: [], error: error.message };
+        }
+
+        const resultData = data || [];
+        if (!hasFilters) {
+            ticketsCache = resultData;
+            ticketsCacheTime = Date.now();
+        }
+        return { data: resultData, error: null };
+    })();
+
+    if (!hasFilters && !force) {
+        pendingTicketsPromise = fetchPromise;
+    }
+
+    try {
+        const result = await fetchPromise;
+        return result;
+    } finally {
+        if (!hasFilters) {
+            pendingTicketsPromise = null;
+        }
+    }
+}
+/* END FETCH TICKETS */
 
 /**
  * Fetch a single ticket by its ticket_number (e.g., 'TK-0001').
@@ -89,6 +133,7 @@ export async function fetchTicketByNumber(ticketNumber) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function createTicket(payload) {
+    invalidateTicketsCache();
     const newTicket = {
         ...payload,
         status: 'Pending',
@@ -122,6 +167,7 @@ export async function createTicket(payload) {
  * @returns {{ error: string|null }}
  */
 export async function openTicket(ticketId) {
+    invalidateTicketsCache();
     const { error } = await supabase
         .from('tickets')
         .update({
@@ -143,6 +189,7 @@ export async function openTicket(ticketId) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function updateTicket(ticketId, updates) {
+    invalidateTicketsCache();
     const isClosing = updates.status === 'Closed';
     const ticketUpdates = {
         ...updates,
@@ -171,6 +218,7 @@ export async function updateTicket(ticketId, updates) {
  * @returns {{ error: string|null }}
  */
 export async function closeTicket(ticketId) {
+    invalidateTicketsCache();
     const { error } = await supabase
         .from('tickets')
         .update({ status: 'Closed', unread_count: 0, updated_at: new Date().toISOString() })
@@ -188,6 +236,7 @@ export async function closeTicket(ticketId) {
  * @returns {{ error: string|null }}
  */
 export async function archiveTicket(ticketId) {
+    invalidateTicketsCache();
     const { error } = await supabase
         .from('tickets')
         .update({ archived_at: new Date().toISOString(), unread_count: 0 })

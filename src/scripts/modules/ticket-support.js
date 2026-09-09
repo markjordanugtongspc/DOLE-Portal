@@ -31,6 +31,7 @@ import { Modal } from 'flowbite';
 import { getCachedCurrentUser, detectActiveUserSession } from '@/backend/api/auth.api.js';
 
 import { fetchArticles } from '@/backend/api/articles.api.js';
+import { getAvatarUrl } from './avatar.js';
 
 // Category theme styling helper for articles
 const getArticleCategoryTheme = (category = '') => {
@@ -108,10 +109,7 @@ const formatFileSize = (bytes) => {
 
 const esc = (v = '') => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
-const avatar = (person) => {
-    const name = typeof person === 'string' ? person : person?.full_name || person?.username || 'User';
-    return (typeof person === 'object' && person?.avatar_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
-};
+const avatar = (person) => getAvatarUrl(person, 'User');
 
 const fmtDate = (iso) => {
     if (!iso) return 'N/A';

@@ -5,6 +5,7 @@
 
 import { Modal } from 'flowbite';
 import { fetchCurrentProfile, updateCurrentProfile, uploadUserAvatar } from '@/backend/api/profile.api.js';
+import { getAvatarUrl } from './avatar.js';
 
 let imageModalInstance = null;
 let currentPreviewUrl = '';
@@ -176,7 +177,7 @@ export function showAssistantDetailsModal(assistant = {}) {
         const viewPhone = modalEl.querySelector('#view-phone');
         const viewStatus = modalEl.querySelector('#view-status');
 
-        if (viewAvatar) viewAvatar.src = assistant.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assistant.name || 'GIP')}&background=random`;
+        if (viewAvatar) viewAvatar.src = getAvatarUrl(assistant, 'GIP');
         if (viewName) viewName.textContent = assistant.name || '';
         if (viewEmail) viewEmail.textContent = assistant.email || '';
         if (viewUsername) viewUsername.textContent = assistant.username || '';
@@ -305,10 +306,7 @@ const escapeSettingsHtml = (value = '') => String(value)
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
 
-const settingsAvatarFallback = (user = {}) => {
-    const profile = user || {};
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.username || 'User')}&background=DBEAFE&color=1D4ED8&bold=true`;
-};
+const settingsAvatarFallback = (user = {}) => getAvatarUrl(user, 'User');
 
 const settingsField = (id, label, type = 'text', extra = '') => `
     <div>

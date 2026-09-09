@@ -72,33 +72,78 @@ const selectUsers = async (buildQuery) => {
     return result;
 };
 
-/* START FETCH USERS - Retrieves users with optional role and archive filtering */
-export async function fetchUsers(roleId = null, includeArchived = false) {
-    const { data, error } = await selectUsers((selectClause) => {
-        let query = supabase
-            .from('users')
-            .select(selectClause);
+let usersCache = null;
+let usersCacheTime = 0;
+let pendingUsersPromise = null;
+const USERS_CACHE_TTL_MS = 10000; // 10 seconds cache
 
-        if (includeArchived) {
-            query = query.not('archived_at', 'is', null);
-        } else {
-            query = query.is('archived_at', null);
-        }
+/* START INVALIDATE USERS CACHE - Clears in-memory users cache on mutations or realtime events */
+export function invalidateUsersCache() {
+    usersCache = null;
+    usersCacheTime = 0;
+    pendingUsersPromise = null;
+}
+/* END INVALIDATE USERS CACHE */
 
-        query = query.order('created_at', { ascending: false });
+/* START FETCH USERS - Retrieves users with optional role and archive filtering, deduplicating simultaneous requests */
+export async function fetchUsers(roleId = null, includeArchived = false, force = false) {
+    const isStandardQuery = roleId === null && !includeArchived;
+    const now = Date.now();
 
-        if (roleId !== null) {
-            query = query.eq('role_id', roleId);
-        }
-
-        return query;
-    });
-
-    if (error) {
-        if (window.DEBUG) window.DEBUG.error('USERS-API', 'Failed to fetch users', error.message);
-        return { data: [], error: error.message };
+    if (isStandardQuery && !force && usersCache && (now - usersCacheTime < USERS_CACHE_TTL_MS)) {
+        return { data: usersCache, error: null };
     }
-    return { data: data || [], error: null };
+
+    if (isStandardQuery && !force && pendingUsersPromise) {
+        return pendingUsersPromise;
+    }
+
+    const fetchPromise = (async () => {
+        const { data, error } = await selectUsers((selectClause) => {
+            let query = supabase
+                .from('users')
+                .select(selectClause);
+
+            if (includeArchived) {
+                query = query.not('archived_at', 'is', null);
+            } else {
+                query = query.is('archived_at', null);
+            }
+
+            query = query.order('created_at', { ascending: false });
+
+            if (roleId !== null) {
+                query = query.eq('role_id', roleId);
+            }
+
+            return query;
+        });
+
+        if (error) {
+            if (window.DEBUG) window.DEBUG.error('USERS-API', 'Failed to fetch users', error.message);
+            return { data: [], error: error.message };
+        }
+
+        const resultData = data || [];
+        if (isStandardQuery) {
+            usersCache = resultData;
+            usersCacheTime = Date.now();
+        }
+        return { data: resultData, error: null };
+    })();
+
+    if (isStandardQuery && !force) {
+        pendingUsersPromise = fetchPromise;
+    }
+
+    try {
+        const result = await fetchPromise;
+        return result;
+    } finally {
+        if (isStandardQuery) {
+            pendingUsersPromise = null;
+        }
+    }
 }
 /* END FETCH USERS */
 
@@ -157,6 +202,7 @@ export async function fetchUserById(userId) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function createUser(payload) {
+    invalidateUsersCache();
     const safePayload = { ...payload, approval_status: payload.approval_status || 'APPROVED' };
     if (safePayload.password) safePayload.password = await hashCredential(safePayload.password);
     if (safePayload.pin) safePayload.pin = await hashCredential(safePayload.pin);
@@ -195,6 +241,7 @@ export async function createUser(payload) {
  * @returns {{ data: object|null, error: string|null }}
  */
 export async function updateUser(userId, updates) {
+    invalidateUsersCache();
     const safeUpdates = { ...updates };
     if (safeUpdates.password) safeUpdates.password = await hashCredential(safeUpdates.password);
     if (safeUpdates.pin) safeUpdates.pin = await hashCredential(safeUpdates.pin);
@@ -243,6 +290,7 @@ export async function updateUser(userId, updates) {
  * @returns {{ error: string|null }}
  */
 export async function archiveUser(userId) {
+    invalidateUsersCache();
     const { error } = await supabase
         .from('users')
         .update({ archived_at: new Date().toISOString(), status: 'offline' })

@@ -1,14 +1,14 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadEnv } from 'vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(__dirname, '../dist');
+const configDir = path.resolve(__dirname, '../src/backend/config');
 const port = Number(process.env.PORT || 4180);
 
-const configDir = path.resolve(__dirname, '../src/backend/config');
 const localEnvironment = {
     ...loadEnv('production', process.cwd(), ''),
     ...loadEnv('development', process.cwd(), ''),
@@ -20,25 +20,18 @@ for (const [name, value] of Object.entries(localEnvironment)) {
 }
 process.env.PORTAL_APP_ORIGIN = `http://localhost:${port}`;
 
-const apiHandlers = {
-    '/api/auth/login': () => import(`../api/auth/login.js?update=${Date.now()}`),
-    '/api/auth/me': () => import(`../api/auth/me.js?update=${Date.now()}`),
-    '/api/auth/logout': () => import(`../api/auth/logout.js?update=${Date.now()}`),
-    '/api/profile': () => import(`../api/profile.js?update=${Date.now()}`),
-    '/api/audit-logs': () => import(`../api/audit-logs.js?update=${Date.now()}`),
-    '/api/external-account-links': () => import(`../api/external-account-links.js?update=${Date.now()}`),
-    '/api/external-system-directory': () => import(`../api/external-system-directory.js?update=${Date.now()}`),
-    '/api/sso/authorize': () => import(`../api/sso/authorize.js?update=${Date.now()}`),
-    '/api/sso/consume': () => import(`../api/sso/consume.js?update=${Date.now()}`)
-};
+const apiIndexPath = path.resolve(__dirname, '../api/index.js');
 
+/* START READ JSON BODY UTILITY - Parses incoming JSON request payload */
 const readJsonBody = async (req) => {
     let raw = '';
     for await (const chunk of req) raw += chunk;
     if (!raw) return {};
     try { return JSON.parse(raw); } catch { return raw; }
 };
+/* END READ JSON BODY UTILITY */
 
+/* START DECORATE RESPONSE UTILITY - Adds status and json helper methods to HTTP response */
 const decorateResponse = (res) => {
     res.status = (status) => { res.statusCode = status; return res; };
     res.json = (payload) => {
@@ -48,6 +41,7 @@ const decorateResponse = (res) => {
     };
     return res;
 };
+/* END DECORATE RESPONSE UTILITY */
 
 const MIME_TYPES = {
     '.html': 'text/html; charset=utf-8',
@@ -63,6 +57,7 @@ const MIME_TYPES = {
     '.woff2': 'font/woff2'
 };
 
+/* START SERVE STATIC FILES - Serves built production assets from dist directory */
 const serveStatic = (req, res, pathname) => {
     let filePath = path.join(distDir, pathname);
     
@@ -92,22 +87,27 @@ const serveStatic = (req, res, pathname) => {
         res.end('Server Error loading static file');
     }
 };
+/* END SERVE STATIC FILES */
 
+/* START LOCAL PREVIEW SERVER - Serves production bundle and forwards API calls to centralized router */
 const server = http.createServer(async (req, res) => {
     const pathname = new URL(req.url || '/', `http://localhost:${port}`).pathname;
-    const loadHandler = apiHandlers[pathname];
 
-    if (!loadHandler) return serveStatic(req, res, pathname);
-
-    try {
-        req.body = await readJsonBody(req);
-        const { default: handler } = await loadHandler();
-        await handler(req, decorateResponse(res));
-    } catch (error) {
-        console.error('[LOCAL PREVIEW API] Failed:', error.message);
-        if (!res.headersSent) decorateResponse(res).status(500).json({ error: 'Local Preview API failed.' });
+    if (pathname.startsWith('/api/') || pathname === '/api') {
+        try {
+            req.body = await readJsonBody(req);
+            const { default: handler } = await import(`${pathToFileURL(apiIndexPath).href}?update=${Date.now()}`);
+            await handler(req, decorateResponse(res));
+        } catch (error) {
+            console.error('[LOCAL PREVIEW API] Failed:', error);
+            if (!res.headersSent) decorateResponse(res).status(500).json({ error: error.message || 'Local Preview API failed.' });
+        }
+        return;
     }
+
+    serveStatic(req, res, pathname);
 });
+/* END LOCAL PREVIEW SERVER */
 
 server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {

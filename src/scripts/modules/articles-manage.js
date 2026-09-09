@@ -2,6 +2,7 @@ import { fetchArticles, fetchArticleById, createArticle, updateArticle, uploadAr
 import { saveArticleDraft, getArticleDraft, clearArticleDraft } from '@/scripts/modules/storage.js';
 import { supabase } from '@/backend/api/supabase.js';
 import { Modal } from 'flowbite';
+import { getAvatarUrl } from './avatar.js';
 
 const ARTICLE_STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET || 'system-images';
 
@@ -860,15 +861,11 @@ class ArticlesBrowseController {
 
     getAuthorInfo(category) {
         const cat = String(category || '').trim().toLowerCase();
-        if (cat === 'user guide') {
-            return { name: 'Dev Ops Team', avatar: 'https://ui-avatars.com/api/?name=Dev+Ops&background=random' };
-        } else if (cat === 'troubleshooting') {
-            return { name: 'IT Support', avatar: 'https://ui-avatars.com/api/?name=IT+Support&background=random' };
-        } else if (cat === 'tutorial') {
-            return { name: 'System Admin', avatar: 'https://ui-avatars.com/api/?name=Admin+Sys&background=random' };
-        } else {
-            return { name: 'System Admin', avatar: 'https://ui-avatars.com/api/?name=Admin+Sys&background=random' };
-        }
+        let name = 'System Admin';
+        if (cat === 'user guide') name = 'Dev Ops Team';
+        else if (cat === 'troubleshooting') name = 'IT Support';
+        else if (cat === 'tutorial') name = 'System Admin';
+        return { name, avatar: getAvatarUrl(name) };
     }    sanitizeSummaryAndExtractCover(rawHtml = '', articleTitle = '') {
         if (!rawHtml) return { coverBannerHtml: '', summaryContent: '' };
         try {
@@ -1065,15 +1062,11 @@ class ArticlesViewController {
 
     getAuthorInfo(category) {
         const cat = String(category || '').trim().toLowerCase();
-        if (cat === 'user guide') {
-            return { name: 'Dev Ops Team', avatar: 'https://ui-avatars.com/api/?name=Dev+Ops&background=random' };
-        } else if (cat === 'troubleshooting') {
-            return { name: 'IT Support', avatar: 'https://ui-avatars.com/api/?name=IT+Support&background=random' };
-        } else if (cat === 'tutorial') {
-            return { name: 'System Admin', avatar: 'https://ui-avatars.com/api/?name=Admin+Sys&background=random' };
-        } else {
-            return { name: 'System Admin', avatar: 'https://ui-avatars.com/api/?name=Admin+Sys&background=random' };
-        }
+        let name = 'System Admin';
+        if (cat === 'user guide') name = 'Dev Ops Team';
+        else if (cat === 'troubleshooting') name = 'IT Support';
+        else if (cat === 'tutorial') name = 'System Admin';
+        return { name, avatar: getAvatarUrl(name) };
     }
 
     render(art) {

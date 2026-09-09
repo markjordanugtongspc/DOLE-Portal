@@ -5,6 +5,7 @@ import pkg from '../../../package.json';
 import { getCachedCurrentUser, logout } from '@/backend/api/auth.api.js';
 import { authStorage } from '@/scripts/modules/storage.js';
 import { Drawer } from 'flowbite';
+import { invalidateTicketsCache } from '@/backend/api/tickets.api.js';
 
 let sidebarDrawerInstance = null;
 let sidebarRealtimeChannel = null;
@@ -111,9 +112,11 @@ const setupSidebarRealtime = (role, userId) => {
     sidebarRealtimeChannel = supabase
         .channel('sidebar-realtime-notifications')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
+            invalidateTicketsCache();
             updateSidebarTicketsBadge(role, userId);
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_messages' }, () => {
+            invalidateTicketsCache();
             updateSidebarTicketsBadge(role, userId);
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
