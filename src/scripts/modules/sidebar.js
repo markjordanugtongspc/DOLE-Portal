@@ -245,7 +245,7 @@ const setupDynamicSidebar = () => {
     // Initialize Flowbite Drawer programmatically since it is dynamically injected
     const sidebarNode = document.getElementById('default-sidebar');
     const toggleBtns = document.querySelectorAll('[data-drawer-toggle="default-sidebar"]');
-    if (sidebarNode && toggleBtns.length > 0) {
+    if (sidebarNode) {
         if (sidebarDrawerInstance) {
             try { sidebarDrawerInstance.destroy(); } catch {}
         }
@@ -255,8 +255,16 @@ const setupDynamicSidebar = () => {
             bodyScrolling: false,
             edge: false,
             edgeOffset: '',
-            onShow: () => window.dispatchEvent(new CustomEvent('portal:sidebar-open')),
-            onHide: () => window.dispatchEvent(new CustomEvent('portal:sidebar-close'))
+            onShow: () => {
+                if (window.matchMedia('(max-width: 639px)').matches) {
+                    document.body.classList.add('overflow-hidden');
+                }
+                window.dispatchEvent(new CustomEvent('portal:sidebar-open'));
+            },
+            onHide: () => {
+                document.body.classList.remove('overflow-hidden');
+                window.dispatchEvent(new CustomEvent('portal:sidebar-close'));
+            }
         });
 
         toggleBtns.forEach((btn) => {
@@ -270,6 +278,44 @@ const setupDynamicSidebar = () => {
                 }
             });
         });
+
+        // Set up outside-click dismissal and mobile resize scroll sync
+        if (!sidebarNode.dataset.mobileEventsBound) {
+            sidebarNode.dataset.mobileEventsBound = 'true';
+
+            const syncSidebarMobileScroll = () => {
+                const isMobile = window.matchMedia('(max-width: 639px)').matches;
+                if (!isMobile) {
+                    document.body.classList.remove('overflow-hidden');
+                    return;
+                }
+                const isSidebarOpen = !sidebarNode.classList.contains('translate-x-full') && !sidebarNode.classList.contains('-translate-x-full');
+                document.body.classList.toggle('overflow-hidden', isSidebarOpen);
+            };
+
+            const sidebarObserver = new MutationObserver(syncSidebarMobileScroll);
+            sidebarObserver.observe(sidebarNode, { attributes: true, attributeFilter: ['class', 'style'] });
+            window.addEventListener('resize', syncSidebarMobileScroll, { passive: true });
+
+            document.addEventListener('pointerdown', (event) => {
+                const isMobile = window.matchMedia('(max-width: 639px)').matches;
+                if (!isMobile) return;
+                const isSidebarOpen = !sidebarNode.classList.contains('translate-x-full') && !sidebarNode.classList.contains('-translate-x-full');
+                if (!isSidebarOpen) return;
+
+                // Ignore if click is within sidebar or on any trigger button
+                if (sidebarNode.contains(event.target)) return;
+                if (event.target.closest('[data-drawer-toggle="default-sidebar"], [data-drawer-show="default-sidebar"], [data-drawer-target="default-sidebar"]')) return;
+
+                if (sidebarDrawerInstance) {
+                    sidebarDrawerInstance.hide();
+                } else {
+                    sidebarNode.classList.add('translate-x-full');
+                    document.body.classList.remove('overflow-hidden');
+                    window.dispatchEvent(new CustomEvent('portal:sidebar-close'));
+                }
+            });
+        }
     }
 
     // Update Role Badge
