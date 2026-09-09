@@ -31,7 +31,7 @@
   <div class="sm:ml-64 min-h-screen flex flex-col">
 
     <!-- Main Content -->
-    <main class="flex-1 p-6 md:p-8 space-y-6">
+    <main id="main-content" class="flex-1 p-6 md:p-8 space-y-6 transition-all duration-300">
       <!-- Flowbite Announcement CTA Banner Slot -->
       <div id="announcement-banner-slot"></div>
 
@@ -344,12 +344,12 @@
       </div>
 
       <!-- Stats View Container -->
-      <div id="stats-view-container">
+      <div id="stats-view-container" class="w-full min-w-0 overflow-hidden">
         <!-- Grid for Charts and Active Staff -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full min-w-0">
           <!-- Left: Bar Chart Card -->
           <div
-            class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full">
+            class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors h-full w-full min-w-0 overflow-hidden">
             <div class="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
               <div class="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-gray-500 dark:text-gray-400">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -380,7 +380,7 @@
             </div>
 
             <!-- Bar Chart container -->
-            <div id="bar-chart" class="min-h-[280px] w-full"></div>
+            <div id="bar-chart" class="min-h-[280px] w-full min-w-0 overflow-hidden"></div>
 
             <div class="border-t border-gray-100 dark:border-gray-800 pt-4 mt-4">
               <div class="flex justify-between items-center">
@@ -397,7 +397,7 @@
 
           <!-- Right: Current Active Staff Card Container -->
           <div
-            class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors relative h-full">
+            class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm flex flex-col justify-between transition-colors relative h-full w-full min-w-0 overflow-hidden">
             <div>
               <div class="border-b border-gray-100 dark:border-gray-800 pb-3 mb-4">
                 <h3 class="text-lg font-extrabold text-gray-900 dark:text-white">Staff list</h3>
@@ -545,7 +545,7 @@
         </div>
         <!-- Area Chart (Tickets Support) -->
         <div
-          class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm w-full transition-colors mt-6">
+          class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 md:p-6 rounded-none shadow-sm w-full min-w-0 overflow-hidden transition-colors mt-6">
           <div class="flex justify-between">
             <div>
               <h5 id="admin-tickets-period-count" class="text-2xl font-bold text-gray-900 dark:text-white" role="status"
@@ -565,7 +565,7 @@
                   class="sr-only">Loading percentage...</span></span>
             </div>
           </div>
-          <div id="labels-chart" class="py-4 md:py-6">
+          <div id="labels-chart" class="py-4 md:py-6 w-full min-w-0 overflow-hidden">
             <div role="status" class="h-[280px] w-full animate-pulse px-2 pb-2 pt-3" aria-label="Loading area chart">
               <div class="relative h-full overflow-hidden border-b border-gray-100 dark:border-gray-800">
                 <div class="absolute left-2 top-0 space-y-3">
