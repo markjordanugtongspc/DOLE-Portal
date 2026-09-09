@@ -406,6 +406,47 @@ export const ocrImageStorage = {
 };
 /* END OCR IMAGE INDEXEDDB STORAGE */
 
+/* START STAFFS AND ASSISTANTS LOCALSTORAGE CACHE */
+const STAFFS_CACHE_KEY = 'portal_staffs_cache';
+const ASSISTANTS_CACHE_KEY = 'portal_assistants_cache';
+
+export const staffsCacheStorage = {
+    saveStaffs(data) {
+        if (!data) return;
+        writeValue(STAFFS_CACHE_KEY, JSON.stringify(data));
+    },
+    getStaffs() {
+        try {
+            const raw = readValue(STAFFS_CACHE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    },
+    clearStaffs() {
+        removeValue(STAFFS_CACHE_KEY);
+    }
+};
+
+export const assistantsCacheStorage = {
+    saveAssistants(data) {
+        if (!data) return;
+        writeValue(ASSISTANTS_CACHE_KEY, JSON.stringify(data));
+    },
+    getAssistants() {
+        try {
+            const raw = readValue(ASSISTANTS_CACHE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    },
+    clearAssistants() {
+        removeValue(ASSISTANTS_CACHE_KEY);
+    }
+};
+/* END STAFFS AND ASSISTANTS LOCALSTORAGE CACHE */
+
 export const appStorage = {
     auth: authStorage,
     preferences: preferencesStorage,
@@ -413,7 +454,9 @@ export const appStorage = {
     staffAddDraft: staffAddDraftStorage,
     assistantAddDraft: assistantAddDraftStorage,
     ticketCache: ticketCacheStorage,
-    ocrImages: ocrImageStorage
+    ocrImages: ocrImageStorage,
+    staffsCache: staffsCacheStorage,
+    assistantsCache: assistantsCacheStorage
 };
 
 export const setPreference = (...args) => preferencesStorage.set(...args);

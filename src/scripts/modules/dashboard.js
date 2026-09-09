@@ -223,7 +223,20 @@ class AdminDashboardController {
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1A56DB&color=fff&bold=true`;
     }
 
+    /* START DEVELOPER CLONE EXCLUSION */
+    isDeveloperClone(user) {
+        if (!user) return false;
+        const name = String(user.full_name || '').toUpperCase();
+        const username = String(user.username || '').toUpperCase();
+        const email = String(user.email || '').toUpperCase();
+        return name.includes('MARK JORDAN') || name.includes('UGTONG') ||
+               username.includes('MARKJORDAN') || username.includes('UGTONG') ||
+               email.includes('MARKJORDAN') || email.includes('UGTONG');
+    }
+    /* END DEVELOPER CLONE EXCLUSION */
+
     isStaffUser(user) {
+        if (this.isDeveloperClone(user)) return false;
         const roleName = String(user?.roles?.name || '').trim().toLowerCase();
         return ['hr', 'staff'].includes(roleName);
     }

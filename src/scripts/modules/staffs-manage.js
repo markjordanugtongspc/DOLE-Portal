@@ -4,7 +4,7 @@ import { archiveGip, createGip, fetchAllGips, updateGip } from '@/backend/api/gi
 import { archiveUser, createUser, fetchOffices, fetchRoles, fetchUsers, updateUser } from '@/backend/api/users.api.js';
 import { supabase } from '@/backend/api/supabase.js';
 import { createNotification } from '@/backend/api/notifications.api.js';
-import { staffAddDraftStorage } from '@/scripts/modules/storage.js';
+import { staffAddDraftStorage, staffsCacheStorage } from '@/scripts/modules/storage.js';
 import { subscribeToPresenceSync } from '@/backend/api/presence.api.js';
 
 export const initStaffsManage = () => {
@@ -210,16 +210,83 @@ export const initStaffsManage = () => {
         document.querySelector('.dataTable-wrapper')?.classList.add('overflow-y-auto', 'max-h-[600px]');
     };
 
-    // Sort helper: admins (role_id 1) always first, then by created_at ascending
+    /* START DEVELOPER CLONE IDENTIFIER */
+    const isDeveloperClone = (u) => {
+        if (!u) return false;
+        const name = String(u.full_name || '').toUpperCase();
+        const username = String(u.username || '').toUpperCase();
+        const email = String(u.email || '').toUpperCase();
+        return name.includes('MARK JORDAN') || name.includes('UGTONG') ||
+               username.includes('MARKJORDAN') || username.includes('UGTONG') ||
+               email.includes('MARKJORDAN') || email.includes('UGTONG');
+    };
+    /* END DEVELOPER CLONE IDENTIFIER */
+
+    let activeFilter = 'default';
+
+    /* START SORT USERS - Sorts user list according to active filter selection */
     const sortUsers = (list) => {
-        return [...list].sort((a, b) => {
-            const aIsAdmin = Number(a.role_id) === 1;
-            const bIsAdmin = Number(b.role_id) === 1;
+        let filtered = [...list];
+        if (activeFilter === 'online') {
+            filtered = filtered.filter(u => isPersonOnline(u));
+        } else if (activeFilter === 'offline') {
+            filtered = filtered.filter(u => !isPersonOnline(u));
+        }
+
+        if (activeFilter === 'a-z') {
+            return filtered.sort((a, b) => {
+                const aDev = isDeveloperClone(a);
+                const bDev = isDeveloperClone(b);
+                if (aDev && !bDev) return 1;
+                if (!aDev && bDev) return -1;
+                return String(a.full_name || a.username || '').localeCompare(String(b.full_name || b.username || ''));
+            });
+        }
+        if (activeFilter === 'z-a') {
+            return filtered.sort((a, b) => {
+                const aDev = isDeveloperClone(a);
+                const bDev = isDeveloperClone(b);
+                if (aDev && !bDev) return 1;
+                if (!aDev && bDev) return -1;
+                return String(b.full_name || b.username || '').localeCompare(String(a.full_name || a.username || ''));
+            });
+        }
+
+        // Default / Online / Offline sort:
+        // 1. Stick Developer Clone to the very LAST of the list
+        // 2. Super Admin / Admin first
+        // 3. ILIGAN CITY office first
+        // 4. Priority staff ('Lace Arrellano')
+        // 5. created_at ascending
+        return filtered.sort((a, b) => {
+            const aDev = isDeveloperClone(a);
+            const bDev = isDeveloperClone(b);
+            if (aDev && !bDev) return 1;
+            if (!aDev && bDev) return -1;
+
+            const aIsAdmin = Number(a.role_id) === 1 || Number(a.id) === 1;
+            const bIsAdmin = Number(b.role_id) === 1 || Number(b.id) === 1;
             if (aIsAdmin && !bIsAdmin) return -1;
             if (!aIsAdmin && bIsAdmin) return 1;
+
+            const aOffice = officeName(a).toUpperCase();
+            const bOffice = officeName(b).toUpperCase();
+            const aIsIligan = aOffice.includes('ILIGAN');
+            const bIsIligan = bOffice.includes('ILIGAN');
+            if (aIsIligan && !bIsIligan) return -1;
+            if (!aIsIligan && bIsIligan) return 1;
+
+            const aName = String(a.full_name || '').toUpperCase();
+            const bName = String(b.full_name || '').toUpperCase();
+            const aIsPriority = aName.includes('LACE');
+            const bIsPriority = bName.includes('LACE');
+            if (aIsPriority && !bIsPriority) return -1;
+            if (!aIsPriority && bIsPriority) return 1;
+
             return new Date(a.created_at) - new Date(b.created_at);
         });
     };
+    /* END SORT USERS */
 
     const skeletonRow = () => `
         <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
@@ -338,15 +405,38 @@ export const initStaffsManage = () => {
             if (officeBtn) officeBtn.classList.remove('hidden');
         }
     };
+    /* START LOAD STAFFS DATA WITH LOCALSTORAGE CACHE */
     const load = async () => {
-        showSkeleton(5);
+        // 1. Try reading from cached state first for instant display
+        const cached = staffsCacheStorage.getStaffs();
+        if (cached && Array.isArray(cached.users) && cached.users.length) {
+            users = cached.users;
+            gips = cached.gips || [];
+            roles = cached.roles || [];
+            offices = cached.offices || [];
+            populateSelects();
+            render(users);
+        } else {
+            showSkeleton(5);
+        }
+
         window.DEBUG?.flow('STAFFS', 'Fetching users, roles, offices, and GIP assistants.');
         const [ur, gr, rr, or] = await Promise.all([fetchUsers(), fetchAllGips(), fetchRoles(), fetchOffices()]);
         if (ur.error) window.DEBUG?.error('STAFFS', 'Users fetch failed.', ur.error);
         if (gr.error) window.DEBUG?.error('STAFFS', 'GIPs fetch failed.', gr.error);
-        users = ur.data || []; gips = gr.data || []; roles = rr.data || []; offices = or.data || [];
-        populateSelects(); render(users);
+        
+        users = ur.data || [];
+        gips = gr.data || [];
+        roles = rr.data || [];
+        offices = or.data || [];
+
+        // Save fresh state to client localStorage
+        staffsCacheStorage.saveStaffs({ users, gips, roles, offices });
+
+        populateSelects();
+        render(users);
     };
+    /* END LOAD STAFFS DATA WITH LOCALSTORAGE CACHE */
 
     const gipBtnState = () => {
         if (!els.addGip || !els.gipBox) return;
@@ -994,7 +1084,43 @@ export const initStaffsManage = () => {
             window.DEBUG?.event('STAFFS', 'Select-all changed.', { checked });
         }
     });
-    els.search?.addEventListener('input', (e) => { const s = e.target.value.toLowerCase().trim(); render(users.filter(u => [u.full_name, u.username, u.email, roleName(u), officeName(u), approvalState(u)].some(v => String(v || '').toLowerCase().includes(s)))); });
+    /* START BIND STAFF FILTER DROPDOWN - Handles filter option selection and reloads list */
+    const bindStaffFilters = () => {
+        document.querySelectorAll('.staff-filter-opt').forEach((btn) => {
+            if (btn.dataset.filterBound) return;
+            btn.dataset.filterBound = 'true';
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const val = btn.dataset.filterVal;
+                if (!val) return;
+                activeFilter = val;
+
+                document.querySelectorAll('.staff-filter-opt').forEach((b) => {
+                    const check = b.querySelector('.filter-check');
+                    if (check) check.classList.toggle('hidden', b.dataset.filterVal !== activeFilter);
+                });
+
+                document.getElementById('staff-filter-dropdown')?.classList.add('hidden');
+
+                if (activeFilter === 'archived') {
+                    showSkeleton(5);
+                    const [ur, gr] = await Promise.all([fetchUsers(null, true), fetchAllGips(true)]);
+                    users = ur.data || [];
+                    gips = gr.data || [];
+                    render(users);
+                } else {
+                    await load();
+                }
+            });
+        });
+    };
+    bindStaffFilters();
+    /* END BIND STAFF FILTER DROPDOWN */
+
+    els.search?.addEventListener('input', (e) => {
+        const s = e.target.value.toLowerCase().trim();
+        render(users.filter(u => [u.full_name, u.username, u.email, roleName(u), officeName(u), approvalState(u)].some(v => String(v || '').toLowerCase().includes(s))));
+    });
     const selectedUserIds = () => Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value).filter(v => !String(v).startsWith('gip:')).map(Number);
     q('bulk-approved')?.addEventListener('click', async (e) => {
         e.preventDefault();

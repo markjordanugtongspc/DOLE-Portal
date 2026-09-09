@@ -7,18 +7,20 @@
 import { supabase } from './supabase.js';
 import { hashCredential } from './auth.api.js';
 
-/**
- * Fetch all active GIP assistants created by a specific staff user.
- * @param {number} createdBy  â€” The staff user's ID (users.id)
- * @returns {{ data: Array, error: string|null }}
- */
-export async function fetchGipsByStaff(createdBy) {
-    const { data, error } = await supabase
+/* START FETCH GIPS BY STAFF - Retrieves GIP assistants created by a specific staff user */
+export async function fetchGipsByStaff(createdBy, includeArchived = false) {
+    let query = supabase
         .from('gips')
-        .select('id, full_name, username, email, phone, avatar_url, status, created_at')
-        .eq('created_by', createdBy)
-        .is('archived_at', null)
-        .order('created_at', { ascending: true });
+        .select('id, full_name, username, email, phone, avatar_url, status, created_at, archived_at')
+        .eq('created_by', createdBy);
+
+    if (includeArchived) {
+        query = query.not('archived_at', 'is', null);
+    } else {
+        query = query.is('archived_at', null);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: true });
 
     if (error) {
         if (window.DEBUG) window.DEBUG.error('GIPS-API', 'Failed to fetch GIPs', error.message);
@@ -26,6 +28,7 @@ export async function fetchGipsByStaff(createdBy) {
     }
     return { data: data || [], error: null };
 }
+/* END FETCH GIPS BY STAFF */
 
 /**
  * Fetch a single GIP assistant by ID.
@@ -47,19 +50,22 @@ export async function fetchGipById(gipId) {
     return { data: data || null, error: null };
 }
 
-/**
- * Fetch all GIPs (admin view — all assistants).
- * @returns {{ data: Array, error: string|null }}
- */
-export async function fetchAllGips() {
-    const { data, error } = await supabase
+/* START FETCH ALL GIPS - Retrieves all GIP assistants across the portal */
+export async function fetchAllGips(includeArchived = false) {
+    let query = supabase
         .from('gips')
         .select(`
-            id, full_name, username, email, phone, avatar_url, status, created_at, created_by,
+            id, full_name, username, email, phone, avatar_url, status, created_at, created_by, archived_at,
             users!gips_created_by_fkey ( full_name, username )
-        `)
-        .is('archived_at', null)
-        .order('created_at', { ascending: false });
+        `);
+
+    if (includeArchived) {
+        query = query.not('archived_at', 'is', null);
+    } else {
+        query = query.is('archived_at', null);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
         if (window.DEBUG) window.DEBUG.error('GIPS-API', 'Failed to fetch all GIPs', error.message);
@@ -67,6 +73,7 @@ export async function fetchAllGips() {
     }
     return { data: data || [], error: null };
 }
+/* END FETCH ALL GIPS */
 
 /**
  * Count active GIPs for a specific staff member (enforce max 2 limit).

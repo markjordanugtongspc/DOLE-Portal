@@ -125,13 +125,78 @@
                         </div>
                     </div>
                     <label for="input-group-1" class="sr-only">Search</label>
-                    <div class="relative order-1 w-full md:order-2 md:w-auto">
-                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                            </svg>
+                    <div class="order-1 w-full md:order-2 md:w-auto flex items-center gap-2">
+                        <!-- Filter Dropdown Button & Menu -->
+                        <div class="relative">
+                            <button id="assistant-filter-btn" data-dropdown-toggle="assistant-filter-dropdown" data-dropdown-placement="bottom-end"
+                                class="group cursor-pointer inline-flex items-center justify-center p-2.5 text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 hover:text-blue-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white rounded-lg transition-all shadow-sm focus:ring-2 focus:ring-blue-500/30"
+                                type="button" title="Filter & Sort Assistants" aria-label="Filter & Sort Assistants">
+                                <svg class="w-4 h-4 pointer-events-none group-hover:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M18.796 4H5.204a1 1 0 0 0-.753 1.659l5.302 6.058a1 1 0 0 1 .247.659v4.874a.5.5 0 0 0 .2.4l3 2.25a.5.5 0 0 0 .8-.4v-7.124a1 1 0 0 1 .247-.659l5.302-6.059c.566-.646.106-1.658-.753-1.658Z"/>
+                                </svg>
+                                <svg class="hidden w-4 h-4 pointer-events-none group-hover:block text-blue-600 dark:text-blue-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M5.05 3C3.291 3 2.352 5.024 3.51 6.317l5.422 6.059v4.874c0 .472.227.917.613 1.2l3.069 2.25c1.01.742 2.454.036 2.454-1.2v-7.124l5.422-6.059C21.647 5.024 20.708 3 18.95 3H5.05Z"/>
+                                </svg>
+                            </button>
+                            <!-- Filter Menu -->
+                            <div id="assistant-filter-dropdown" class="z-50 hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl w-44">
+                                <ul class="p-1.5 text-xs text-gray-700 dark:text-gray-300 space-y-0.5" aria-labelledby="assistant-filter-btn">
+                                    <li>
+                                        <button type="button" data-filter-val="default" class="assistant-filter-opt cursor-pointer inline-flex items-center justify-between w-full px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-400 rounded font-semibold text-left">
+                                            <span>Default</span>
+                                            <span class="filter-check text-blue-600 dark:text-blue-400">✓</span>
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" data-filter-val="a-z" class="assistant-filter-opt cursor-pointer inline-flex items-center justify-between w-full px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-400 rounded font-medium text-left">
+                                            <span>A-Z</span>
+                                            <span class="filter-check hidden text-blue-600 dark:text-blue-400">✓</span>
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" data-filter-val="z-a" class="assistant-filter-opt cursor-pointer inline-flex items-center justify-between w-full px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-400 rounded font-medium text-left">
+                                            <span>Z-A</span>
+                                            <span class="filter-check hidden text-blue-600 dark:text-blue-400">✓</span>
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" data-filter-val="online" class="assistant-filter-opt cursor-pointer inline-flex items-center justify-between w-full px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 rounded font-medium text-left">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                Online
+                                            </span>
+                                            <span class="filter-check hidden text-emerald-600 dark:text-emerald-400">✓</span>
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" data-filter-val="offline" class="assistant-filter-opt cursor-pointer inline-flex items-center justify-between w-full px-3 py-2 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 dark:hover:text-rose-400 rounded font-medium text-left">
+                                            <span class="inline-flex items-center gap-1.5">
+                                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                                Offline
+                                            </span>
+                                            <span class="filter-check hidden text-rose-600 dark:text-rose-400">✓</span>
+                                        </button>
+                                    </li>
+                                    <li role="separator" class="my-1 border-t border-gray-200 dark:border-gray-700"></li>
+                                    <li>
+                                        <button type="button" data-filter-val="archived" class="assistant-filter-opt cursor-pointer inline-flex items-center justify-between w-full px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded font-semibold text-left">
+                                            <span>Archived</span>
+                                            <span class="filter-check hidden text-red-600 dark:text-red-400">✓</span>
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <input type="text" id="input-group-1" class="block w-full md:w-80 py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-blue-600 dark:border-blue-500 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200" placeholder="Search assistants...">
+
+                        <!-- Search Input -->
+                        <div class="relative flex-1 md:w-80">
+                            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                </svg>
+                            </div>
+                            <input type="text" id="input-group-1" class="block w-full py-2 ps-10 pr-3 bg-white dark:bg-gray-800 border border-blue-600 dark:border-blue-500 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-600 dark:focus:border-blue-500 transition-all duration-200" placeholder="Search assistants...">
+                        </div>
                     </div>
                 </div>
 
@@ -155,7 +220,23 @@
                         </tr>
                     </thead>
                     <tbody id="assistants-table-body">
-                        <!-- Loaded Dynamically by assistants-manage.js -->
+                        <!-- Skeleton rows shown until JS loads data -->
+                        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm"></div></td>
+                            <td class="min-w-[240px] px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-28"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-40"></div></div></div></td>
+                            <td class="min-w-[150px] px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
+                            <td class="min-w-[150px] px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div></div></td>
+                        </tr>
+                        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+                            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm"></div></td>
+                            <td class="min-w-[240px] px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-36"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-48"></div></div></div></td>
+                            <td class="min-w-[150px] px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                            <td class="min-w-[150px] px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
+                            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div></div></td>
+                        </tr>
                     </tbody>
                 </table>
                 <!-- Table Footer -->

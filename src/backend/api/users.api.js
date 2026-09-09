@@ -72,18 +72,20 @@ const selectUsers = async (buildQuery) => {
     return result;
 };
 
-/**
- * Fetch all active users (non-archived), optionally filtered by role.
- * @param {number|null} roleId - Filter by role_id (optional)
- * @returns {{ data: Array, error: string|null }}
- */
-export async function fetchUsers(roleId = null) {
+/* START FETCH USERS - Retrieves users with optional role and archive filtering */
+export async function fetchUsers(roleId = null, includeArchived = false) {
     const { data, error } = await selectUsers((selectClause) => {
         let query = supabase
             .from('users')
-            .select(selectClause)
-            .is('archived_at', null)
-            .order('created_at', { ascending: false });
+            .select(selectClause);
+
+        if (includeArchived) {
+            query = query.not('archived_at', 'is', null);
+        } else {
+            query = query.is('archived_at', null);
+        }
+
+        query = query.order('created_at', { ascending: false });
 
         if (roleId !== null) {
             query = query.eq('role_id', roleId);
@@ -98,6 +100,7 @@ export async function fetchUsers(roleId = null) {
     }
     return { data: data || [], error: null };
 }
+/* END FETCH USERS */
 
 /**
  * Fetch count metrics used by the admin dashboard cards.

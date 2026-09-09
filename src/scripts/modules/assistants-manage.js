@@ -1,7 +1,7 @@
 import { Modal } from 'flowbite';
 import { fetchGipsByStaff, fetchGipById, createGip, updateGip, archiveGip } from '@/backend/api/gips.api.js';
 import { getCachedCurrentUser } from '@/backend/api/auth.api.js';
-import { assistantAddDraftStorage } from '@/scripts/modules/storage.js';
+import { assistantAddDraftStorage, assistantsCacheStorage } from '@/scripts/modules/storage.js';
 import { showAssistantDetailsModal } from '@/scripts/modules/modals.js';
 
 /* START STAFF ASSISTANTS MANAGEMENT CONTROLLER */
@@ -130,10 +130,67 @@ export const initAssistantsManage = () => {
         return removeToast;
     };
 
-    const renderTable = () => {
+    let activeAssistantFilter = 'default';
+
+    /* START SORT ASSISTANTS - Sorts assistants list according to active filter selection */
+    const sortAssistants = (list) => {
+        let filtered = [...list];
+        if (activeAssistantFilter === 'online') {
+            filtered = filtered.filter(a => a.status === 'Active');
+        } else if (activeAssistantFilter === 'offline') {
+            filtered = filtered.filter(a => a.status !== 'Active');
+        }
+
+        if (activeAssistantFilter === 'a-z') {
+            return filtered.sort((a, b) => String(a.name || a.username || '').localeCompare(String(b.name || b.username || '')));
+        }
+        if (activeAssistantFilter === 'z-a') {
+            return filtered.sort((a, b) => String(b.name || b.username || '').localeCompare(String(a.name || a.username || '')));
+        }
+
+        // Default / Online / Offline sort: priority names ('Lace Arrellano' / 'Lace'), then alphabetical
+        return filtered.sort((a, b) => {
+            const aName = String(a.name || '').toUpperCase();
+            const bName = String(b.name || '').toUpperCase();
+            const aIsPriority = aName.includes('LACE');
+            const bIsPriority = bName.includes('LACE');
+            if (aIsPriority && !bIsPriority) return -1;
+            if (!aIsPriority && bIsPriority) return 1;
+
+            return aName.localeCompare(bName);
+        });
+    };
+    /* END SORT ASSISTANTS */
+
+    /* START ASSISTANTS SKELETON ROW */
+    const assistantSkeletonRow = () => `
+        <tr class="animate-pulse border-b border-gray-200 dark:border-gray-800">
+            <td class="w-4 p-4 text-center"><div class="mx-auto w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-sm"></div></td>
+            <td class="min-w-[240px] px-6 py-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 border border-gray-300 dark:border-gray-600"></div><div class="space-y-1.5"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-28"></div><div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-40"></div></div></div></td>
+            <td class="min-w-[150px] px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
+            <td class="min-w-[150px] px-6 py-4"><div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+            <td class="px-6 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+            <td class="px-6 py-4"><div class="flex gap-1.5"><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div><div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div></div></td>
+        </tr>`;
+
+    const showAssistantSkeleton = (rows = 3) => {
+        if (currentDataTable) {
+            currentDataTable.destroy();
+            currentDataTable = null;
+        }
+        const dynamicTableBody = document.getElementById("assistants-table-body");
+        if (dynamicTableBody) {
+            dynamicTableBody.innerHTML = Array(rows).fill(0).map(() => assistantSkeletonRow()).join('');
+        }
+    };
+    /* END ASSISTANTS SKELETON ROW */
+
+    /* START RENDER ASSISTANTS TABLE */
+    const renderTable = (listToRender = null) => {
         // Destroy existing Datatable to restore the original table DOM structure
         if (currentDataTable) {
             currentDataTable.destroy();
+            currentDataTable = null;
         }
 
         const dynamicTableBody = document.getElementById("assistants-table-body");
@@ -141,10 +198,27 @@ export const initAssistantsManage = () => {
 
         dynamicTableBody.innerHTML = '';
         
-        // Filter out archived assistants from view
-        const activeAssistants = assistants.filter(asst => asst.status !== 'Archived');
+        const sourceList = listToRender || assistants;
+        // Filter out archived assistants from view unless archived filter is selected
+        const displayedAssistants = activeAssistantFilter === 'archived'
+            ? sourceList.filter(asst => asst.status === 'Archived')
+            : sourceList.filter(asst => asst.status !== 'Archived');
 
-        activeAssistants.forEach(asst => {
+        const sortedAssistants = sortAssistants(displayedAssistants);
+
+        if (!sortedAssistants.length) {
+            dynamicTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-sm font-semibold text-gray-500 dark:text-gray-400">No assistant records found.</td></tr>';
+            renderGrid([]);
+            const showingCount = document.getElementById('showing-count');
+            const showingTotal1 = document.getElementById('showing-total-1');
+            const showingTotal2 = document.getElementById('showing-total-2');
+            if (showingCount) showingCount.textContent = 0;
+            if (showingTotal1) showingTotal1.textContent = 0;
+            if (showingTotal2) showingTotal2.textContent = 0;
+            return;
+        }
+
+        sortedAssistants.forEach(asst => {
             const row = document.createElement('tr');
             row.className = 'assistant-row cursor-pointer bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors';
             row.setAttribute('data-id', asst.id);
@@ -220,10 +294,10 @@ export const initAssistantsManage = () => {
             }
         }
 
-        renderGrid(activeAssistants);
+        renderGrid(sortedAssistants);
 
         // Update counts using only active assistants
-        const count = activeAssistants.length;
+        const count = displayedAssistants.length;
         const showingCount = document.getElementById('showing-count');
         const showingTotal1 = document.getElementById('showing-total-1');
         const showingTotal2 = document.getElementById('showing-total-2');
@@ -234,7 +308,7 @@ export const initAssistantsManage = () => {
         // Enforce max 2 assistants limit
         const btnAddAsst = document.getElementById('btn-add-assistant');
         if (btnAddAsst) {
-            if (count >= 2) {
+            if (count >= 2 && activeAssistantFilter !== 'archived') {
                 btnAddAsst.disabled = true;
                 btnAddAsst.classList.add('opacity-50', 'cursor-not-allowed');
                 btnAddAsst.classList.remove('cursor-pointer', 'hover:bg-blue-800', 'dark:hover:bg-blue-700', 'group', 'hover:-skew-x-12');
@@ -247,6 +321,7 @@ export const initAssistantsManage = () => {
             }
         }
     };
+    /* END RENDER ASSISTANTS TABLE */
 
     const renderGrid = (activeAssistants) => {
         const gridContainer = document.getElementById("grid-container");
@@ -391,28 +466,73 @@ export const initAssistantsManage = () => {
 
     const getUserId = () => getCachedCurrentUser()?.id || null;
 
-    const load = async () => {
+    /* START LOAD ASSISTANTS WITH LOCALSTORAGE CACHE */
+    const load = async (includeArchived = false) => {
         const staffId = getUserId();
         if (!staffId) return;
 
-        const { data, error } = await fetchGipsByStaff(staffId);
+        // 1. Try reading from cached state first for instant display
+        const cached = assistantsCacheStorage.getAssistants();
+        if (cached && Array.isArray(cached) && cached.length) {
+            assistants = cached;
+            renderTable();
+        } else {
+            showAssistantSkeleton(3);
+        }
+
+        const { data, error } = await fetchGipsByStaff(staffId, includeArchived);
         if (error) {
             window.DEBUG?.error('ASSISTANTS', 'Fetch failed', error);
+            if (!assistants.length) renderTable();
             return;
         }
         
-        assistants = data.map(g => ({
+        assistants = (data || []).map(g => ({
             id: String(g.id),
             name: g.full_name,
             username: g.username,
             email: g.email || '',
             phone: g.phone || '',
-            status: g.status === 'online' ? 'Active' : 'Offline',
+            created_at: g.created_at,
+            status: g.is_archived || g.status === 'archived' ? 'Archived' : (g.status === 'online' ? 'Active' : 'Offline'),
             avatar: g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.full_name)}&background=random`
         }));
 
+        // Cache the latest assistants in localStorage
+        assistantsCacheStorage.saveAssistants(assistants);
+
         renderTable();
     };
+    /* END LOAD ASSISTANTS WITH LOCALSTORAGE CACHE */
+
+    /* START BIND ASSISTANT FILTER DROPDOWN - Handles assistant filter and sorting selection */
+    const bindAssistantFilters = () => {
+        document.querySelectorAll('.assistant-filter-opt').forEach((btn) => {
+            if (btn.dataset.filterBound) return;
+            btn.dataset.filterBound = 'true';
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const val = btn.dataset.filterVal;
+                if (!val) return;
+                activeAssistantFilter = val;
+
+                document.querySelectorAll('.assistant-filter-opt').forEach((b) => {
+                    const check = b.querySelector('.filter-check');
+                    if (check) check.classList.toggle('hidden', b.dataset.filterVal !== activeAssistantFilter);
+                });
+
+                document.getElementById('assistant-filter-dropdown')?.classList.add('hidden');
+
+                if (activeAssistantFilter === 'archived') {
+                    await load(true);
+                } else {
+                    await load(false);
+                }
+            });
+        });
+    };
+    bindAssistantFilters();
+    /* END BIND ASSISTANT FILTER DROPDOWN */
 
     const populateViewModal = (asst) => {
         const viewAvatar = document.getElementById('view-avatar');
