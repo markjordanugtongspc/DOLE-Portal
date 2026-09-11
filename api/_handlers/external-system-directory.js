@@ -15,8 +15,8 @@ export default async function handler(req, res) {
         const session = await requirePortalSession(req, res, admin);
         if (!session) return;
         const roleId = Number(session.user.role_id);
-        if (roleId !== 1 && roleId !== 3) {
-            return sendJson(res, 403, { error: 'Only an approved Portal administrator or staff member can search external directories.' });
+        if (![1, 2, 3, 5].includes(roleId)) {
+            return sendJson(res, 403, { error: 'Only an approved Portal administrator, staff member, or executive can search external directories.' });
         }
         const administrator = session;
 

@@ -27,7 +27,7 @@ const ROLE_ROUTES = {
 
 const ROLE_GROUPS = {
     admin: [1],
-    staff: [2, 3]
+    staff: [2, 3, 5]
 };
 
 const ERROR_TEXT_CLASS = 'mt-1.5 text-xs font-semibold text-red-600 dark:text-red-400';
@@ -234,8 +234,9 @@ const setupRouteGuard = async () => {
     const isGip = Boolean(user?.is_gip || user?.gip_id);
     const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(window.location.pathname);
     const isAssistantsRoute = /\/src\/pages\/user\/staff\/assistants\//.test(window.location.pathname);
-    const hasAlertsAccess = isAlertsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2);
-    const hasToolsAccess = isToolsRoute && (Number(user.role_id) === 1 || Number(user.role_id) === 2 || Number(user.role_id) === 3);
+    const roleId = Number(user.role_id);
+    const hasAlertsAccess = isAlertsRoute && (roleId === 1 || roleId === 2 || roleId === 5);
+    const hasToolsAccess = isToolsRoute && (roleId === 1 || roleId === 2 || roleId === 3 || roleId === 5);
     const isAssistantsBlocked = isAssistantsRoute && isGip;
 
     if (isAssistantsBlocked || (requiredRole && !hasAlertsAccess && !hasToolsAccess && userRole !== requiredRole)) {

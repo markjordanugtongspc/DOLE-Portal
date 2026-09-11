@@ -1492,6 +1492,8 @@ export class ChatbotStorage {
             let rolePrefix = 'staff';
             if (roleId === 1 || roleName.includes('admin')) {
                 rolePrefix = 'admin';
+            } else if (roleId === 5 || roleName.includes('chief')) {
+                rolePrefix = 'chief';
             } else if (isHr) {
                 rolePrefix = 'hr';
             } else if (isGip) {

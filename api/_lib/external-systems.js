@@ -45,15 +45,13 @@ const getGipDirectoryAccount = async (externalUserId) => {
     const config = systemConfig('GIP');
     if (!config?.url || !config?.anonKey) throw new Error('GIP external directory is not configured.');
     const client = createClient(config.url, config.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    let query = client.from(config.table).select('*');
-    if (Number.isFinite(Number(externalUserId))) {
-        query = query.or(`user_id.eq.${externalUserId},id.eq.${externalUserId}`);
-    } else {
-        query = query.eq('user_id', externalUserId);
-    }
-    const { data, error } = await query.maybeSingle();
+    const { data, error } = await client
+        .from(config.table)
+        .select('*')
+        .eq('user_id', externalUserId)
+        .maybeSingle();
     if (error || !data) throw new Error('Selected GIP account could not be verified.');
-    const resolvedId = String(data.user_id || data.id || externalUserId);
+    const resolvedId = String(data.user_id || externalUserId);
     return { id: resolvedId, full_name: safeString(data.full_name), username: safeString(data.username), email: safeString(data.email) };
 };
 /* END GIP SERVER DIRECTORY LOOKUP */

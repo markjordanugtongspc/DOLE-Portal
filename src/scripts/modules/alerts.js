@@ -134,7 +134,7 @@ export const initAlerts = () => {
     root.dataset.initialized = 'true';
 
     const user = getCachedCurrentUser();
-    const recipientRole = Number(user?.role_id) === 1 ? 'admin' : Number(user?.role_id) === 2 ? 'hr' : null;
+    const recipientRole = Number(user?.role_id) === 1 ? 'admin' : Number(user?.role_id) === 2 ? 'hr' : Number(user?.role_id) === 5 ? 'chief' : null;
     if (!recipientRole) return;
 
     const list = document.getElementById('alerts-list');
@@ -350,7 +350,7 @@ export const initAlerts = () => {
             }
 
             setText('alert-view-name', user.full_name || user.username);
-            setText('alert-view-position', user.roles?.name || (Number(user.role_id) === 2 ? 'HR' : Number(user.role_id) === 1 ? 'Admin' : 'Staff'));
+            setText('alert-view-position', user.roles?.name || (Number(user.role_id) === 5 ? 'Chief' : Number(user.role_id) === 2 ? 'HR' : Number(user.role_id) === 1 ? 'Admin' : 'Staff'));
             setText('alert-view-email', user.email);
             setText('alert-view-username', user.username);
             setText('alert-view-office', user.offices?.name || 'No office assigned');
@@ -378,7 +378,7 @@ export const initAlerts = () => {
                 user = freshUserRes.data;
                 activeModalUser = user;
                 setText('alert-view-name', user.full_name || user.username);
-                setText('alert-view-position', user.roles?.name || (Number(user.role_id) === 2 ? 'HR' : Number(user.role_id) === 1 ? 'Admin' : 'Staff'));
+                setText('alert-view-position', user.roles?.name || (Number(user.role_id) === 5 ? 'Chief' : Number(user.role_id) === 2 ? 'HR' : Number(user.role_id) === 1 ? 'Admin' : 'Staff'));
                 setText('alert-view-email', user.email);
                 setText('alert-view-username', user.username);
                 setText('alert-view-office', user.offices?.name || 'No office assigned');

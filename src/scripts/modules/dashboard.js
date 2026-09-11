@@ -1464,7 +1464,7 @@ class StaffDashboardController {
         // Filter staff & hr users
         const staffUsers = users.filter(user => {
             const roleName = String(user?.roles?.name || '').trim().toLowerCase();
-            return ['hr', 'staff'].includes(roleName) || [2, 3].includes(Number(user?.role_id));
+            return ['hr', 'staff', 'chief'].includes(roleName) || [2, 3, 5].includes(Number(user?.role_id));
         });
 
         const parseTime = (u) => {
@@ -2008,7 +2008,7 @@ class StaffDashboardController {
 
         users.forEach(user => {
             const roleName = String(user?.roles?.name || '').trim().toLowerCase();
-            const isStaff = ['hr', 'staff'].includes(roleName) || [2, 3].includes(Number(user?.role_id));
+            const isStaff = ['hr', 'staff', 'chief'].includes(roleName) || [2, 3, 5].includes(Number(user?.role_id));
             if (isStaff) {
                 const status = String(user?.status || '').toLowerCase();
                 const isOnline = ['active', 'online'].includes(status);

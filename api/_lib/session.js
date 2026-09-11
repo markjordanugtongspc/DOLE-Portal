@@ -203,8 +203,8 @@ export const requirePortalAdminOrStaff = async (req, res, admin) => {
     const session = await requirePortalSession(req, res, admin);
     if (!session) return null;
     const roleId = Number(session.user.role_id);
-    if (roleId !== 1 && roleId !== 3) {
-        sendJson(res, 403, { error: 'Only an approved Portal administrator or staff member can manage account assignments.' });
+    if (![1, 2, 3, 5].includes(roleId)) {
+        sendJson(res, 403, { error: 'Only an approved Portal administrator, staff member, or executive can manage account assignments.' });
         return null;
     }
     return session;

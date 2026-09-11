@@ -165,8 +165,9 @@ export const initStaffsManage = () => {
     const esc = (v = '') => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     const avatar = (person) => getAvatarUrl(person, 'User');
     const na = (v) => v ? esc(v) : '<span class="italic text-gray-400 dark:text-gray-600">N/A</span>';
+    const isGlobalRole = (u) => [1, 5].includes(Number(u?.role_id));
     const roleName = (u) => u?.roles?.name || roles.find(r => Number(r.id) === Number(u?.role_id))?.name || `Role ${u?.role_id || 'N/A'}`;
-    const officeName = (u) => u?.offices?.name || offices.find(o => Number(o.id) === Number(u?.office_id))?.name || 'N/A';
+    const officeName = (u) => isGlobalRole(u) ? 'N/A (Global)' : (u?.offices?.name || offices.find(o => Number(o.id) === Number(u?.office_id))?.name || 'N/A');
     const staffGips = (id) => gips.filter(g => Number(g.created_by) === Number(id));
     const approvalState = (user) => String(user?.approval_status || 'APPROVED').toUpperCase();
     const approvalBadge = (state) => {
@@ -267,19 +268,22 @@ export const initStaffsManage = () => {
             if (aIsAdmin && !bIsAdmin) return -1;
             if (!aIsAdmin && bIsAdmin) return 1;
 
+            const aIsChief = Number(a.role_id) === 5 || String(a.full_name || a.username || '').toLowerCase().includes('chief');
+            const bIsChief = Number(b.role_id) === 5 || String(b.full_name || b.username || '').toLowerCase().includes('chief');
+            if (aIsChief && !bIsChief) return -1;
+            if (!aIsChief && bIsChief) return 1;
+
+            const aIsHr = Number(a.role_id) === 2 || String(a.full_name || a.username || '').toLowerCase().includes('lace');
+            const bIsHr = Number(b.role_id) === 2 || String(b.full_name || b.username || '').toLowerCase().includes('lace');
+            if (aIsHr && !bIsHr) return -1;
+            if (!aIsHr && bIsHr) return 1;
+
             const aOffice = officeName(a).toUpperCase();
             const bOffice = officeName(b).toUpperCase();
             const aIsIligan = aOffice.includes('ILIGAN');
             const bIsIligan = bOffice.includes('ILIGAN');
             if (aIsIligan && !bIsIligan) return -1;
             if (!aIsIligan && bIsIligan) return 1;
-
-            const aName = String(a.full_name || '').toUpperCase();
-            const bName = String(b.full_name || '').toUpperCase();
-            const aIsPriority = aName.includes('LACE');
-            const bIsPriority = bName.includes('LACE');
-            if (aIsPriority && !bIsPriority) return -1;
-            if (!aIsPriority && bIsPriority) return 1;
 
             return new Date(a.created_at) - new Date(b.created_at);
         });
@@ -536,12 +540,12 @@ export const initStaffsManage = () => {
             els.confPwdRequiredStar?.classList.add('hidden');
             els.pinRequiredStar?.classList.add('hidden');
         } else {
-            // For other roles: Full Name, Position, Office, Username, Email are required
+            const isChiefEdit = Number(u.role_id) === 5;
             if (els.staffName) els.staffName.required = true;
             if (els.username) els.username.required = true;
             if (els.email) els.email.required = true;
             if (els.role) els.role.required = true;
-            if (els.office) els.office.required = true;
+            if (els.office) els.office.required = !isChiefEdit;
 
             // Phone, Pin, Password, Birthday are optional
             if (els.phone) els.phone.required = false;
@@ -553,7 +557,11 @@ export const initStaffsManage = () => {
             // Show required stars on mandatory fields only
             els.nameRequiredStar?.classList.remove('hidden');
             els.posRequiredStar?.classList.remove('hidden');
-            els.officeRequiredStar?.classList.remove('hidden');
+            if (isChiefEdit) {
+                els.officeRequiredStar?.classList.add('hidden');
+            } else {
+                els.officeRequiredStar?.classList.remove('hidden');
+            }
             els.userRequiredStar?.classList.remove('hidden');
             els.emailRequiredStar?.classList.remove('hidden');
             els.pwdRequiredStar?.classList.add('hidden');
@@ -669,26 +677,33 @@ export const initStaffsManage = () => {
         return null;
     };
 
-    const staffPayload = () => ({
-        full_name: els.staffName?.value.trim() || '',
-        birthday: els.birthday?.value || null,
-        role_id: Number(els.role?.value || 0),
-        office_id: els.office?.value ? Number(els.office.value) : null,
-        username: els.username?.value.trim() || '',
-        email: els.email?.value.trim() || null,
-        phone: els.phone?.value.trim() || null,
-        status: 'offline'
-    });
+    const staffPayload = () => {
+        const roleId = Number(els.role?.value || 0);
+        const isGlobal = roleId === 1 || roleId === 5;
+        return {
+            full_name: els.staffName?.value.trim() || '',
+            birthday: els.birthday?.value || null,
+            role_id: roleId,
+            office_id: isGlobal ? null : (els.office?.value ? Number(els.office.value) : null),
+            username: els.username?.value.trim() || '',
+            email: els.email?.value.trim() || null,
+            phone: els.phone?.value.trim() || null,
+            status: 'offline'
+        };
+    };
     const submitForm = async (e) => {
         e.preventDefault();
         const isSuperAdminEdit = mode === 'edit-staff' && Number(recordId) === 1;
+
+        const selectedRoleId = Number(els.role?.value || 0);
+        const isGlobal = selectedRoleId === 1 || selectedRoleId === 5;
 
         if (mode === 'add-staff') {
             if (!els.role?.value) {
                 showToast('danger', 'Position is required.');
                 return;
             }
-            if (!els.office?.value) {
+            if (!isGlobal && !els.office?.value) {
                 showToast('danger', 'Office / Location is required.');
                 return;
             }
@@ -705,7 +720,6 @@ export const initStaffsManage = () => {
                 return;
             }
         } else if (mode === 'edit-staff' && !isSuperAdminEdit) {
-            // For other roles, Full Name, Position, Office, Username, Email are required
             if (!els.staffName?.value.trim()) {
                 showToast('danger', 'Full name is required.');
                 return;
@@ -714,7 +728,7 @@ export const initStaffsManage = () => {
                 showToast('danger', 'Position is required.');
                 return;
             }
-            if (!els.office?.value) {
+            if (!isGlobal && !els.office?.value) {
                 showToast('danger', 'Office / Location is required.');
                 return;
             }

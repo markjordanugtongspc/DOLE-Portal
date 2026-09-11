@@ -2,9 +2,9 @@ import { supabase } from './supabase.js';
 
 const normalizeRoles = (roles) => Array.from(new Set((Array.isArray(roles) ? roles : [roles])
     .map((role) => String(role || '').trim().toLowerCase())
-    .filter((role) => role === 'admin' || role === 'hr')));
+    .filter((role) => role === 'admin' || role === 'hr' || role === 'chief')));
 
-export async function createNotification({ type = 'system', title, message, recipientRoles = ['admin', 'hr'], actorId = null, subjectUserId = null, actionUrl = null }) {
+export async function createNotification({ type = 'system', title, message, recipientRoles = ['admin', 'hr', 'chief'], actorId = null, subjectUserId = null, actionUrl = null }) {
     const roles = normalizeRoles(recipientRoles);
     if (!title || !message || !roles.length) return { data: null, error: 'Notification title, message, and recipients are required.' };
 
@@ -23,7 +23,7 @@ export async function createNotification({ type = 'system', title, message, reci
 
 export async function fetchNotifications(recipientRole, filter = 'all') {
     const role = normalizeRoles(recipientRole)[0];
-    if (!role) return { data: [], error: 'Alerts are available only to Admin and HR.' };
+    if (!role) return { data: [], error: 'Alerts are available only to Admin, HR, and Chief.' };
 
     let query = supabase
         .from('notifications')

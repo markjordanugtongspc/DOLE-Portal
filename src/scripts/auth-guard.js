@@ -38,10 +38,10 @@ if (isAboutRoute) {
     const allowed = isToolsRoute
         ? true
         : isAssistantsRoute
-        ? !isGip && (roleId === 2 || roleId === 3)
+        ? !isGip && (roleId === 2 || roleId === 3 || roleId === 5)
         : isAlertsRoute
-        ? roleId === 1 || roleId === 2
-        : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
+        ? roleId === 1 || roleId === 2 || roleId === 5
+        : requiredRole === 'admin' ? roleId === 1 : (roleId === 2 || roleId === 3 || roleId === 5);
     if (allowed) {
         document.documentElement.classList.remove('portal-auth-checking');
     }
@@ -127,10 +127,10 @@ const validateProtectedRoute = async () => {
         const allowed = isToolsRoute
             ? true
             : isAssistantsRoute
-            ? !isGip && (roleId === 2 || roleId === 3)
+            ? !isGip && (roleId === 2 || roleId === 3 || roleId === 5)
             : isAlertsRoute
-            ? roleId === 1 || roleId === 2
-            : requiredRole === 'admin' ? roleId === 1 : roleId === 2 || roleId === 3;
+            ? roleId === 1 || roleId === 2 || roleId === 5
+            : requiredRole === 'admin' ? roleId === 1 : (roleId === 2 || roleId === 3 || roleId === 5);
 
         if (!allowed) return window.location.replace(dashboardFor(roleId));
         window.__PORTAL_SESSION = user;

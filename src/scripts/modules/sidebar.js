@@ -231,11 +231,13 @@ const setupDynamicSidebar = () => {
             ? 'gip'
             : sessionRoleId === 1
                 ? 'admin'
-                : sessionRoleId === 2
-                    ? 'hr'
-                    : sessionRoleId === 3
-                        ? 'staff'
-                        : (requestedRole === 'alerts' ? 'admin' : (requestedRole || 'staff'));
+                : sessionRoleId === 5
+                    ? 'chief'
+                    : sessionRoleId === 2
+                        ? 'hr'
+                        : sessionRoleId === 3
+                            ? 'staff'
+                            : (requestedRole === 'alerts' ? 'admin' : (requestedRole || 'staff'));
     const activeItem = sidebarEl.getAttribute('data-active') || (isPublic ? 'about-developer' : 'dashboard');
 
     // Keep the shell rendered by main.js during module startup, but repair the
@@ -326,11 +328,13 @@ const setupDynamicSidebar = () => {
     if (badgeEl) {
         badgeEl.textContent = role === 'admin'
             ? 'Admin Access'
-            : role === 'hr'
-                ? 'HR Access'
-                : role === 'staff'
-                    ? 'Staff Access'
-                    : 'Public Access';
+            : role === 'chief'
+                ? 'Chief Access'
+                : role === 'hr'
+                    ? 'HR Access'
+                    : role === 'staff'
+                        ? 'Staff Access'
+                        : 'Public Access';
     }
 
     // Role-based navigation items configuration with SVGs
@@ -424,6 +428,32 @@ const setupDynamicSidebar = () => {
                 badge: null,
                 dropdown: [
                     { id: 'articles', label: 'Manage Articles', url: '/src/pages/user/admin/articles/', svg: SVG_ARTICLES_ADMIN }
+                ]
+            },
+            {
+                id: 'tools',
+                label: 'Tools',
+                url: '#',
+                svg: SVG_TOOLS,
+                dropdown: [
+                    { id: 'sprc-converter', label: 'SPRC Converter', url: '#', svg: SVG_SPRC_CONVERTER },
+                    { id: 'ocr-converter', label: 'OCR Converter', url: '/src/pages/tools/ocr-converter/', svg: SVG_OCR_CONVERTER }
+                ]
+            },
+            { id: 'about-developer', label: 'About Developer', url: '/src/pages/about/', svg: SVG_ABOUT_DEV, hasSeparator: true }
+        ],
+        chief: [
+            { id: 'dashboard', label: 'Dashboard', url: '/src/pages/user/staff/dashboard/', svg: SVG_DASHBOARD },
+            { id: 'alerts', label: 'Alerts', url: '/src/pages/user/admin/alerts/', svg: SVG_ALERTS },
+            { id: 'assistants', label: 'Manage Assistants', url: '/src/pages/user/staff/assistants/', svg: SVG_ASSISTANTS },
+            {
+                id: 'tickets',
+                label: 'My Tickets',
+                url: '/src/pages/user/staff/tickets/',
+                svg: SVG_TICKETS_ADMIN,
+                badge: null,
+                dropdown: [
+                    { id: 'articles', label: 'Browse Articles', url: '/src/pages/user/staff/articles/', svg: SVG_ARTICLES_ADMIN }
                 ]
             },
             {

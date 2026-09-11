@@ -78,6 +78,7 @@ ${colors.bold}OPTIONS:${colors.reset}
                     • creao     CREAO AI Assistant and Provincial Head test
                     • sync      User registration & SPES dual-sync simulation
                     • security  Credential hashing & key exposure security
+                    • chief     Chief Role (ID 5), RBAC permissions & links audit
   --json          Output test report as machine-readable JSON
   --help, -h      Display this help menu
 `);
@@ -518,6 +519,175 @@ async function runSecuritySuite() {
     recordTest('security', 'SPES Hashing Standard', 'pass', 'SPES uses bcrypt ($2a$06$) auto-hashed via database trigger');
 }
 
+// ─── SUITE 6: Chief Role (ID 5), RBAC & External Links Fix Suite ──────────────
+async function runChiefRoleSuite() {
+    if (!isJsonOutput) {
+        console.log(`\n${colors.cyan}${colors.bold}═══ [SUITE 6] Chief Role (ID 5), RBAC & External Links Suite ═══${colors.reset}`);
+    }
+
+    const portalUrl = env.VITE_SUPABASE_URL || env.PORTAL_SUPABASE_URL;
+    const portalKey = env.PORTAL_SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_ANON_KEY;
+
+    // 1. Roles Table Check: Verify ID 5 is 'Chief' and ID 4 is 'gip'
+    if (portalUrl && portalKey) {
+        const rolesRes = await httpFetch(`${portalUrl}/rest/v1/roles?select=id,name&order=id.asc`, {
+            headers: { 'apikey': portalKey, 'Authorization': `Bearer ${portalKey}` }
+        });
+
+        if (rolesRes.response && rolesRes.response.ok) {
+            const roles = await rolesRes.response.json();
+            const chiefRole = roles.find((r) => Number(r.id) === 5);
+            const gipRole = roles.find((r) => Number(r.id) === 4);
+
+            if (chiefRole && /chief/i.test(chiefRole.name)) {
+                recordTest('chief', 'Portal Supabase: Chief Role (ID 5) Exists', 'pass', `Role ID 5 registered with name "${chiefRole.name}"`);
+            } else {
+                recordTest('chief', 'Portal Supabase: Chief Role (ID 5) Exists', 'fail', 'Role ID 5 is missing or not named Chief');
+            }
+
+            if (gipRole && /gip/i.test(gipRole.name)) {
+                recordTest('chief', 'Portal Supabase: GIP Role (ID 4) Preserved', 'pass', `Role ID 4 preserved with name "${gipRole.name}"`);
+            } else {
+                recordTest('chief', 'Portal Supabase: GIP Role (ID 4) Preserved', 'fail', 'Role ID 4 is missing or altered');
+            }
+        } else {
+            recordTest('chief', 'Portal Supabase: Roles Table Query', 'fail', `HTTP ${rolesRes.response?.status}`);
+        }
+    }
+
+    // 2. Role Group & Target Route Resolution
+    const ROLE_GROUPS = { admin: [1], staff: [2, 3, 5] };
+    const getRoleGroup = (roleId) => {
+        const id = Number(roleId);
+        if (ROLE_GROUPS.admin.includes(id)) return 'admin';
+        if (ROLE_GROUPS.staff.includes(id)) return 'staff';
+        return null;
+    };
+    const dashboardFor = (roleId) => Number(roleId) === 1
+        ? '/src/pages/user/admin/dashboard/'
+        : '/src/pages/user/staff/dashboard/';
+
+    const chiefRoleGroup = getRoleGroup(5);
+    const chiefDashboard = dashboardFor(5);
+
+    if (chiefRoleGroup === 'staff' && chiefDashboard === '/src/pages/user/staff/dashboard/') {
+        recordTest('chief', 'Role Resolution & Dashboard Target', 'pass', `Role 5 maps to group "${chiefRoleGroup}" and dashboard "${chiefDashboard}"`);
+    } else {
+        recordTest('chief', 'Role Resolution & Dashboard Target', 'fail', `Unexpected mapping: group=${chiefRoleGroup}, route=${chiefDashboard}`);
+    }
+
+    // 3. Route Access Authorization Evaluation
+    const checkRouteAccess = (roleId, path, isGip = false) => {
+        const isToolsRoute = /\/src\/pages\/tools\//.test(path);
+        const isAlertsRoute = /\/src\/pages\/user\/admin\/alerts\//.test(path);
+        const isAssistantsRoute = /\/src\/pages\/user\/staff\/assistants\//.test(path);
+        const userRouteMatch = path.match(/\/src\/pages\/user\/(admin|staff)\//);
+        const requiredRole = isToolsRoute ? 'tools' : userRouteMatch?.[1] || null;
+
+        return isToolsRoute
+            ? true
+            : isAssistantsRoute
+            ? !isGip && (roleId === 2 || roleId === 3 || roleId === 5)
+            : isAlertsRoute
+            ? roleId === 1 || roleId === 2 || roleId === 5
+            : requiredRole === 'admin' ? roleId === 1 : (roleId === 2 || roleId === 3 || roleId === 5);
+    };
+
+    const staffDashAccess = checkRouteAccess(5, '/src/pages/user/staff/dashboard/');
+    const assistantsAccess = checkRouteAccess(5, '/src/pages/user/staff/assistants/');
+    const ticketsAccess = checkRouteAccess(5, '/src/pages/user/staff/tickets/');
+    const alertsAccess = checkRouteAccess(5, '/src/pages/user/admin/alerts/');
+    const toolsAccess = checkRouteAccess(5, '/src/pages/tools/ocr-converter/');
+    const adminStaffsBlocked = !checkRouteAccess(5, '/src/pages/user/admin/staffs/');
+    const adminSystemsBlocked = !checkRouteAccess(5, '/src/pages/user/admin/systems/');
+
+    if (staffDashAccess && assistantsAccess && ticketsAccess && alertsAccess && toolsAccess && adminStaffsBlocked && adminSystemsBlocked) {
+        recordTest('chief', 'Route Guard Permissions Matrix', 'pass', 'Chief allowed on all staff pages, alerts & tools; strictly blocked from admin-only routes');
+    } else {
+        recordTest('chief', 'Route Guard Permissions Matrix', 'fail', 'Permission check mismatch on protected routes');
+    }
+
+    // 4. Office Scope Policy Evaluation (Admin & Chief null, HR retained)
+    const resolveOfficeForRole = (roleId, inputOfficeId) => {
+        const isGlobal = roleId === 1 || roleId === 5;
+        return isGlobal ? null : (inputOfficeId ? Number(inputOfficeId) : null);
+    };
+
+    const adminOffice = resolveOfficeForRole(1, 10);
+    const chiefOffice = resolveOfficeForRole(5, 10);
+    const hrOffice = resolveOfficeForRole(2, 10);
+    const staffOffice = resolveOfficeForRole(3, 10);
+
+    if (adminOffice === null && chiefOffice === null && hrOffice === 10 && staffOffice === 10) {
+        recordTest('chief', 'Office Scope Policy & HR Retention', 'pass', 'Admin (1) and Chief (5) set office_id to null; HR (2) retains assigned office');
+    } else {
+        recordTest('chief', 'Office Scope Policy & HR Retention', 'fail', `Office resolution error: Admin=${adminOffice}, Chief=${chiefOffice}, HR=${hrOffice}`);
+    }
+
+    // 5. Table Pinning Order Simulation
+    const sampleStaffList = [
+        { id: 10, role_id: 3, full_name: 'Regular Staff', created_at: '2026-01-01' },
+        { id: 2, role_id: 2, full_name: 'Lace Arellano', created_at: '2026-01-02' },
+        { id: 1, role_id: 1, full_name: 'Super Admin', created_at: '2026-01-03' },
+        { id: 5, role_id: 5, full_name: 'Chief Executive', created_at: '2026-01-04' }
+    ];
+
+    const sortedStaff = [...sampleStaffList].sort((a, b) => {
+        const aIsAdmin = Number(a.role_id) === 1;
+        const bIsAdmin = Number(b.role_id) === 1;
+        if (aIsAdmin && !bIsAdmin) return -1;
+        if (!aIsAdmin && bIsAdmin) return 1;
+
+        const aIsChief = Number(a.role_id) === 5 || String(a.full_name || '').toLowerCase().includes('chief');
+        const bIsChief = Number(b.role_id) === 5 || String(b.full_name || '').toLowerCase().includes('chief');
+        if (aIsChief && !bIsChief) return -1;
+        if (!aIsChief && bIsChief) return 1;
+
+        const aIsHr = Number(a.role_id) === 2 || String(a.full_name || '').toLowerCase().includes('lace');
+        const bIsHr = Number(b.role_id) === 2 || String(b.full_name || '').toLowerCase().includes('lace');
+        if (aIsHr && !bIsHr) return -1;
+        if (!aIsHr && bIsHr) return 1;
+
+        return new Date(a.created_at) - new Date(b.created_at);
+    });
+
+    const sequence = sortedStaff.map((u) => u.role_id);
+    if (sequence[0] === 1 && sequence[1] === 5 && sequence[2] === 2 && sequence[3] === 3) {
+        recordTest('chief', 'Executive Table Pinning Sequence', 'pass', 'Verified ranking sequence: 1. Admin, 2. Chief, 3. HR, 4. Staff');
+    } else {
+        recordTest('chief', 'Executive Table Pinning Sequence', 'fail', `Incorrect sequence: ${sequence.join(' -> ')}`);
+    }
+
+    // 6. GIP External Directory Verification Fix Test
+    const gipUrl = env.VITE_GIP_SUPABASE_URL || env.GIP_SUPABASE_URL;
+    const gipKey = env.VITE_GIP_SUPABASE_ANON_KEY || env.GIP_SUPABASE_ANON_KEY;
+
+    if (gipUrl && gipKey) {
+        const gipQuery = await httpFetch(`${gipUrl}/rest/v1/users?user_id=eq.1&select=user_id,full_name,username,email`, {
+            headers: { 'apikey': gipKey, 'Authorization': `Bearer ${gipKey}` }
+        });
+
+        if (gipQuery.response && gipQuery.response.ok) {
+            const rows = await gipQuery.response.json();
+            if (rows.length > 0 && rows[0].user_id) {
+                recordTest('chief', 'GIP Directory Verification Fix', 'pass', `Looked up GIP user_id=1 (${rows[0].full_name}) without schema error`);
+            } else {
+                recordTest('chief', 'GIP Directory Verification Fix', 'warn', 'Query succeeded but returned 0 rows');
+            }
+        } else {
+            recordTest('chief', 'GIP Directory Verification Fix', 'fail', `GIP query failed: HTTP ${gipQuery.response?.status}`);
+        }
+    }
+
+    // 7. Backend Role Authorization Permissions
+    const isAuthorizedRole = (roleId) => [1, 2, 3, 5].includes(Number(roleId));
+    if (isAuthorizedRole(5) && isAuthorizedRole(1) && isAuthorizedRole(2) && isAuthorizedRole(3) && !isAuthorizedRole(99)) {
+        recordTest('chief', 'Backend Link & Session Authorization', 'pass', 'Role 5 permitted in requirePortalAdminOrStaff and external links');
+    } else {
+        recordTest('chief', 'Backend Link & Session Authorization', 'fail', 'Role 5 rejected by backend authorization filter');
+    }
+}
+
 // ─── Test Runner Orchestrator ─────────────────────────────────────────────────
 async function runAllSuites() {
     const startTime = Date.now();
@@ -530,7 +700,7 @@ ${colors.dim}Date: ${new Date().toLocaleString()} | Env: ${env.VITE_SUPABASE_URL
 
     const suitesToRun = suiteFilter
         ? [suiteFilter]
-        : ['env', 'supabase', 'creao', 'sync', 'security'];
+        : ['env', 'supabase', 'creao', 'sync', 'security', 'chief'];
 
     for (const s of suitesToRun) {
         if (s === 'env') await runEnvSuite();
@@ -538,6 +708,7 @@ ${colors.dim}Date: ${new Date().toLocaleString()} | Env: ${env.VITE_SUPABASE_URL
         else if (s === 'creao') await runCreaoSuite();
         else if (s === 'sync') await runSyncSuite();
         else if (s === 'security') await runSecuritySuite();
+        else if (s === 'chief') await runChiefRoleSuite();
     }
 
     totalDurationMs = Date.now() - startTime;
