@@ -126,6 +126,7 @@ class AdminDashboardController {
         // Flowbite Marketing Announcement CTA Banner on top of Image Banner Header
         initAnnouncementBanner('#announcement-banner-slot');
 
+        this.initMobileCarousel();
         this.renderUserMetrics();
         this.renderTicketMetrics();
         this.renderStaffList();
@@ -181,13 +182,69 @@ class AdminDashboardController {
         });
     }
 
+    /* START MOBILE CAROUSEL INITIALIZATION */
+    initMobileCarousel() {
+        const carouselEl = document.getElementById('stats-mobile-carousel');
+        if (!carouselEl) return;
+
+        const items = Array.from(carouselEl.querySelectorAll('[data-carousel-item]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const indicatorItems = Array.from(carouselEl.querySelectorAll('[data-carousel-slide-to]')).map((el, index) => ({
+            position: index,
+            el: el
+        }));
+
+        const options = {
+            defaultPosition: 0,
+            indicators: {
+                activeClasses: 'bg-blue-600 dark:bg-white scale-110',
+                inactiveClasses: 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600',
+                items: indicatorItems
+            },
+            interval: 5000
+        };
+
+        const instanceOptions = { id: carouselEl.id, override: true };
+        this.statsCarousel = new DashboardCarousel(carouselEl, items, options, instanceOptions);
+
+        // Bind touch swipe support manually for smoother mobile navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        carouselEl.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselEl.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (this.statsCarousel) {
+                if (touchEndX < touchStartX - 50) {
+                    this.statsCarousel.next();
+                }
+                if (touchEndX > touchStartX + 50) {
+                    this.statsCarousel.prev();
+                }
+            }
+        }, { passive: true });
+    }
+    /* END MOBILE CAROUSEL INITIALIZATION */
+
     setMetric(metricName, value) {
-        const el = this.metricEls[metricName];
-        if (!el) return;
+        const els = Array.from(document.querySelectorAll(`[data-admin-dashboard-metric="${metricName}"], #admin-${metricName}-value`));
+        if (!els.length && this.metricEls[metricName]) {
+            els.push(this.metricEls[metricName]);
+        }
+        if (!els.length) return;
 
         const hasValue = Number.isFinite(value) && value > 0;
-        el.textContent = hasValue ? value.toLocaleString() : 'N/A';
-        el.classList.toggle('text-red-100', !hasValue);
+        const formatted = hasValue ? value.toLocaleString() : 'N/A';
+        els.forEach(el => {
+            el.textContent = formatted;
+            el.classList.toggle('text-red-100', !hasValue);
+        });
     }
 
     async renderUserMetrics() {
@@ -201,13 +258,14 @@ class AdminDashboardController {
 
         // Fetch active session user to initialize live total uptime tracking
         const activeUser = (await detectActiveUserSession()) || getCachedCurrentUser();
-        if (activeUser && this.metricEls.totalUptime) {
+        if (activeUser) {
             if (this.stopUptimeTracker) this.stopUptimeTracker();
             this.stopUptimeTracker = startUserUptimeTracker(activeUser, ({ formatted }) => {
-                if (this.metricEls.totalUptime) {
-                    this.metricEls.totalUptime.textContent = formatted;
-                    this.metricEls.totalUptime.classList.remove('text-red-100', 'text-indigo-100');
-                }
+                const uptimeEls = document.querySelectorAll('[data-admin-dashboard-metric="totalUptime"], #admin-user-uptime-value');
+                uptimeEls.forEach(el => {
+                    el.textContent = formatted;
+                    el.classList.remove('text-red-100', 'text-indigo-100');
+                });
             });
         }
     }

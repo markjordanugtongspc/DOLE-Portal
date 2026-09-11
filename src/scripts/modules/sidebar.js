@@ -149,7 +149,7 @@ const setupSidebarLogout = () => {
     const closeSidebarBeforeModal = () => {
         const isMobileViewport = window.matchMedia('(max-width: 639px)').matches;
         if (!isMobileViewport || !sidebarEl) return;
-        const isSidebarOpen = !sidebarEl.classList.contains('-translate-x-full');
+        const isSidebarOpen = !sidebarEl.classList.contains('translate-x-full') && !sidebarEl.classList.contains('-translate-x-full');
         if (isSidebarOpen && sidebarDrawerInstance) {
             sidebarDrawerInstance.hide();
         }

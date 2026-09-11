@@ -297,7 +297,7 @@ export default async function handler(req, res) {
     const resolveCreaoConfig = () => {
         let apiKey = process.env.CREAO_API_KEY;
         let agentId = process.env.CREAO_AGENT_ID || 'bff66ca9-b406-4de3-86a6-0cde187b24aa';
-        let baseUrl = process.env.CREAO_API_BASE_URL || 'https://developer.creao.ai';
+        let baseUrl = process.env.CREAO_API_BASE_URL || 'https://agent.creao.ai';
 
         if (!apiKey) {
             try {
@@ -315,8 +315,8 @@ export default async function handler(req, res) {
                                 const [, key, val] = match;
                                 const cleanVal = (val || '').trim().replace(/^['"]|['"]$/g, '');
                                 if (key === 'CREAO_API_KEY' && !apiKey) apiKey = cleanVal;
-                                if (key === 'CREAO_AGENT_ID' && agentId === 'bff66ca9-b406-4de3-86a6-0cde187b24aa') agentId = cleanVal || agentId;
-                                if (key === 'CREAO_API_BASE_URL' && baseUrl === 'https://developer.creao.ai') baseUrl = cleanVal || baseUrl;
+                                if (key === 'CREAO_AGENT_ID') agentId = cleanVal || agentId;
+                                if (key === 'CREAO_API_BASE_URL') baseUrl = cleanVal || baseUrl;
                             }
                         }
                     }
@@ -344,6 +344,120 @@ export default async function handler(req, res) {
     const topic = inferTopic(message, requestedTopic);
 
     try {
+        const isAgentAppApi = apiKey.startsWith('capi_') || baseUrl.includes('agent.creao.ai');
+
+        if (isAgentAppApi) {
+            const runRes = await fetch(`${baseUrl}/api/v1/apps/${agentId}/runs`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    inputs: {
+                        question: message,
+                        topic: topic,
+                        audience: audience
+                    }
+                })
+            });
+
+            if (!runRes.ok) {
+                const errorPayload = await runRes.text();
+                return sendJson(res, runRes.status, {
+                    error: `CREAO agent service returned ${runRes.status}: ${errorPayload}`
+                });
+            }
+
+            const runData = await runRes.json();
+            const runId = runData.id || '';
+
+            if (isStreamRequested) {
+                res.writeHead(200, {
+                    'Content-Type': 'text/event-stream; charset=utf-8',
+                    'Cache-Control': 'no-cache, no-transform',
+                    'Connection': 'keep-alive',
+                    'X-Accel-Buffering': 'no'
+                });
+                res.write(`data: ${JSON.stringify({ delta: '', conversation_id: conversationId, run_id: runId })}\n\n`);
+            }
+
+            let completedData = null;
+            const maxPollAttempts = 60; // up to 60 seconds for complex queries
+            for (let attempt = 0; attempt < maxPollAttempts; attempt++) {
+                await new Promise((r) => setTimeout(r, 1500));
+                const pollRes = await fetch(`${baseUrl}/api/v1/apps/${agentId}/runs/${runId}`, {
+                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                });
+                if (!pollRes.ok) {
+                    if (pollRes.status === 429) {
+                        // Creao rate limited the poll, wait longer and continue
+                        await new Promise((r) => setTimeout(r, 2000));
+                        continue;
+                    }
+                    continue;
+                }
+                const pollData = await pollRes.json();
+                if (pollData.error === 'RATE_LIMITED') {
+                    await new Promise((r) => setTimeout(r, 2000));
+                    continue;
+                }
+                if (pollData.status === 'completed' || pollData.status === 'succeeded') {
+                    completedData = pollData;
+                    break;
+                }
+                if (pollData.status === 'failed' || pollData.status === 'error') {
+                    completedData = pollData;
+                    break;
+                }
+            }
+
+            if (!completedData || completedData.status === 'failed') {
+                const errDetail = completedData?.errorCode || completedData?.error || 'AI run timed out or encountered an internal error. Please try again.';
+                if (isStreamRequested) {
+                    res.write(`data: ${JSON.stringify({ delta: `⚠️ **Notice:** ${errDetail}`, error: errDetail })}\n\n`);
+                    res.write(`data: ${JSON.stringify({ event: 'run.completed' })}\n\n`);
+                    res.end();
+                    return;
+                }
+                return sendJson(res, 500, { error: errDetail });
+            }
+
+            let rawAnswer = '';
+            if (completedData.result?.chatText) {
+                rawAnswer = completedData.result.chatText;
+            } else if (completedData.result?.text) {
+                try {
+                    const parsedText = JSON.parse(completedData.result.text);
+                    rawAnswer = parsedText.response || parsedText.chatText || completedData.result.text;
+                } catch {
+                    rawAnswer = completedData.result.text;
+                }
+            } else if (completedData.outputs) {
+                rawAnswer = typeof completedData.outputs === 'string' ? completedData.outputs : JSON.stringify(completedData.outputs);
+            }
+
+            const cleanReply = cleanAgentResponse(rawAnswer);
+
+            if (isStreamRequested) {
+                res.write(`data: ${JSON.stringify({ delta: cleanReply, conversation_id: conversationId, run_id: runId })}\n\n`);
+                res.write(`data: ${JSON.stringify({ event: 'run.completed' })}\n\n`);
+                res.end();
+                return;
+            }
+
+            return sendJson(res, 200, {
+                success: true,
+                reply: cleanReply,
+                raw: rawAnswer,
+                topic: topic,
+                audience: audience,
+                conversation_id: conversationId,
+                run_id: runId
+            });
+        }
+
+        // Fallback for developer.creao.ai realtime streaming API
         if (isStreamRequested) {
             const creaoStreamRes = await fetch(`${baseUrl}/v1/realtime/runs`, {
                 method: 'POST',
@@ -370,7 +484,7 @@ export default async function handler(req, res) {
             }
 
             res.writeHead(200, {
-                'Content-Type': 'text/event-stream',
+                'Content-Type': 'text/event-stream; charset=utf-8',
                 'Cache-Control': 'no-cache, no-transform',
                 'Connection': 'keep-alive',
                 'X-Accel-Buffering': 'no'

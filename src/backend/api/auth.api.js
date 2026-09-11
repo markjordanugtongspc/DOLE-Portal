@@ -3,6 +3,7 @@
  * Handles login/logout operations against the users table.
  */
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from './supabase.js';
 import { createNotification } from './notifications.api.js';
 
@@ -35,9 +36,6 @@ export async function hashCredential(value) {
 }
 /* END HASH CREDENTIAL */
 
-
-
-
 /* START SANITIZE USER - Removes credential columns before returning session data */
 function sanitizeUser(user) {
     if (!user) return null;
@@ -45,11 +43,6 @@ function sanitizeUser(user) {
     return safeUser;
 }
 /* END SANITIZE USER */
-
-
-
-
-
 
 /* START FIND EXISTING REGISTRATION FIELD - Checks duplicate identities before public registration */
 async function findExistingRegistrationField(field, value) {
@@ -72,8 +65,90 @@ async function findExistingRegistrationField(field, value) {
 }
 /* END FIND EXISTING REGISTRATION FIELD */
 
-/* START REGISTER PENDING USER - Creates a new public registration awaiting approval */
+const SPES_SUPABASE_URL = import.meta.env.VITE_SPES_SUPABASE_URL || 'https://pprmqnrevuyllhkxejbu.supabase.co';
+const SPES_SUPABASE_ANON_KEY = import.meta.env.VITE_SPES_SUPABASE_ANON_KEY || 'sb_publishable_0sCQGxGm-VH-wDE6jN1CsA_UtJ3vvP3';
+
+let spesClientInstance = null;
+export const getSpesClient = () => {
+    if (!spesClientInstance && SPES_SUPABASE_URL && SPES_SUPABASE_ANON_KEY) {
+        spesClientInstance = createClient(SPES_SUPABASE_URL, SPES_SUPABASE_ANON_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false }
+        });
+    }
+    return spesClientInstance;
+};
+
+/* START FIND EXISTING SPES STAFF FIELD - Checks duplicate identities in SPES system */
+async function findExistingSpesStaffField(field, value) {
+    if (!value) return null;
+    const client = getSpesClient();
+    if (!client) return null;
+
+    try {
+        const { data, error } = await client
+            .from('staffs')
+            .select('id')
+            .eq(field, value)
+            .is('archive_at', null)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            console.warn('[AUTH-API] SPES duplicate check error:', error.message);
+            return null;
+        }
+
+        return data ? { exists: true } : null;
+    } catch {
+        return null;
+    }
+}
+/* END FIND EXISTING SPES STAFF FIELD */
+
+/* START SYNC USER TO SPES - Copies registered user to SPES staffs table */
+export async function syncUserToSpes(payload) {
+    const client = getSpesClient();
+    if (!client) {
+        return { data: null, error: 'SPES client is not configured.' };
+    }
+
+    const spesStaffPayload = {
+        full_name: String(payload.full_name || '').trim(),
+        office_id: payload.office_id ? Number(payload.office_id) : null,
+        role_id: Number(payload.role_id || 3), // Role 3 = Officer / Staff in SPES
+        username: String(payload.username || '').trim(),
+        email: String(payload.email || '').trim(),
+        phone: String(payload.phone || '').trim() || null,
+        password: String(payload.password || ''), // SPES database trigger auto-hashes to $2a$06$ bcrypt
+        status: 'OFFLINE',
+        approved: false // Requires approval by SPES admin in SPES system
+    };
+
+    try {
+        const { data, error } = await client
+            .from('staffs')
+            .insert([spesStaffPayload])
+            .select('id, full_name, username, email, office_id, role_id, status, approved')
+            .single();
+
+        if (error) {
+            if (window.DEBUG) window.DEBUG.error('AUTH-API', 'SPES sync failed', error.message);
+            console.error('[AUTH-API] SPES sync error:', error.message);
+            return { data: null, error: error.message };
+        }
+
+        if (window.DEBUG) window.DEBUG.success('AUTH-API', `Synced user ${data.username} to SPES staffs (ID: ${data.id})`);
+        return { data, error: null };
+    } catch (err) {
+        console.error('[AUTH-API] Exception during SPES sync:', err);
+        return { data: null, error: err.message };
+    }
+}
+/* END SYNC USER TO SPES */
+
+/* START REGISTER PENDING USER - Creates a new public registration awaiting approval and syncs to SPES */
 export async function registerPendingUser(payload) {
+    const rawPlainPassword = String(payload.password || '');
     const safePayload = {
         full_name: String(payload.full_name || '').trim(),
         office_id: payload.office_id ? Number(payload.office_id) : null,
@@ -81,25 +156,37 @@ export async function registerPendingUser(payload) {
         username: String(payload.username || '').trim(),
         email: String(payload.email || '').trim(),
         phone: String(payload.phone || '').trim() || null,
-        password: await hashCredential(payload.password || ''),
+        password: await hashCredential(rawPlainPassword),
         status: 'offline',
         approval_status: APPROVAL_PENDING
     };
 
+    // 1. Check duplicate username in Portal
     const usernameExists = await findExistingRegistrationField('username', safePayload.username);
     if (usernameExists?.error) return { data: null, error: usernameExists.error, code: 'register_unavailable' };
-    if (usernameExists?.exists) return { data: null, error: 'That username is already in use.', code: 'username_taken', field: 'username' };
+    if (usernameExists?.exists) return { data: null, error: 'That username is already in use in the Portal.', code: 'username_taken', field: 'username' };
 
+    // Check duplicate username in SPES
+    const spesUsernameExists = await findExistingSpesStaffField('username', safePayload.username);
+    if (spesUsernameExists?.exists) return { data: null, error: 'That username is already in use in the SPES system.', code: 'spes_username_taken', field: 'username' };
+
+    // 2. Check duplicate email in Portal
     const emailExists = await findExistingRegistrationField('email', safePayload.email);
     if (emailExists?.error) return { data: null, error: emailExists.error, code: 'register_unavailable' };
-    if (emailExists?.exists) return { data: null, error: 'That email address is already registered.', code: 'email_taken', field: 'email' };
+    if (emailExists?.exists) return { data: null, error: 'That email address is already registered in the Portal.', code: 'email_taken', field: 'email' };
 
+    // Check duplicate email in SPES
+    const spesEmailExists = await findExistingSpesStaffField('email', safePayload.email);
+    if (spesEmailExists?.exists) return { data: null, error: 'That email address is already registered in the SPES system.', code: 'spes_email_taken', field: 'email' };
+
+    // 3. Check duplicate phone in Portal
     if (safePayload.phone) {
         const phoneExists = await findExistingRegistrationField('phone', safePayload.phone);
         if (phoneExists?.error) return { data: null, error: phoneExists.error, code: 'register_unavailable' };
         if (phoneExists?.exists) return { data: null, error: 'That phone number is already registered.', code: 'phone_taken', field: 'phone' };
     }
 
+    // 4. Insert into Portal users table
     const { data, error } = await supabase
         .from('users')
         .insert([safePayload])
@@ -118,15 +205,33 @@ export async function registerPendingUser(payload) {
         return { data: null, error: error.message, code: 'register_failed' };
     }
 
+    // 5. Throw copy to SPES staffs table with identical password & pending approval
+    const spesSync = await syncUserToSpes({
+        full_name: safePayload.full_name,
+        office_id: safePayload.office_id,
+        role_id: safePayload.role_id,
+        username: safePayload.username,
+        email: safePayload.email,
+        phone: safePayload.phone,
+        password: rawPlainPassword
+    });
+
     await createNotification({
         type: 'registration_pending',
         title: 'New user registration',
-        message: `${data.full_name || data.username || 'A new user'} registered and is waiting for approval.`,
+        message: `${data.full_name || data.username || 'A new user'} registered (synced with SPES) and is waiting for approval.`,
         recipientRoles: ['admin', 'hr'],
         subjectUserId: data.id,
         actionUrl: '/src/pages/user/admin/staffs/'
     });
-    return { data: sanitizeUser(data), error: null };
+
+    const sanitized = sanitizeUser(data);
+    if (sanitized) {
+        sanitized.spes_synced = Boolean(!spesSync.error);
+        sanitized.spes_staff_id = spesSync.data?.id || null;
+    }
+
+    return { data: sanitized, error: null, spesSyncError: spesSync.error };
 }
 /* END REGISTER PENDING USER */
 

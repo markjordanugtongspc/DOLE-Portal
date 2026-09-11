@@ -1508,8 +1508,14 @@ const setupRegistrationFlow = async () => {
             registerOfficeDropdowns[prefix]?.reset();
             updateRegisterGipState(prefix);
             showRegisterStep(prefix, 0);
-            setAuthViewMode('login');
-            showAuthStatusModal({ title: 'Registration submitted', message: 'Your registration request is now pending approval. Please wait for HR or a portal administrator to approve your account before logging in.', tone: 'success' });
+            const spesSyncNotice = result.data?.spes_synced
+                ? ' Your account has also been synced to the SPES System. Once approved by the administrator, you can log into both systems with the same credentials.'
+                : '';
+            showAuthStatusModal({
+                title: 'Registration submitted',
+                message: `Your registration request is now pending approval.${spesSyncNotice} Please wait for HR or an administrator to approve your account before logging in.`,
+                tone: 'success'
+            });
             if (submit) { submit.disabled = false; submit.textContent = 'Submit Registration'; }
         });
         updateRegisterGipState(prefix);

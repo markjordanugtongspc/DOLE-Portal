@@ -8,7 +8,9 @@
     "dev:vite": "vite",
     "dev:vercel": "npx --yes vercel@latest dev",
     "build": "npm version patch --no-git-tag-version && vite build",
-    "preview": "node scripts/local-preview-server.js"
+    "preview": "node scripts/local-preview-server.js",
+    "test": "node scripts/test-portal-suite.js",
+    "test:verbose": "node scripts/test-portal-suite.js --verbose"
   },
   "devDependencies": {
     "vite": "^8.1.1",

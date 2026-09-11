@@ -246,7 +246,7 @@ export class DoleChatbotController {
             const sidebarToggleBtn = e.target.closest('[data-drawer-toggle="default-sidebar"]');
             if (sidebarToggleBtn) {
                 const sidebar = document.getElementById('default-sidebar');
-                const isCurrentlyClosed = sidebar?.classList.contains('-translate-x-full');
+                const isCurrentlyClosed = sidebar?.classList.contains('translate-x-full') || sidebar?.classList.contains('-translate-x-full');
                 if (isCurrentlyClosed) {
                     this.closeWindow();
                     this.ui.hideFab();
@@ -968,7 +968,7 @@ export class ChatbotUI {
 
             // Check mobile sidebar drawer
             const sidebar = document.getElementById('default-sidebar');
-            const isMobileSidebarOpen = Boolean(isMobile && sidebar && (sidebar.classList.contains('transform-none') || !sidebar.classList.contains('-translate-x-full')));
+            const isMobileSidebarOpen = Boolean(isMobile && sidebar && (sidebar.classList.contains('transform-none') || (!sidebar.classList.contains('-translate-x-full') && !sidebar.classList.contains('translate-x-full'))));
 
             // Check right-side system / assignment / ticket drawers
             const isRightDrawerOpen = Boolean(
