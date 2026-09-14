@@ -447,9 +447,151 @@ export const assistantsCacheStorage = {
 };
 /* END STAFFS AND ASSISTANTS LOCALSTORAGE CACHE */
 
+/* START PRIVACY AND TERMS LOCALSTORAGE HANDLERS */
+const PRIVACY_TERMS_VERSION = 'v1.0-2026';
+const PRIVACY_KEY_PREFIX = 'dole_privacy_accepted_';
+const TERMS_KEY_PREFIX = 'dole_terms_accepted_';
+const COMBINED_KEY_PREFIX = 'dole_privacy_terms_accepted_';
+
+export const privacyTermsStorage = {
+    /* START IS PRIVACY ACCEPTED */
+    isPrivacyAccepted(userId = 'global') {
+        try {
+            const key = `${PRIVACY_KEY_PREFIX}${userId || 'global'}`;
+            const raw = readValue(key);
+            if (!raw) return false;
+            const parsed = JSON.parse(raw);
+            return parsed && parsed.version === PRIVACY_TERMS_VERSION && Boolean(parsed.accepted);
+        } catch {
+            return false;
+        }
+    },
+    /* END IS PRIVACY ACCEPTED */
+
+    /* START IS TERMS ACCEPTED */
+    isTermsAccepted(userId = 'global') {
+        try {
+            const key = `${TERMS_KEY_PREFIX}${userId || 'global'}`;
+            const raw = readValue(key);
+            if (!raw) return false;
+            const parsed = JSON.parse(raw);
+            return parsed && parsed.version === PRIVACY_TERMS_VERSION && Boolean(parsed.accepted);
+        } catch {
+            return false;
+        }
+    },
+    /* END IS TERMS ACCEPTED */
+
+    /* START IS ACCEPTED - Checks combined acceptance of both Privacy and Terms */
+    isAccepted(userId = 'global') {
+        try {
+            const combinedKey = `${COMBINED_KEY_PREFIX}${userId || 'global'}`;
+            const raw = readValue(combinedKey);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.version === PRIVACY_TERMS_VERSION && Boolean(parsed.accepted)) {
+                    return true;
+                }
+            }
+            return this.isPrivacyAccepted(userId) && this.isTermsAccepted(userId);
+        } catch {
+            return false;
+        }
+    },
+    /* END IS ACCEPTED */
+
+    /* START SET PRIVACY ACCEPTED */
+    setPrivacyAccepted(userId = 'global') {
+        try {
+            const key = `${PRIVACY_KEY_PREFIX}${userId || 'global'}`;
+            const payload = {
+                accepted: true,
+                version: PRIVACY_TERMS_VERSION,
+                timestamp: Date.now(),
+                isoDate: new Date().toISOString()
+            };
+            writeValue(key, JSON.stringify(payload));
+            return payload;
+        } catch (error) {
+            console.error('Error saving privacy acceptance:', error);
+            return null;
+        }
+    },
+    /* END SET PRIVACY ACCEPTED */
+
+    /* START SET TERMS ACCEPTED */
+    setTermsAccepted(userId = 'global') {
+        try {
+            const key = `${TERMS_KEY_PREFIX}${userId || 'global'}`;
+            const payload = {
+                accepted: true,
+                version: PRIVACY_TERMS_VERSION,
+                timestamp: Date.now(),
+                isoDate: new Date().toISOString()
+            };
+            writeValue(key, JSON.stringify(payload));
+            return payload;
+        } catch (error) {
+            console.error('Error saving terms acceptance:', error);
+            return null;
+        }
+    },
+    /* END SET TERMS ACCEPTED */
+
+    /* START SET ACCEPTED - Stores acceptance for both Privacy and Terms and updates combined record */
+    setAccepted(userId = 'global') {
+        try {
+            this.setPrivacyAccepted(userId);
+            this.setTermsAccepted(userId);
+
+            const combinedKey = `${COMBINED_KEY_PREFIX}${userId || 'global'}`;
+            const payload = {
+                accepted: true,
+                version: PRIVACY_TERMS_VERSION,
+                timestamp: Date.now(),
+                isoDate: new Date().toISOString()
+            };
+            writeValue(combinedKey, JSON.stringify(payload));
+            return payload;
+        } catch (error) {
+            console.error('Error saving privacy terms acceptance:', error);
+            return null;
+        }
+    },
+    /* END SET ACCEPTED */
+
+    /* START CLEAR ACCEPTED - Destroys privacy, terms, and combined localStorage entries */
+    clearAccepted(userId = 'global') {
+        try {
+            const uId = userId || 'global';
+            removeValue(`${PRIVACY_KEY_PREFIX}${uId}`);
+            removeValue(`${TERMS_KEY_PREFIX}${uId}`);
+            removeValue(`${COMBINED_KEY_PREFIX}${uId}`);
+        } catch (error) {
+            console.error('Error clearing privacy terms acceptance:', error);
+        }
+    }
+    /* END CLEAR ACCEPTED */
+};
+
+/* START HAS ACCEPTED PRIVACY TERMS - Helper to quickly evaluate privacy acceptance */
+export const hasAcceptedPrivacyTerms = (userId = 'global') => privacyTermsStorage.isAccepted(userId);
+export const hasAcceptedPrivacy = (userId = 'global') => privacyTermsStorage.isPrivacyAccepted(userId);
+export const hasAcceptedTerms = (userId = 'global') => privacyTermsStorage.isTermsAccepted(userId);
+/* END HAS ACCEPTED PRIVACY TERMS */
+
+/* START SET ACCEPTED PRIVACY TERMS - Helper to record privacy terms acceptance */
+export const setAcceptedPrivacyTerms = (userId = 'global') => privacyTermsStorage.setAccepted(userId);
+export const setAcceptedPrivacy = (userId = 'global') => privacyTermsStorage.setPrivacyAccepted(userId);
+export const setAcceptedTerms = (userId = 'global') => privacyTermsStorage.setTermsAccepted(userId);
+export const clearAcceptedPrivacyTerms = (userId = 'global') => privacyTermsStorage.clearAccepted(userId);
+/* END SET ACCEPTED PRIVACY TERMS */
+/* END PRIVACY AND TERMS LOCALSTORAGE HANDLERS */
+
 export const appStorage = {
     auth: authStorage,
     preferences: preferencesStorage,
+    privacyTerms: privacyTermsStorage,
     articleDraft: articleDraftStorage,
     staffAddDraft: staffAddDraftStorage,
     assistantAddDraft: assistantAddDraftStorage,
@@ -464,3 +606,4 @@ export const getPreference = (...args) => preferencesStorage.get(...args);
 export const setRememberedLogin = (...args) => authStorage.setRememberedLogin(...args);
 export const getRememberedLogin = (...args) => authStorage.getRememberedLogin(...args);
 export const clearRememberedLogin = (...args) => authStorage.clearRememberedLogin(...args);
+

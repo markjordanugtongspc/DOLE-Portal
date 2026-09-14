@@ -17,8 +17,11 @@ import { fetchOffices, fetchRoles } from '@/backend/api/users.api.js';
 import {
     clearRememberedLogin,
     getRememberedLogin,
+    hasAcceptedPrivacyTerms,
+    setAcceptedPrivacyTerms,
     setRememberedLogin
 } from '@/scripts/modules/storage.js';
+import { showPrivacyTermsModal } from './privacy-terms.js';
 
 const ROLE_ROUTES = {
     admin: '/src/pages/user/admin/dashboard/',
@@ -1244,6 +1247,14 @@ const buildRegisterPanel = (prefix) => {
                         <button id="${prefix}-register-submit-btn" type="submit" class="${registerButtonClass(prefix)} w-full py-3 text-center hidden" hidden>Submit Registration</button>
                     </div>
                 </div>
+                <div class="pt-1 text-center">
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-normal">
+                        By requesting access, you agree to our 
+                        <a href="#" data-open-privacy-terms data-privacy-tab="privacy" class="cursor-pointer font-bold text-blue-700 hover:underline dark:text-blue-400">Data Privacy Policy</a> 
+                        and 
+                        <a href="#" data-open-privacy-terms data-privacy-tab="terms" class="cursor-pointer font-bold text-blue-700 hover:underline dark:text-blue-400">Terms of Service</a>.
+                    </p>
+                </div>
             </form>
         </section>`;
 };
@@ -1512,6 +1523,7 @@ const setupRegistrationFlow = async () => {
             const spesSyncNotice = result.data?.spes_synced
                 ? ' Your account has also been synced to the SPES System. Once approved by the administrator, you can log into both systems with the same credentials.'
                 : '';
+            setAcceptedPrivacyTerms(result.data?.id || 'global');
             showAuthStatusModal({
                 title: 'Registration submitted',
                 message: `Your registration request is now pending approval.${spesSyncNotice} Please wait for HR or an administrator to approve your account before logging in.`,
@@ -1749,7 +1761,19 @@ const setupLoginForms = () => {
                 }
 
                 saveSession(result.data);
-                window.location.href = getDashboardRoute(result.data);
+                const targetRoute = getDashboardRoute(result.data);
+                if (hasAcceptedPrivacyTerms(result.data?.id)) {
+                    window.location.href = targetRoute;
+                } else {
+                    showPrivacyTermsModal({
+                        userId: result.data?.id,
+                        isGate: true,
+                        initialTab: 'privacy',
+                        onAccept: () => {
+                            window.location.href = targetRoute;
+                        }
+                    });
+                }
             } catch (error) {
                 if (window.DEBUG) window.DEBUG.error('AUTH', 'Login request failed', error);
                 setFieldError(credentialWrapper, 'Login failed. Please check your connection and try again.');

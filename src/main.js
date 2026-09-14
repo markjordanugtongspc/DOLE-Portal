@@ -152,6 +152,7 @@ const bootAppModules = async () => {
 
     // 2. Global application shell components (required across all authenticated pages)
     await importModule('Settings modal module', () => import('@/scripts/modules/modals.js'));
+    await importModule('Privacy & Terms module', () => import('@/scripts/modules/privacy-terms.js'));
     await importModule('Sidebar module', () => import('@/scripts/modules/sidebar.js'));
     await importModule('Theme toggler module', () => import('@/scripts/modules/theme-toggler.js'));
 

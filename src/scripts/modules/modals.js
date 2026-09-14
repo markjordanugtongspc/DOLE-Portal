@@ -588,3 +588,7 @@ export const initSettingsModal = () => {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSettingsModal);
 else initSettingsModal();
 /* END GLOBAL SETTINGS MODAL */
+
+/* START PRIVACY AND TERMS MODAL EXPORTS */
+export { showPrivacyTermsModal, initPrivacyTermsModal } from './privacy-terms.js';
+/* END PRIVACY AND TERMS MODAL EXPORTS */
