@@ -7,19 +7,20 @@ const EXTERNAL_SYSTEMS = {
         label: 'SYSTEM 1',
         name: 'SPES Monitoring',
         tableName: 'staffs',
+        schema: 'spes',
         selectFields: 'id, full_name, username, email, roles ( name ), offices ( name, location )',
-        url: import.meta.env.VITE_SPES_SUPABASE_URL,
-        anonKey: import.meta.env.VITE_SPES_SUPABASE_ANON_KEY
+        url: import.meta.env.VITE_SPES_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL,
+        anonKey: import.meta.env.VITE_SPES_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY
     },
     GIP: {
         key: 'GIP',
         label: 'SYSTEM 2',
         name: 'DOLE GIP System',
         tableName: 'users',
-        selectFields: 'id, full_name, username, email, role_id',
-        adminRoleId: 1,
-        url: import.meta.env.VITE_GIP_SUPABASE_URL,
-        anonKey: import.meta.env.VITE_GIP_SUPABASE_ANON_KEY
+        schema: 'gip',
+        selectFields: 'user_id, full_name, username, email, is_active, portal_sso_enabled',
+        url: import.meta.env.VITE_GIP_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL,
+        anonKey: import.meta.env.VITE_GIP_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY
     }
 };
 
@@ -33,7 +34,8 @@ const getClient = (system) => {
     }
     if (!clients.has(system.key)) {
         clients.set(system.key, createClient(system.url, system.anonKey, {
-            auth: { persistSession: false, autoRefreshToken: false }
+            auth: { persistSession: false, autoRefreshToken: false },
+            db: { schema: system.schema || 'public' }
         }));
     }
     return { client: clients.get(system.key), error: null };
@@ -85,7 +87,12 @@ export async function fetchExternalUsers({ systemKey, fullName }) {
     }
 
     return {
-        data: (data || []).filter((user) => !system.adminRoleId || Number(user.role_id) === Number(system.adminRoleId)).map((user) => ({ ...user, system_key: system.key, system_name: system.name })),
+        data: (data || []).map((user) => ({
+            ...user,
+            id: user.user_id ? String(user.user_id) : String(user.id || ''),
+            system_key: system.key,
+            system_name: system.name
+        })),
         error: null
     };
 }

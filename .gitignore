@@ -43,3 +43,13 @@ src/assets/audio
 .vercel
 .env*
 .env*.local
+
+# Backups & Migration SQL scripts & Local Integration Tests
+docs/backups/
+docs/sql/
+test_system_integration.cjs
+NETWORK_OPTIMIZATION_GUIDE.md
+caveman_output.txt
+.agents.zip
+supabase/.temp/
+supabase/migrations/

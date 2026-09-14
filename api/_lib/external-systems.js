@@ -5,14 +5,14 @@ const safeString = (value) => String(value || '').trim();
 const systemConfig = (key) => {
     const configurations = {
         SPES: {
-            url: process.env.SPES_SUPABASE_URL || process.env.VITE_SPES_SUPABASE_URL,
-            anonKey: process.env.SPES_SUPABASE_ANON_KEY || process.env.VITE_SPES_SUPABASE_ANON_KEY,
-            table: 'staffs', select: 'id, full_name, username, email'
+            url: process.env.SPES_SUPABASE_URL || process.env.VITE_SPES_SUPABASE_URL || process.env.PORTAL_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+            anonKey: process.env.SPES_SUPABASE_ANON_KEY || process.env.VITE_SPES_SUPABASE_ANON_KEY || process.env.PORTAL_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+            table: 'staffs', schema: 'spes', select: 'id, full_name, username, email'
         },
         GIP: {
-            url: process.env.GIP_SUPABASE_URL || process.env.VITE_GIP_SUPABASE_URL,
-            anonKey: process.env.GIP_SUPABASE_ANON_KEY || process.env.VITE_GIP_SUPABASE_ANON_KEY,
-            table: 'users', select: 'user_id, full_name, username, email, is_active, portal_sso_enabled'
+            url: process.env.GIP_SUPABASE_URL || process.env.VITE_GIP_SUPABASE_URL || process.env.PORTAL_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+            anonKey: process.env.GIP_SUPABASE_ANON_KEY || process.env.VITE_GIP_SUPABASE_ANON_KEY || process.env.PORTAL_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+            table: 'users', schema: 'gip', select: 'user_id, full_name, username, email, is_active, portal_sso_enabled'
         }
     };
     return configurations[key] || null;
@@ -44,7 +44,10 @@ const getGipDirectoryAccount = async (externalUserId) => {
 
     const config = systemConfig('GIP');
     if (!config?.url || !config?.anonKey) throw new Error('GIP external directory is not configured.');
-    const client = createClient(config.url, config.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const client = createClient(config.url, config.anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        db: { schema: config.schema || 'public' }
+    });
     const { data, error } = await client
         .from(config.table)
         .select('*')
@@ -62,7 +65,10 @@ export const searchGipDirectory = async (fullName) => {
     const config = systemConfig('GIP');
     if (!config?.url || !config?.anonKey) throw new Error('The GIP account directory is not configured yet.');
 
-    const client = createClient(config.url, config.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const client = createClient(config.url, config.anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        db: { schema: config.schema || 'public' }
+    });
     const { data, error } = await client
         .from(config.table)
         .select('*')
@@ -87,7 +93,10 @@ export const validateExternalAccount = async ({ systemKey, externalUserId }) => 
 
     const config = systemConfig(key);
     if (!config?.url || !config?.anonKey) throw new Error(`${key} external directory is not configured.`);
-    const client = createClient(config.url, config.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const client = createClient(config.url, config.anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+        db: { schema: config.schema || 'public' }
+    });
     const { data, error } = await client.from(config.table).select(config.select).eq('id', identifier).maybeSingle();
     if (error || !data) throw new Error(`Selected ${key} account could not be verified.`);
     return data;

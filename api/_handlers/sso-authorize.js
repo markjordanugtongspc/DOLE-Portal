@@ -50,6 +50,12 @@ export default async function handler(req, res) {
                 .maybeSingle();
             link = data;
         }
+
+        // Auto-resolve identity if not explicitly linked in external_account_links
+        if (!link) {
+            link = await autoResolveExternalLink(admin, session.user, system.key);
+        }
+
         if (!link) return sendJson(res, 403, { error: 'Your Portal account is not assigned to this system yet.' });
 
         const code = randomToken(32);
@@ -119,3 +125,112 @@ export default async function handler(req, res) {
     }
 }
 /* END SSO AUTHORIZATION CODE ISSUE API */
+
+/* START autoResolveExternalLink FUNCTIONALITY - Automatically resolves and caches subsystem identity for Portal users */
+async function autoResolveExternalLink(admin, sessionUser, systemKey) {
+    if (!sessionUser) return null;
+    const portalUserId = Number(sessionUser.id);
+    const username = String(sessionUser.username || '').trim();
+    const email = String(sessionUser.email || '').trim().toLowerCase();
+    const fullName = String(sessionUser.full_name || '').trim();
+    const roleId = Number(sessionUser.role_id);
+    const isAdmin = roleId === 1 || roleId === 6;
+    const isHr = roleId === 2;
+    const isChief = roleId === 4 || roleId === 5;
+
+    if (systemKey === 'SPES') {
+        const spesAdmin = typeof admin.schema === 'function' ? admin.schema('spes') : admin;
+        let matchedStaff = null;
+
+        // 1. Try matching by username
+        if (username) {
+            const { data } = await spesAdmin.from('staffs').select('id, full_name, username').ilike('username', username).is('archive_at', null).limit(1).maybeSingle();
+            if (data) matchedStaff = data;
+        }
+
+        // 2. Try matching by email
+        if (!matchedStaff && email) {
+            const { data } = await spesAdmin.from('staffs').select('id, full_name, username').ilike('email', email).is('archive_at', null).limit(1).maybeSingle();
+            if (data) matchedStaff = data;
+        }
+
+        // 3. Try matching by full name
+        if (!matchedStaff && fullName) {
+            const { data } = await spesAdmin.from('staffs').select('id, full_name, username').ilike('full_name', `%${fullName}%`).is('archive_at', null).limit(1).maybeSingle();
+            if (data) matchedStaff = data;
+        }
+
+        // 4. Role-based fallback for Executive/Administrative roles
+        if (!matchedStaff) {
+            if (isAdmin) {
+                const { data } = await spesAdmin.from('staffs').select('id, full_name, username').eq('id', 1).maybeSingle();
+                matchedStaff = data || { id: 1, full_name: fullName || 'System Administrator', username: 'admin' };
+            } else if (isHr) {
+                const { data } = await spesAdmin.from('staffs').select('id, full_name, username').eq('id', 2).maybeSingle();
+                matchedStaff = data || { id: 2, full_name: fullName || 'HR Officer', username: username || 'hr' };
+            } else if (isChief) {
+                const { data } = await spesAdmin.from('staffs').select('id, full_name, username').eq('id', 57).maybeSingle();
+                matchedStaff = data || { id: 57, full_name: fullName || 'Chief Officer', username: username || 'chief' };
+            }
+        }
+
+        if (matchedStaff) {
+            const linkRecord = {
+                portal_user_id: portalUserId,
+                system_key: 'SPES',
+                external_user_id: String(matchedStaff.id),
+                external_full_name: matchedStaff.full_name,
+                external_username: matchedStaff.username,
+                linked_by: portalUserId,
+                is_gip: Boolean(sessionUser.is_gip)
+            };
+            await admin.from('external_account_links').upsert(linkRecord, { onConflict: 'portal_user_id,system_key,is_gip' });
+            return linkRecord;
+        }
+    } else if (systemKey === 'GIP') {
+        const gipAdmin = typeof admin.schema === 'function' ? admin.schema('gip') : admin;
+        let matchedUser = null;
+
+        // 1. Try matching by username
+        if (username) {
+            const { data } = await gipAdmin.from('users').select('user_id, full_name, username').ilike('username', username).eq('is_active', true).limit(1).maybeSingle();
+            if (data) matchedUser = data;
+        }
+
+        // 2. Try matching by email
+        if (!matchedUser && email) {
+            const { data } = await gipAdmin.from('users').select('user_id, full_name, username').ilike('email', email).eq('is_active', true).limit(1).maybeSingle();
+            if (data) matchedUser = data;
+        }
+
+        // 3. Try matching by full name
+        if (!matchedUser && fullName) {
+            const { data } = await gipAdmin.from('users').select('user_id, full_name, username').ilike('full_name', `%${fullName}%`).eq('is_active', true).limit(1).maybeSingle();
+            if (data) matchedUser = data;
+        }
+
+        // 4. Role-based fallback for Executive/Administrative roles
+        if (!matchedUser && (isAdmin || isHr || isChief)) {
+            const { data } = await gipAdmin.from('users').select('user_id, full_name, username').eq('user_id', 1).maybeSingle();
+            matchedUser = data || { user_id: 1, full_name: fullName || 'Administrator', username: 'admin' };
+        }
+
+        if (matchedUser) {
+            const linkRecord = {
+                portal_user_id: portalUserId,
+                system_key: 'GIP',
+                external_user_id: String(matchedUser.user_id),
+                external_full_name: matchedUser.full_name,
+                external_username: matchedUser.username,
+                linked_by: portalUserId,
+                is_gip: Boolean(sessionUser.is_gip)
+            };
+            await admin.from('external_account_links').upsert(linkRecord, { onConflict: 'portal_user_id,system_key,is_gip' });
+            return linkRecord;
+        }
+    }
+
+    return null;
+}
+/* END autoResolveExternalLink FUNCTIONALITY */
+

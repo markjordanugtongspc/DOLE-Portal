@@ -12,7 +12,9 @@ const isAdminUser = () => {
     }
 };
 
-const isDebugActive = () => isAdminUser();
+const isDebugActive = () => {
+    return Boolean(import.meta.env?.DEV) || isAdminUser();
+};
 
 window.DEBUG = {
     isEnabled: () => isDebugActive(),

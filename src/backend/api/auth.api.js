@@ -44,14 +44,58 @@ function sanitizeUser(user) {
 }
 /* END SANITIZE USER */
 
-/* START FIND EXISTING REGISTRATION FIELD - Checks duplicate identities before public registration */
+/* START CACHE REGISTRATION UNIQUENESS - Session-scoped cache destroyed on close/shutdown and evicted on inactivity */
+const UNIQUENESS_CACHE_KEY = 'portal_uniqueness_cache';
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes of inactivity
+let lastActivityTimestamp = Date.now();
+
+function updateActivityTimestamp() {
+    lastActivityTimestamp = Date.now();
+}
+
+if (typeof window !== 'undefined') {
+    ['mousedown', 'keydown', 'touchstart', 'scroll'].forEach((evt) => {
+        window.addEventListener(evt, updateActivityTimestamp, { passive: true });
+    });
+}
+
+function getUniquenessCache() {
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return {};
+    // Check if user has been inactive for too long
+    if (Date.now() - lastActivityTimestamp > INACTIVITY_TIMEOUT_MS) {
+        sessionStorage.removeItem(UNIQUENESS_CACHE_KEY);
+        lastActivityTimestamp = Date.now();
+        if (window.DEBUG) window.DEBUG.flow('AUTH-API', 'Uniqueness cache cleared due to user inactivity.');
+        return {};
+    }
+    try {
+        const raw = sessionStorage.getItem(UNIQUENESS_CACHE_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch {
+        return {};
+    }
+}
+
+function setUniquenessCache(key, result) {
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
+    try {
+        const cache = getUniquenessCache();
+        cache[key] = { result, cachedAt: Date.now() };
+        sessionStorage.setItem(UNIQUENESS_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+        // Ignore session storage full/quota errors
+    }
+}
+/* END CACHE REGISTRATION UNIQUENESS */
+
+/* START FIND EXISTING REGISTRATION FIELD - Checks duplicate identities before public registration (Case-Insensitive) */
 async function findExistingRegistrationField(field, value) {
     if (!value) return null;
 
     const { data, error } = await supabase
         .from('users')
-        .select('id')
-        .eq(field, value)
+        .select('id, full_name, username, email')
+        .ilike(field, value)
         .is('archived_at', null)
         .limit(1)
         .maybeSingle();
@@ -61,24 +105,25 @@ async function findExistingRegistrationField(field, value) {
         return { error: AUTH_CONFIG_ERROR };
     }
 
-    return data ? { exists: true } : null;
+    return data ? { exists: true, data } : null;
 }
 /* END FIND EXISTING REGISTRATION FIELD */
 
-const SPES_SUPABASE_URL = import.meta.env.VITE_SPES_SUPABASE_URL || 'https://pprmqnrevuyllhkxejbu.supabase.co';
-const SPES_SUPABASE_ANON_KEY = import.meta.env.VITE_SPES_SUPABASE_ANON_KEY || 'sb_publishable_0sCQGxGm-VH-wDE6jN1CsA_UtJ3vvP3';
+const SPES_SUPABASE_URL = import.meta.env.VITE_SPES_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const SPES_SUPABASE_ANON_KEY = import.meta.env.VITE_SPES_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 let spesClientInstance = null;
 export const getSpesClient = () => {
     if (!spesClientInstance && SPES_SUPABASE_URL && SPES_SUPABASE_ANON_KEY) {
         spesClientInstance = createClient(SPES_SUPABASE_URL, SPES_SUPABASE_ANON_KEY, {
-            auth: { persistSession: false, autoRefreshToken: false }
+            auth: { persistSession: false, autoRefreshToken: false },
+            db: { schema: 'spes' }
         });
     }
     return spesClientInstance;
 };
 
-/* START FIND EXISTING SPES STAFF FIELD - Checks duplicate identities in SPES system */
+/* START FIND EXISTING SPES STAFF FIELD - Checks duplicate identities in SPES system (Case-Insensitive) */
 async function findExistingSpesStaffField(field, value) {
     if (!value) return null;
     const client = getSpesClient();
@@ -87,8 +132,8 @@ async function findExistingSpesStaffField(field, value) {
     try {
         const { data, error } = await client
             .from('staffs')
-            .select('id')
-            .eq(field, value)
+            .select('id, full_name, username, email')
+            .ilike(field, value)
             .is('archive_at', null)
             .limit(1)
             .maybeSingle();
@@ -98,12 +143,67 @@ async function findExistingSpesStaffField(field, value) {
             return null;
         }
 
-        return data ? { exists: true } : null;
+        return data ? { exists: true, data } : null;
     } catch {
         return null;
     }
 }
 /* END FIND EXISTING SPES STAFF FIELD */
+
+/* START CHECK REGISTRATION UNIQUENESS - Background validation for Full Name, Username, and Email across Portal and SPES (Case-Insensitive) */
+export async function checkRegistrationUniqueness(field, value) {
+    const cleanValue = String(value || '').trim();
+    if (!cleanValue) return { exists: false };
+
+    // Use lowercased key for case-insensitive local session cache
+    const cacheKey = `${field}:::${cleanValue.toLowerCase()}`;
+    const cached = getUniquenessCache()[cacheKey];
+    if (cached && cached.result) {
+        if (window.DEBUG) {
+            window.DEBUG.flow('AUTH-API', `Uniqueness check for [${field}]: "${cleanValue}" served from session cache.`, cached.result);
+        }
+        return cached.result;
+    }
+
+    if (window.DEBUG) {
+        window.DEBUG.flow('AUTH-API', `Validating uniqueness for [${field}]: "${cleanValue}" (case-insensitive) against Supabase...`);
+    }
+
+    // 1. Check in Portal users table (Case-insensitive via ilike)
+    const portalMatch = await findExistingRegistrationField(field, cleanValue);
+    if (portalMatch?.exists) {
+        let msg = 'User already exists with this ' + field.replace('_', ' ') + '.';
+        if (field === 'full_name') msg = 'A user with this full name already exists.';
+        if (field === 'username') msg = 'That username is already taken.';
+        if (field === 'email') msg = 'That email address is already registered.';
+        if (window.DEBUG) window.DEBUG.warn('AUTH-API', `Portal match found for [${field}]: "${cleanValue}"`);
+        const res = { exists: true, source: 'portal', field, message: msg };
+        setUniquenessCache(cacheKey, res);
+        return res;
+    }
+
+    // 2. Check in SPES staffs table (Case-insensitive via ilike)
+    const spesMatch = await findExistingSpesStaffField(field, cleanValue);
+    if (spesMatch?.exists) {
+        let msg = 'User already exists with this ' + field.replace('_', ' ') + ' in SPES.';
+        if (field === 'full_name') msg = 'A user with this full name already exists in SPES.';
+        if (field === 'username') msg = 'That username is already taken in SPES.';
+        if (field === 'email') msg = 'That email address is already registered in SPES.';
+        if (window.DEBUG) window.DEBUG.warn('AUTH-API', `SPES match found for [${field}]: "${cleanValue}"`);
+        const res = { exists: true, source: 'spes', field, message: msg };
+        setUniquenessCache(cacheKey, res);
+        return res;
+    }
+
+    if (window.DEBUG) {
+        window.DEBUG.success('AUTH-API', `Field [${field}]: "${cleanValue}" is unique and available.`);
+    }
+
+    const availableRes = { exists: false, field, message: null };
+    setUniquenessCache(cacheKey, availableRes);
+    return availableRes;
+}
+/* END CHECK REGISTRATION UNIQUENESS */
 
 /* START SYNC USER TO SPES - Copies registered user to SPES staffs table */
 export async function syncUserToSpes(payload) {
@@ -161,25 +261,25 @@ export async function registerPendingUser(payload) {
         approval_status: APPROVAL_PENDING
     };
 
-    // 1. Check duplicate username in Portal
-    const usernameExists = await findExistingRegistrationField('username', safePayload.username);
-    if (usernameExists?.error) return { data: null, error: usernameExists.error, code: 'register_unavailable' };
-    if (usernameExists?.exists) return { data: null, error: 'That username is already in use in the Portal.', code: 'username_taken', field: 'username' };
+    // 1. Check duplicate full_name
+    const nameCheck = await checkRegistrationUniqueness('full_name', safePayload.full_name);
+    if (nameCheck.exists) {
+        return { data: null, error: nameCheck.message || 'User already exists with this full name.', code: 'name_taken', field: 'name' };
+    }
 
-    // Check duplicate username in SPES
-    const spesUsernameExists = await findExistingSpesStaffField('username', safePayload.username);
-    if (spesUsernameExists?.exists) return { data: null, error: 'That username is already in use in the SPES system.', code: 'spes_username_taken', field: 'username' };
+    // 2. Check duplicate username
+    const usernameCheck = await checkRegistrationUniqueness('username', safePayload.username);
+    if (usernameCheck.exists) {
+        return { data: null, error: usernameCheck.message || 'That username is already taken.', code: 'username_taken', field: 'username' };
+    }
 
-    // 2. Check duplicate email in Portal
-    const emailExists = await findExistingRegistrationField('email', safePayload.email);
-    if (emailExists?.error) return { data: null, error: emailExists.error, code: 'register_unavailable' };
-    if (emailExists?.exists) return { data: null, error: 'That email address is already registered in the Portal.', code: 'email_taken', field: 'email' };
+    // 3. Check duplicate email
+    const emailCheck = await checkRegistrationUniqueness('email', safePayload.email);
+    if (emailCheck.exists) {
+        return { data: null, error: emailCheck.message || 'That email address is already registered.', code: 'email_taken', field: 'email' };
+    }
 
-    // Check duplicate email in SPES
-    const spesEmailExists = await findExistingSpesStaffField('email', safePayload.email);
-    if (spesEmailExists?.exists) return { data: null, error: 'That email address is already registered in the SPES system.', code: 'spes_email_taken', field: 'email' };
-
-    // 3. Check duplicate phone in Portal
+    // 4. Check duplicate phone in Portal
     if (safePayload.phone) {
         const phoneExists = await findExistingRegistrationField('phone', safePayload.phone);
         if (phoneExists?.error) return { data: null, error: phoneExists.error, code: 'register_unavailable' };

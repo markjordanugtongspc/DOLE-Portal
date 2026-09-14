@@ -1,5 +1,6 @@
 import { Modal, initTooltips } from 'flowbite';
 import {
+    checkRegistrationUniqueness,
     getCurrentUser,
     isHashedCredential,
     loginWithEmail,
@@ -1388,9 +1389,25 @@ const setRegisterFieldError = (prefix, field, message) => {
         wrapper.appendChild(error);
     }
     error.textContent = message;
+
+    const input = document.getElementById(`${prefix}-register-${field}`);
+    if (input) {
+        input.classList.remove(...DEFAULT_INPUT_CLASSES);
+        input.classList.add(...ERROR_INPUT_CLASSES);
+    }
 };
 
-const clearRegisterFieldError = (prefix, field) => document.getElementById(`${prefix}-register-${field}-wrapper`)?.querySelector('[data-register-error]')?.remove();
+const clearRegisterFieldError = (prefix, field) => {
+    const wrapper = document.getElementById(`${prefix}-register-${field}-wrapper`);
+    if (!wrapper) return;
+    wrapper.querySelector('[data-register-error]')?.remove();
+    const input = document.getElementById(`${prefix}-register-${field}`);
+    if (input) {
+        input.classList.remove(...ERROR_INPUT_CLASSES);
+        input.classList.add(...DEFAULT_INPUT_CLASSES);
+    }
+};
+
 const clearRegisterErrors = (prefix) => REGISTER_FIELDS.forEach((field) => clearRegisterFieldError(prefix, field));
 
 const showRegisterStep = (prefix, index) => {
@@ -1486,6 +1503,71 @@ const collectRegisterPayload = (prefix) => {
     return { user: { full_name: get('name'), office_id: Number(get('office')), role_id: registrationRoleId, username: get('username'), email: get('email'), phone: get('phone').replace(/\s+/g, '') || null, password: get('password') }, gips };
 };
 
+const setupLiveUniquenessChecks = (prefix) => {
+    const nextBtn = document.getElementById(`${prefix}-register-next-btn`);
+    const submitBtn = document.getElementById(`${prefix}-register-submit-btn`);
+    const fieldStates = { name: true, username: true, email: true };
+    const debounceTimers = {};
+
+    const updateButtonStates = () => {
+        const hasDuplicateError = Object.values(fieldStates).some((valid) => valid === false);
+        if (nextBtn) {
+            nextBtn.disabled = hasDuplicateError;
+            nextBtn.classList.toggle('cursor-not-allowed', hasDuplicateError);
+            nextBtn.classList.toggle('opacity-50', hasDuplicateError);
+            nextBtn.classList.toggle('cursor-pointer', !hasDuplicateError);
+        }
+        if (submitBtn) {
+            submitBtn.disabled = hasDuplicateError;
+            submitBtn.classList.toggle('cursor-not-allowed', hasDuplicateError);
+            submitBtn.classList.toggle('opacity-50', hasDuplicateError);
+            submitBtn.classList.toggle('cursor-pointer', !hasDuplicateError);
+        }
+    };
+
+    const validateFieldAsync = async (field, dbField, inputEl) => {
+        const val = inputEl?.value.trim() || '';
+        if (!val) {
+            fieldStates[field] = true;
+            clearRegisterFieldError(prefix, field);
+            updateButtonStates();
+            return;
+        }
+
+        const result = await checkRegistrationUniqueness(dbField, val);
+        if (result.exists) {
+            fieldStates[field] = false;
+            setRegisterFieldError(prefix, field, result.message || 'User already exists.');
+        } else {
+            fieldStates[field] = true;
+            clearRegisterFieldError(prefix, field);
+        }
+        updateButtonStates();
+    };
+
+    const bindInput = (field, dbField) => {
+        const inputEl = document.getElementById(`${prefix}-register-${field}`);
+        if (!inputEl) return;
+
+        inputEl.addEventListener('input', () => {
+            clearTimeout(debounceTimers[field]);
+            clearRegisterFieldError(prefix, field);
+            debounceTimers[field] = setTimeout(() => {
+                validateFieldAsync(field, dbField, inputEl);
+            }, 400);
+        });
+
+        inputEl.addEventListener('blur', () => {
+            clearTimeout(debounceTimers[field]);
+            validateFieldAsync(field, dbField, inputEl);
+        });
+    };
+
+    bindInput('name', 'full_name');
+    bindInput('username', 'username');
+    bindInput('email', 'email');
+};
+
 const setupRegistrationFlow = async () => {
     const [rolesResult, officesResult] = await Promise.all([fetchRoles(), fetchOffices()]);
     const roles = rolesResult.data || [];
@@ -1493,8 +1575,47 @@ const setupRegistrationFlow = async () => {
     ['desktop', 'mobile'].forEach((prefix) => {
         initRegisterOfficeDropdown(prefix, officesResult.data || []);
         showRegisterStep(prefix, 0);
+        setupLiveUniquenessChecks(prefix);
         document.getElementById(`${prefix}-register-login-btn`)?.addEventListener('click', () => setAuthViewMode('login'));
-        document.getElementById(`${prefix}-register-next-btn`)?.addEventListener('click', () => { const step = registerStepState[prefix] || 0; if (validateRegisterStep(prefix, step)) showRegisterStep(prefix, Math.min(step + 1, 2)); });
+        document.getElementById(`${prefix}-register-next-btn`)?.addEventListener('click', async () => {
+            const step = registerStepState[prefix] || 0;
+            if (!validateRegisterStep(prefix, step)) return;
+
+            if (step === 0) {
+                const nextBtn = document.getElementById(`${prefix}-register-next-btn`);
+                if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Checking...'; }
+
+                const nameVal = document.getElementById(`${prefix}-register-name`)?.value.trim() || '';
+                const usernameVal = document.getElementById(`${prefix}-register-username`)?.value.trim() || '';
+                const emailVal = document.getElementById(`${prefix}-register-email`)?.value.trim() || '';
+
+                const [nameCheck, userCheck, emailCheck] = await Promise.all([
+                    checkRegistrationUniqueness('full_name', nameVal),
+                    checkRegistrationUniqueness('username', usernameVal),
+                    checkRegistrationUniqueness('email', emailVal)
+                ]);
+
+                if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Next'; }
+
+                let hasError = false;
+                if (nameCheck.exists) {
+                    setRegisterFieldError(prefix, 'name', nameCheck.message || 'A user with this full name already exists.');
+                    hasError = true;
+                }
+                if (userCheck.exists) {
+                    setRegisterFieldError(prefix, 'username', userCheck.message || 'That username is already taken.');
+                    hasError = true;
+                }
+                if (emailCheck.exists) {
+                    setRegisterFieldError(prefix, 'email', emailCheck.message || 'That email address is already registered.');
+                    hasError = true;
+                }
+
+                if (hasError) return;
+            }
+
+            showRegisterStep(prefix, Math.min(step + 1, 2));
+        });
         document.getElementById(`${prefix}-register-back-btn`)?.addEventListener('click', () => showRegisterStep(prefix, Math.max((registerStepState[prefix] || 0) - 1, 0)));
         document.getElementById(`${prefix}-register-add-gip-btn`)?.addEventListener('click', () => addRegisterGip(prefix));
         document.getElementById(`${prefix}-register-form`)?.addEventListener('submit', async (event) => {
