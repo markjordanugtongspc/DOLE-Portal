@@ -80,7 +80,7 @@ let modalZoomLevel = 0; // 0 = 1x Normal, 1 = 1.6x Zoom, 2 = 2.5x Deep Zoom
 
 const MAX_IMAGE_FILES = 16;
 const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
-const ALLOWED_EXTENSIONS = ['.png', '.jpg', '.jpeg'];
+const ALLOWED_EXTENSIONS = ['.png', '.webp', '.jpeg'];
 
 const ACTIVE_CARD_CLASSES = [
     'ring-2', 'ring-blue-600', 'dark:ring-blue-500',
@@ -162,13 +162,13 @@ const showOcrToast = (type = 'success', title = '', message = '') => {
             <span class="sr-only">Success icon</span>
            </div>`
         : isWarning
-        ? `<div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-amber-500 bg-amber-100 rounded-lg dark:bg-amber-800/40 dark:text-amber-200">
+            ? `<div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-amber-500 bg-amber-100 rounded-lg dark:bg-amber-800/40 dark:text-amber-200">
             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>
             </svg>
             <span class="sr-only">Warning icon</span>
            </div>`
-        : `<div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800/40 dark:text-red-200">
+            : `<div class="inline-flex items-center justify-center shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800/40 dark:text-red-200">
             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>
             </svg>
@@ -566,14 +566,14 @@ const renderMasonryGallery = () => {
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Extracted
                    </span>`
                 : status === 'processing'
-                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60">
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60">
                     <svg class="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>Cooking...
                    </span>`
-                : status === 'error'
-                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900/60">
+                    : status === 'error'
+                        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900/60">
                     <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Error
                    </span>`
-                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                        : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                     <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>Pending
                    </span>`;
 
@@ -972,8 +972,8 @@ const updateWorkspaceUiState = (docId, state) => {
                 doc.status === 'done'
                     ? 'w-2 h-2 rounded-full bg-emerald-500'
                     : doc.status === 'error'
-                    ? 'w-2 h-2 rounded-full bg-red-500'
-                    : 'w-2 h-2 rounded-full bg-gray-400';
+                        ? 'w-2 h-2 rounded-full bg-red-500'
+                        : 'w-2 h-2 rounded-full bg-gray-400';
         }
 
         if (copyBtnEl) copyBtnEl.disabled = !doc.rawText;

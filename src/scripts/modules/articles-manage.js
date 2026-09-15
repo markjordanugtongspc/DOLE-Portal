@@ -922,7 +922,7 @@ class ArticlesBrowseController {
             const author = this.getAuthorInfo(art.category);
             const badgeHtml = this.getCategoryBadgeHtml(art.category);
             const articleEl = document.createElement('article');
-            const viewUrl = `${this.articlesBasePath}view.html?id=${art.id}`;
+            const viewUrl = `${this.articlesBasePath}view/?id=${art.id}`;
             
             // Clean summary & extract cover banner via DOMParser
             const { coverBannerHtml, summaryContent } = this.sanitizeSummaryAndExtractCover(art.summary || '', art.title);
@@ -1146,7 +1146,7 @@ class ArticlesViewController {
     }
 
     // -----------------------------------------------------------------------
-    // EDIT ARTICLE MODAL — only available on admin view.html
+    // EDIT ARTICLE MODAL — only available on admin view/
     // -----------------------------------------------------------------------
     getStoragePublicUrl(path) {
         const { data } = supabase.storage

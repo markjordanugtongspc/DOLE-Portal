@@ -39,7 +39,7 @@ const decorateResponse = (res) => {
 const vite = await createViteServer({
     configFile: 'vite.config.js',
     server: { middlewareMode: true },
-    appType: 'spa'
+    appType: 'mpa'
 });
 
 const server = http.createServer(async (req, res) => {

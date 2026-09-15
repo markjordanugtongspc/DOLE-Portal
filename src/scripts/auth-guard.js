@@ -41,7 +41,7 @@ if (isAboutRoute) {
         ? !isGip && (roleId === 2 || roleId === 3 || roleId === 5)
         : isAlertsRoute
         ? roleId === 1 || roleId === 2 || roleId === 5
-        : requiredRole === 'admin' ? roleId === 1 : (roleId === 2 || roleId === 3 || roleId === 5);
+        : requiredRole === 'admin' ? roleId === 1 : (roleId === 1 || roleId === 2 || roleId === 3 || roleId === 5);
     if (allowed) {
         document.documentElement.classList.remove('portal-auth-checking');
     }
@@ -130,7 +130,7 @@ const validateProtectedRoute = async () => {
             ? !isGip && (roleId === 2 || roleId === 3 || roleId === 5)
             : isAlertsRoute
             ? roleId === 1 || roleId === 2 || roleId === 5
-            : requiredRole === 'admin' ? roleId === 1 : (roleId === 2 || roleId === 3 || roleId === 5);
+            : requiredRole === 'admin' ? roleId === 1 : (roleId === 1 || roleId === 2 || roleId === 3 || roleId === 5);
 
         if (!allowed) return window.location.replace(dashboardFor(roleId));
         window.__PORTAL_SESSION = user;

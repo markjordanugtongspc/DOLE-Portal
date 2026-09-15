@@ -2358,7 +2358,9 @@ class TicketSupportApp {
 
     /* START getArticleUrl */
     getArticleUrl(articleId) {
-        return `https://dole-portal.vercel.app/src/pages/user/staff/articles/view.html?id=${articleId}`;
+        const origin = window.location.origin;
+        const basePath = this.isAdmin ? '/src/pages/user/admin/articles/view/' : '/src/pages/user/staff/articles/view/';
+        return `${origin}${basePath}?id=${articleId}`;
     }
     /* END getArticleUrl */
 
@@ -2491,7 +2493,7 @@ class TicketSupportApp {
         newEditBtn.addEventListener('click', () => {
             if (this.isAdmin) {
                 // Navigate admin to the article view/edit page
-                window.location.href = `/src/pages/user/admin/articles/view.html?id=${article.id}`;
+                window.location.href = `/src/pages/user/admin/articles/view/?id=${article.id}`;
             } else {
                 if (window.Swal) {
                     window.Swal.fire({

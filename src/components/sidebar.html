@@ -5,7 +5,7 @@
 
    <!-- Background landscape image at subtle opacity -->
    <div class="absolute inset-0 w-full h-full pointer-events-none select-none"
-      style="background-image: url('/src/assets/images/slider/sl1.jpg'); background-size: cover; background-position: center 40%; opacity: 0.15; mix-blend-mode: luminosity;">
+      style="background-image: url('/src/assets/images/slider/sl1.webp'); background-size: cover; background-position: center 40%; opacity: 0.15; mix-blend-mode: luminosity;">
    </div>
 
    <!-- Gradient darkening overlay (left to right) -->
@@ -23,8 +23,8 @@
    </div>
 
    <!-- Flowbite Right Drawer Toggle Button (header top right) -->
-   <button data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" data-drawer-show="default-sidebar" data-drawer-placement="right" aria-controls="default-sidebar"
-      type="button"
+   <button data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" data-drawer-show="default-sidebar"
+      data-drawer-placement="right" aria-controls="default-sidebar" type="button"
       class="relative z-10 cursor-pointer inline-flex items-center justify-center w-10 h-10 mr-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white/30"
       title="Open sidebar">
       <span class="sr-only">Open sidebar</span>
@@ -40,8 +40,7 @@
 <aside id="default-sidebar"
    class="fixed top-0 right-0 sm:right-auto sm:left-0 z-40 w-64 h-screen transition-transform translate-x-full sm:translate-x-0 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 sm:border-l-0 sm:border-r shadow-2xl sm:shadow-none"
    tabindex="-1" aria-labelledby="sidebar-brand-title" aria-label="Sidebar">
-   <div
-      class="h-full px-3 py-4 overflow-y-auto transition-colors flex flex-col justify-between">
+   <div class="h-full px-3 py-4 overflow-y-auto transition-colors flex flex-col justify-between">
       <!-- Top Section -->
       <div>
          <!-- Brand Header with Flowbite Close Button -->
@@ -50,15 +49,19 @@
                <img src="/src/assets/logos/dole_logo.png" class="h-8 w-8 drop-shadow-sm shrink-0" alt="DOLE Logo" />
                <div class="flex flex-col min-w-0">
                   <span id="sidebar-brand-title"
-                     class="text-xs font-extrabold text-blue-700 dark:text-blue-500 tracking-tight uppercase leading-tight truncate">LOCAL EMPLOYMENT PORTAL</span>
+                     class="text-xs font-extrabold text-blue-700 dark:text-blue-500 tracking-tight uppercase leading-tight truncate">LOCAL
+                     EMPLOYMENT PORTAL</span>
                   <span id="sidebar-role-badge"
-                     class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest leading-none">System User</span>
+                     class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest leading-none">System
+                     User</span>
                </div>
             </div>
-            <button type="button" data-drawer-hide="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar"
+            <button type="button" data-drawer-hide="default-sidebar" data-drawer-toggle="default-sidebar"
+               aria-controls="default-sidebar"
                class="sm:hidden cursor-pointer inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white transition-colors focus:outline-none ml-1 shrink-0"
                title="Close sidebar">
-               <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+               <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                </svg>
                <span class="sr-only">Close sidebar</span>
@@ -103,7 +106,8 @@
          <div id="sidebar-user-card"
             class="rounded-[22px] border border-gray-200 bg-gray-100/95 p-2.5 dark:border-gray-800 dark:bg-gray-950/85 shadow-sm transition-all duration-300">
             <!-- Authenticated User Profile Info (Interactive Header with Hover Delay / Click Toggle) -->
-            <button id="sidebar-user-profile-info" type="button" aria-expanded="false" aria-controls="sidebar-user-actions"
+            <button id="sidebar-user-profile-info" type="button" aria-expanded="false"
+               aria-controls="sidebar-user-actions"
                class="flex items-center gap-2 w-full text-left cursor-pointer rounded-xl p-1 -m-1 hover:bg-gray-200/50 dark:hover:bg-gray-900/50 transition-colors select-none focus:outline-none">
                <div class="relative shrink-0">
                   <div id="sidebar-user-avatar"
@@ -116,7 +120,8 @@
                   <div class="flex items-center justify-between gap-1.5">
                      <div class="min-w-0 flex-1">
                         <p id="sidebar-user-name" title=""
-                           class="truncate text-[12px] font-extrabold leading-4 text-gray-900 dark:text-white">System User</p>
+                           class="truncate text-[12px] font-extrabold leading-4 text-gray-900 dark:text-white">System
+                           User</p>
                         <p id="sidebar-user-subtitle" title=""
                            class="mt-0.5 truncate text-[10px] leading-3.5 text-gray-500 dark:text-gray-400">
                            portal@dole.local</p>
@@ -125,8 +130,11 @@
                         <span id="sidebar-user-role-pill"
                            class="shrink-0 rounded-full bg-emerald-400 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-wide text-emerald-950 shadow-sm">Staff</span>
                         <!-- Dropdown Caret Chevron Icon -->
-                        <svg id="sidebar-user-chevron" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 transition-transform duration-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/>
+                        <svg id="sidebar-user-chevron"
+                           class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 transition-transform duration-300"
+                           aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="m19 9-7 7-7-7" />
                         </svg>
                      </div>
                   </div>
@@ -134,8 +142,10 @@
             </button>
 
             <!-- Authenticated User Actions (Expandable accordion with smooth height & opacity animation) -->
-            <div id="sidebar-user-actions-container" class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-out mt-0 border-t-0 border-gray-200 dark:border-gray-800">
-               <div id="sidebar-user-actions" class="overflow-hidden min-h-0 space-y-1.5 pt-0 transition-all duration-300">
+            <div id="sidebar-user-actions-container"
+               class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-out mt-0 border-t-0 border-gray-200 dark:border-gray-800">
+               <div id="sidebar-user-actions"
+                  class="overflow-hidden min-h-0 space-y-1.5 pt-0 transition-all duration-300">
                   <div class="pt-2.5 space-y-1.5">
                      <button id="sidebar-profile-settings-btn" data-settings-modal-open type="button"
                         class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2 text-xs font-bold text-gray-700 transition-colors hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-200 dark:hover:border-blue-800 dark:hover:text-blue-400 cursor-pointer">Profile
@@ -161,38 +171,38 @@
          </div>
       </div>
 
-         <div
-            class="mt-3 rounded-2xl border border-gray-200 bg-gray-100/95 p-1 dark:border-gray-800 dark:bg-gray-950/85 shadow-inner">
-            <div class="grid grid-cols-2 gap-1">
-               <button type="button"
-                  class="theme-toggle-btn theme-toggle-segment flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-500 transition-all duration-200 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer"
-                  data-theme-target="light">
-                  <svg class="theme-toggle-light-icon h-4 w-4" data-theme-target="light" fill="currentColor"
-                     viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                     <path fill-rule="evenodd"
-                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1Zm4 8a4 4 0 11-8 0 4 4 0 018 0Zm-.464 4.95.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414Zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0ZM17 11a1 1 0 100-2h-1a1 1 0 100 2h1Zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1ZM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707Zm1.414 8.486-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414ZM4 11a1 1 0 100-2H3a1 1 0 000 2h1Z"
-                        clip-rule="evenodd"></path>
-                  </svg>
-                  <span>Light</span>
-               </button>
-               <button type="button"
-                  class="theme-toggle-btn theme-toggle-segment flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-500 transition-all duration-200 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer"
-                  data-theme-target="dark">
-                  <svg class="theme-toggle-dark-icon h-4 w-4" data-theme-target="dark" fill="currentColor"
-                     viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                     <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                  </svg>
-                  <span>Dark</span>
-               </button>
-            </div>
-         </div>
-
-         <div
-            class="pt-4 px-1 text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-widest uppercase select-none flex items-center justify-between">
-            <span>Portal Version</span>
-            <span id="app-version-display">v0.0.0</span>
+      <div
+         class="mt-3 rounded-2xl border border-gray-200 bg-gray-100/95 p-1 dark:border-gray-800 dark:bg-gray-950/85 shadow-inner">
+         <div class="grid grid-cols-2 gap-1">
+            <button type="button"
+               class="theme-toggle-btn theme-toggle-segment flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-500 transition-all duration-200 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer"
+               data-theme-target="light">
+               <svg class="theme-toggle-light-icon h-4 w-4" data-theme-target="light" fill="currentColor"
+                  viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd"
+                     d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1Zm4 8a4 4 0 11-8 0 4 4 0 018 0Zm-.464 4.95.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414Zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0ZM17 11a1 1 0 100-2h-1a1 1 0 100 2h1Zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1ZM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707Zm1.414 8.486-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414ZM4 11a1 1 0 100-2H3a1 1 0 000 2h1Z"
+                     clip-rule="evenodd"></path>
+               </svg>
+               <span>Light</span>
+            </button>
+            <button type="button"
+               class="theme-toggle-btn theme-toggle-segment flex items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold text-gray-500 transition-all duration-200 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer"
+               data-theme-target="dark">
+               <svg class="theme-toggle-dark-icon h-4 w-4" data-theme-target="dark" fill="currentColor"
+                  viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+               </svg>
+               <span>Dark</span>
+            </button>
          </div>
       </div>
+
+      <div
+         class="pt-4 px-1 text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-widest uppercase select-none flex items-center justify-between">
+         <span>Portal Version</span>
+         <span id="app-version-display">v0.0.0</span>
+      </div>
+   </div>
    </div>
 </aside>
 <div id="sidebar-logout-confirmation"

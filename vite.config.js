@@ -190,6 +190,8 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        navigateFallback: null,
+        navigateFallbackDenylist: [/^\/src\/pages\//, /^\/api\//],
         runtimeCaching: [
           {
             urlPattern: /\/api\/.*/i,
