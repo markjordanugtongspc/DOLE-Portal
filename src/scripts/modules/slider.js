@@ -1,7 +1,7 @@
 import { Carousel } from 'flowbite';
 
 // Auto-detect images in src/assets/images/slider/
-const imagesObj = import.meta.glob('@/assets/images/slider/*.{jpg,jpeg,png,svg}', { eager: true, import: 'default' });
+const imagesObj = import.meta.glob('@/assets/images/slider/*.{webp,jpg,jpeg,png,svg,avif}', { eager: true, import: 'default' });
 
 const container = document.getElementById('slider-container');
 
