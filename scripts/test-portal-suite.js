@@ -244,7 +244,12 @@ async function runSupabaseSuite() {
 
     if (spesUrl && spesAnonKey) {
         const { response, latency, error } = await httpFetch(`${spesUrl}/rest/v1/staffs?select=id,full_name,username,email,role_id,office_id,approved,status&limit=2`, {
-            headers: { 'apikey': spesAnonKey, 'Authorization': `Bearer ${spesAnonKey}` }
+            headers: {
+                'apikey': spesAnonKey,
+                'Authorization': `Bearer ${spesAnonKey}`,
+                'Accept-Profile': 'spes',
+                'Content-Profile': 'spes'
+            }
         });
 
         if (response && response.ok) {
@@ -259,7 +264,12 @@ async function runSupabaseSuite() {
 
         // SPES Offices Alignment
         const spesOffices = await httpFetch(`${spesUrl}/rest/v1/offices?select=id,name&limit=5`, {
-            headers: { 'apikey': spesAnonKey, 'Authorization': `Bearer ${spesAnonKey}` }
+            headers: {
+                'apikey': spesAnonKey,
+                'Authorization': `Bearer ${spesAnonKey}`,
+                'Accept-Profile': 'spes',
+                'Content-Profile': 'spes'
+            }
         });
         if (spesOffices.response && spesOffices.response.ok) {
             const oRows = await spesOffices.response.json();
@@ -409,7 +419,12 @@ async function runSyncSuite() {
 
     // 1. Duplicate check verification
     const dupCheck = await httpFetch(`${spesUrl}/rest/v1/staffs?username=eq.${testMockUser.username}&select=id`, {
-        headers: { 'apikey': spesAnonKey, 'Authorization': `Bearer ${spesAnonKey}` }
+        headers: {
+            'apikey': spesAnonKey,
+            'Authorization': `Bearer ${spesAnonKey}`,
+            'Accept-Profile': 'spes',
+            'Content-Profile': 'spes'
+        }
     });
     if (dupCheck.response && dupCheck.response.ok) {
         const rows = await dupCheck.response.json();
@@ -423,7 +438,9 @@ async function runSyncSuite() {
             'apikey': spesAnonKey,
             'Authorization': `Bearer ${spesAnonKey}`,
             'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
+            'Prefer': 'return=representation',
+            'Accept-Profile': 'spes',
+            'Content-Profile': 'spes'
         },
         body: JSON.stringify(testMockUser)
     });
@@ -458,7 +475,9 @@ async function runSyncSuite() {
         method: 'DELETE',
         headers: {
             'apikey': spesAnonKey,
-            'Authorization': `Bearer ${spesAnonKey}`
+            'Authorization': `Bearer ${spesAnonKey}`,
+            'Accept-Profile': 'spes',
+            'Content-Profile': 'spes'
         }
     });
 
